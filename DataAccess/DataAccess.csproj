@@ -52,10 +52,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BevososContext.cs" />
+    <Compile Include="DAO\AccountDAO.cs" />
+    <Compile Include="DAO\TokenDAO.cs" />
+    <Compile Include="DAO\UserDAO.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TokenGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

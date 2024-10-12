@@ -11,7 +11,6 @@ namespace BevososService
     internal interface IUsersManager
     {
 
-
         [OperationContract]
 
         bool IsUsernameTaken(string username);
@@ -21,16 +20,39 @@ namespace BevososService
 
 
         [OperationContract]
-        bool SendToken(string email);
+        void SendToken(string email);
 
         [OperationContract]
-        bool VerifyToken(string email, int token);
+        bool VerifyToken(string email, string token);
 
 
         [OperationContract]
 
-        bool RegisterUser(string email, string username, string password);
+        bool RegisterUser(UserDto user);
 
+        [OperationContract]
+
+        UserDto LogIn(string email, string password);
+        
     }
+
+
+    [DataContract]
+    public class UserDto
+    {
+        [DataMember]
+        public int UserId { get; set; }
+
+        [DataMember]
+        public string Username { get; set; }
+
+        [DataMember]
+        public string Email { get; set; }
+
+        [DataMember]
+        public int ProfilePictureId { get; set; }
+    }
+
+
 
 }

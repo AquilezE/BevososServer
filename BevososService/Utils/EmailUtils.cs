@@ -17,7 +17,7 @@ namespace BevososService.Utils
             return token;
         }
 
-        public static bool SendTokenByEmail(string recipientEmail, int token)
+        public static bool SendTokenByEmail(string recipientEmail, string token)
         {
 
             bool emailSent = true;

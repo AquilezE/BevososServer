@@ -48,9 +48,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceImplementation.cs" />
     <Compile Include="Utils\EmailUtils.cs" />
+    <Compile Include="Utils\Hasher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataAccess\DataAccess.csproj">
+      <Project>{799859ae-4c4d-4eaf-9d87-2a71e2df638a}</Project>
+      <Name>DataAccess</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
