@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.Text;
+
+namespace BevososService
+{
+    [ServiceContract]
+    internal interface IUsersManager
+    {
+
+
+        [OperationContract]
+
+        bool IsUsernameTaken(string username);
+
+        [OperationContract]
+        bool IsEmailTaken(string email);
+
+
+        [OperationContract]
+        bool SendToken(string email);
+
+        [OperationContract]
+        bool VerifyToken(string email, int token);
+
+
+        [OperationContract]
+
+        bool RegisterUser(string email, string username, string password);
+
+    }
+
+}

@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "Host\Host.csproj", "{1A2C35A1-3178-4791-96F7-2C58256578A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BevososService", "BevososService\BevososService.csproj", "{876D8FD7-0552-4C44-9470-4807A584CD35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A2C35A1-3178-4791-96F7-2C58256578A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2C35A1-3178-4791-96F7-2C58256578A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2C35A1-3178-4791-96F7-2C58256578A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2C35A1-3178-4791-96F7-2C58256578A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{876D8FD7-0552-4C44-9470-4807A584CD35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{876D8FD7-0552-4C44-9470-4807A584CD35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{876D8FD7-0552-4C44-9470-4807A584CD35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{876D8FD7-0552-4C44-9470-4807A584CD35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {931D3595-3B9D-49A9-88C4-123703767A0E}
+	EndGlobalSection
+EndGlobal
