@@ -11,6 +11,9 @@ namespace BevososService
 {
     public partial class ServiceImplementation : IUsersManager
     {
+
+
+
         public bool IsEmailTaken(string email)
         {
              return new AccountDAO().EmailExists(email);
@@ -28,7 +31,7 @@ namespace BevososService
 
         public void SendToken(string email)
         {
-            if(new TokenDAO().TokenExists(email))
+            if(new TokenDAO().HasToken(email))
             {
                EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
             }else
@@ -40,7 +43,7 @@ namespace BevososService
 
         public bool VerifyToken(string email, string token)
         {
-            if (new TokenDAO().TokenExists(token))
+            if (new TokenDAO().HasToken(email))
             {
                 if(new TokenDAO().TokenIsValid(token, email))
                 {

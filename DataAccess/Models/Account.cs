@@ -6,24 +6,18 @@ namespace DataAccess.Models
     public class Account
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountId { get; set; } // Primary Key
 
-        [EmailAddress]
         [Required]
-        [Index("IX_AccountEmail", IsUnique = true)] // Unique constraint on Email
-        public string Email { get; set; }
+        [Index(IsUnique = true)]
+        [MaxLength(100)]
+        public string Email { get; set; } // Email associated with the account
 
         [Required]
-        public string PasswordHash { get; set; } // Store hashed password
+        public string PasswordHash { get; set; } // Hashed password
 
-        // Foreign Key to User
-        [Required]
-        public int UserId { get; set; }
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public int UserId { get; set; } // Foreign key for User
 
-        // Navigation property to Token (if needed)
-        public virtual Token Token { get; set; }
+        public virtual User User { get; set; } // Navigation property to the User
     }
 }

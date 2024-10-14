@@ -10,6 +10,15 @@ namespace DataAccess.DAO
 {
     public class AccountDAO
     {
+        public Account GetAccountByEmail(string email)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.Accounts.Include(a => a.User)
+                                       .FirstOrDefault(a => a.Email == email);
+            }
+        }
+
         public bool EmailExists(string email)
         {
             using (var context = new BevososContext())
@@ -27,23 +36,14 @@ namespace DataAccess.DAO
             }
         }
 
-        public Account GetAccountByEmail(string email)
+        public bool UpdatePasswordByEmail(string email, string newHashedPassword)
         {
             using (var context = new BevososContext())
             {
-                return context.Accounts.Include(a => a.User)
-                                       .FirstOrDefault(a => a.Email == email);
-            }
-        }
-
-
-        public void UpdatePassword(int accountId, string passwordHashed)
-        {
-            using (var context = new BevososContext())
-            {
-                var account = context.Accounts.FirstOrDefault(a => a.AccountId == accountId);
-                account.PasswordHash = passwordHashed;
-                context.SaveChanges();
+                var account = context.Accounts.FirstOrDefault(a => a.Email == email);
+                account.PasswordHash = newHashedPassword;
+                int alteredRows = context.SaveChanges();
+                return alteredRows == 1;
             }
         }
 

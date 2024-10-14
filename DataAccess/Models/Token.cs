@@ -11,18 +11,15 @@ namespace DataAccess.Models
     public class Token
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TokenId { get; set; } // Primary Key
 
         [Required]
-        public string TokenValue { get; set; } // The token string
+        public string Email { get; set; } // The email for token verification
 
-        public DateTime ExpiryDate { get; set; }
-
-        // Foreign Key to Account
         [Required]
-        public int AccountId { get; set; }
-        [ForeignKey("AccountId")]
-        public virtual Account Account { get; set; }
+        public string TokenValue { get; set; } // 6-digit token
+
+        [Required]
+        public DateTime ExpiryDate { get; set; } // Token expiry time
     }
 }

@@ -11,20 +11,14 @@ namespace DataAccess.Models
     public class User
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int UserId { get; set; } // Primary Key
-
+        public int UserId { get; set; }
         [Required]
+        [Index(IsUnique = true)] // Enforces unique Username
+        [MaxLength(50)]
         public string Username { get; set; }
 
-        [EmailAddress]
-        [Required]
-        [Index("IX_UserEmail", IsUnique = true)] // Unique constraint on Email
-        public string Email { get; set; }
+        public int ProfilePictureId { get; set; } = 1;
 
-        public int ProfilePictureId { get; set; } // Used in the client
-
-        // Navigation properties
-        public virtual Account Account { get; set; }
+        public Account Account { get; set; }
     }
 }

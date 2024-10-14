@@ -22,7 +22,11 @@ namespace DataAccess.DAO
         {
             using (var context = new BevososContext())
             {
-                return context.Users.FirstOrDefault(u => u.Email == email);
+                var account = context.Accounts
+                                     .Include("User") // Eager loading the related User
+                                     .FirstOrDefault(a => a.Email == email);
+
+                return account?.User; // Return the User if the account is found, otherwise null
             }
         }
 
@@ -45,13 +49,32 @@ namespace DataAccess.DAO
         }
 
 
-        public void UpdateUserNames(int userId, string username)
+        public int UpdateUserNames(int userId, string username)
         {
             using (var context = new BevososContext())
             {
+                // Find the user by userId
                 var user = context.Users.FirstOrDefault(u => u.UserId == userId);
-                user.Username= username;
-                context.SaveChanges();
+
+                // If the user is not found, return 0 (no rows affected)
+                if (user == null)
+                {
+                    return 0;
+                }
+
+                // Check if the new username already exists for another user
+                var existingUserWithSameUsername = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
+
+                if (existingUserWithSameUsername != null)
+                {
+                    throw new InvalidOperationException("Username already exists for another user.");
+                }
+
+                // Update the username
+                user.Username = username;
+
+                // Save the changes and return the number of rows affected
+                return context.SaveChanges();
             }
         }
 

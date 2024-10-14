@@ -10,26 +10,26 @@ namespace DataAccess.DAO
     {
 
 
-        public void AsignToken(string email)
+        public int AsignToken(string email)
         {
             using (var context = new BevososContext())
             {
-                var user = context.Accounts.FirstOrDefault(a => a.Email == email);
+        
                 var token = new Models.Token();
-                token.AccountId = user.UserId;
+                token.Email = email;
                 token.TokenValue = new TokenGenerator().GenerateToken();
+                token.ExpiryDate = DateTime.Now.AddMinutes(15);
                 context.Tokens.Add(token);
-                context.SaveChanges();
+                int affectedRows = context.SaveChanges();
+                return affectedRows;
             }
         }
 
-
-        public bool TokenExists(string token)
-
+        public bool HasToken(string email)
         {
             using (var context = new BevososContext())
             {
-                return context.Tokens.Any(t => t.TokenValue == token);
+                return context.Tokens.Any(t => t.Email == email);
             }
         }
 
@@ -37,7 +37,14 @@ namespace DataAccess.DAO
         {
             using (var context = new BevososContext())
             {
-                return context.Tokens.FirstOrDefault(t => t.Account.Email == email).TokenValue;
+                var token = context.Tokens.FirstOrDefault(t => t.Email == email);
+
+                if (token == null)
+                {
+                    return "-1";
+                }
+
+                return token.TokenValue;
             }
         }
 
@@ -45,17 +52,22 @@ namespace DataAccess.DAO
         {
             using (var context = new BevososContext())
             {
-                return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Account.Email == email);
+                return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
             }
         }
 
-        public void DeleteToken(string token, string email)
+        public bool DeleteToken(string token, string email)
         {
             using (var context = new BevososContext())
             {
                 var tokenToDelete = context.Tokens.FirstOrDefault(t => t.TokenValue == token);
-                context.Tokens.Remove(tokenToDelete);
-                context.SaveChanges();
+                if (tokenToDelete != null)
+                {
+                    context.Tokens.Remove(tokenToDelete);
+                    int affectedRows = context.SaveChanges();
+                    return affectedRows > 0;
+                }
+                return false;
             }
         }
 

@@ -55,6 +55,11 @@
     <Compile Include="DAO\AccountDAO.cs" />
     <Compile Include="DAO\TokenDAO.cs" />
     <Compile Include="DAO\UserDAO.cs" />
+    <Compile Include="Migrations\202410132228082_InitialCreate.cs" />
+    <Compile Include="Migrations\202410132228082_InitialCreate.Designer.cs">
+      <DependentUpon>202410132228082_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\User.cs" />
@@ -64,6 +69,11 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\202410132228082_InitialCreate.resx">
+      <DependentUpon>202410132228082_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

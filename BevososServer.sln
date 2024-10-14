@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BevososService", "BevososSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEST", "TEST\TEST.csproj", "{ED45ADFD-53B0-4451-9CD3-82CF667EB592}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{799859AE-4C4D-4EAF-9D87-2A71E2DF638A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED45ADFD-53B0-4451-9CD3-82CF667EB592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED45ADFD-53B0-4451-9CD3-82CF667EB592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED45ADFD-53B0-4451-9CD3-82CF667EB592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED45ADFD-53B0-4451-9CD3-82CF667EB592}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

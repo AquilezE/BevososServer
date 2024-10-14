@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure.Annotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Common;
 
 namespace DataAccess
 {
@@ -17,15 +18,21 @@ namespace DataAccess
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Token> Tokens { get; set; }
 
+        // Default constructor for production
+        public BevososContext() : base("name=BevososContext")
+        {
+        }
+
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            // Unique constraint on User.Email
+            // Unique constraint on User.Username
             modelBuilder.Entity<User>()
-                .Property(u => u.Email)
+                .Property(u => u.Username)
                 .HasColumnAnnotation(
                     IndexAnnotation.AnnotationName,
                     new IndexAnnotation(
-                        new IndexAttribute("IX_UserEmail") { IsUnique = true }));
+                        new IndexAttribute("IX_UserUsername") { IsUnique = true }));
 
             // Unique constraint on Account.Email
             modelBuilder.Entity<Account>()
@@ -35,15 +42,11 @@ namespace DataAccess
                     new IndexAnnotation(
                         new IndexAttribute("IX_AccountEmail") { IsUnique = true }));
 
-            // Configure one-to-one relationship between User and Account
+            // Define the one-to-one relationship between User and Account
             modelBuilder.Entity<User>()
-                .HasRequired(u => u.Account)
-                .WithRequiredPrincipal(a => a.User);
-
-            // Configure one-to-one relationship between Account and Token (if only one token per account)
-            modelBuilder.Entity<Account>()
-                .HasOptional(a => a.Token)
-                .WithRequired(t => t.Account);
+                .HasOptional(u => u.Account)
+                .WithRequired(a => a.User)
+                .WillCascadeOnDelete(true);
 
             base.OnModelCreating(modelBuilder);
         }
