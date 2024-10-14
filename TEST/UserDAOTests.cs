@@ -76,22 +76,6 @@ namespace TEST
         }
 
 
-        [Fact]
-        public void Test_AddUser_AddsUserToDatabase()
-        {
-            // Arrange
-            var userDAO = new UserDAO();
-            var user = new User { UserId = 1, Username = "testUser" };
-
-            // Act
-            userDAO.AddUser(user);
-
-            // Assert
-            var addedUser = userDAO.GetUserById(user.UserId);
-            Assert.NotNull(addedUser);
-            Assert.Equal(user.Username, addedUser.Username);
-        }
-
 
         [Fact]
         public void Test_GetUserById_ReturnsUser_WhenUserIdExists()

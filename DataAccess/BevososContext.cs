@@ -42,11 +42,11 @@ namespace DataAccess
                     new IndexAnnotation(
                         new IndexAttribute("IX_AccountEmail") { IsUnique = true }));
 
-            // Define the one-to-one relationship between User and Account
+            // Define one-to-one relationship between User and Account
             modelBuilder.Entity<User>()
                 .HasOptional(u => u.Account)
                 .WithRequired(a => a.User)
-                .WillCascadeOnDelete(true);
+                .WillCascadeOnDelete(true); // Set cascading delete as needed
 
             base.OnModelCreating(modelBuilder);
         }

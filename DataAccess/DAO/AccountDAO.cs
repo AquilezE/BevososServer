@@ -27,12 +27,17 @@ namespace DataAccess.DAO
             }
         }
 
-        public void AddAccount(Account account)
+
+        public bool AddUserWithAccount(User user, Account account)
         {
             using (var context = new BevososContext())
             {
                 context.Accounts.Add(account);
-                context.SaveChanges();
+                context.Users.Add(user);
+                account.User = user;
+                account.UserId = user.UserId; // Set Account.UserId to the same ID as User.Id
+                int alteredRows = context.SaveChanges();
+                return alteredRows == 2;
             }
         }
 
@@ -46,9 +51,6 @@ namespace DataAccess.DAO
                 return alteredRows == 1;
             }
         }
-
-
-
 
     }
 }

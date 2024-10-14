@@ -28,7 +28,7 @@ namespace BevososService
 
         [OperationContract]
 
-        bool RegisterUser(UserDto user);
+        bool RegisterUser(string email, string username, string password);
 
         [OperationContract]
 

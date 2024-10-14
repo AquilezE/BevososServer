@@ -5,18 +5,16 @@ namespace DataAccess.Models
 {
     public class Account
     {
-        [Key]
-        public int AccountId { get; set; } // Primary Key
+        [Key, ForeignKey("User")]  // UserId is both Primary Key and Foreign Key
+        public int UserId { get; set; } // Foreign key and Primary key for User
 
         [Required]
         [Index(IsUnique = true)]
         [MaxLength(100)]
-        public string Email { get; set; } // Email associated with the account
+        public string Email { get; set; }
 
         [Required]
-        public string PasswordHash { get; set; } // Hashed password
-
-        public int UserId { get; set; } // Foreign key for User
+        public string PasswordHash { get; set; }
 
         public virtual User User { get; set; } // Navigation property to the User
     }

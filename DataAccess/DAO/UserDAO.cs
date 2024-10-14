@@ -39,15 +39,6 @@ namespace DataAccess.DAO
             }
         }
 
-        public void AddUser(User user)
-        {
-            using (var context = new BevososContext())
-            {
-                context.Users.Add(user);
-                context.SaveChanges();
-            }
-        }
-
 
         public int UpdateUserNames(int userId, string username)
         {

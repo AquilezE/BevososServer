@@ -59,6 +59,10 @@
     <Compile Include="Migrations\202410132228082_InitialCreate.Designer.cs">
       <DependentUpon>202410132228082_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202410140828264_UpdateUserAccountRelationship.cs" />
+    <Compile Include="Migrations\202410140828264_UpdateUserAccountRelationship.Designer.cs">
+      <DependentUpon>202410140828264_UpdateUserAccountRelationship.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Token.cs" />
@@ -73,6 +77,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202410132228082_InitialCreate.resx">
       <DependentUpon>202410132228082_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202410140828264_UpdateUserAccountRelationship.resx">
+      <DependentUpon>202410140828264_UpdateUserAccountRelationship.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -14,12 +14,21 @@ namespace DataAccess.DAO
         {
             using (var context = new BevososContext())
             {
-        
-                var token = new Models.Token();
-                token.Email = email;
-                token.TokenValue = new TokenGenerator().GenerateToken();
-                token.ExpiryDate = DateTime.Now.AddMinutes(15);
-                context.Tokens.Add(token);
+                var existingToken = context.Tokens.FirstOrDefault(t => t.Email == email);
+                if (existingToken != null)
+                {
+                    existingToken.TokenValue = new TokenGenerator().GenerateToken();
+                    existingToken.ExpiryDate = DateTime.Now.AddMinutes(15);
+                }
+                else
+                {
+                    var token = new Models.Token();
+                    token.Email = email;
+                    token.TokenValue = new TokenGenerator().GenerateToken();
+                    token.ExpiryDate = DateTime.Now.AddMinutes(15);
+                    context.Tokens.Add(token);
+                }
+
                 int affectedRows = context.SaveChanges();
                 return affectedRows;
             }
@@ -29,7 +38,7 @@ namespace DataAccess.DAO
         {
             using (var context = new BevososContext())
             {
-                return context.Tokens.Any(t => t.Email == email);
+                return context.Tokens.Any(t => t.Email == email && t.ExpiryDate>DateTime.Now);
             }
         }
 
@@ -55,6 +64,7 @@ namespace DataAccess.DAO
                 return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
             }
         }
+
 
         public bool DeleteToken(string token, string email)
         {

@@ -22,7 +22,7 @@ namespace TEST
 
         public AccountDALTests(DatabaseFixture fixture)
         {
-                _fixture = fixture;
+            _fixture = fixture;
         }
 
         [Fact]
@@ -53,7 +53,7 @@ namespace TEST
 
         }
 
-        [Theory] 
+        [Theory]
         [InlineData("accountdal_test@example.com", "newHashedPassword")]
         public void UpdatePasswordTest(string email, string newHashedPassword)
         {
@@ -66,34 +66,25 @@ namespace TEST
 
         }
 
+
         [Fact]
-        public void AddAccount_ShouldAddAccountToDatabase()
+        public void AddUserWithAccount_ShouldReturnTrue_WhenUserIsAdded()
         {
-            // Arrange
+            bool result;
             AccountDAO accountDAO = new AccountDAO();
-            Account account = new Account
-            {
-                Email = "newaccount@example.com",
-                PasswordHash = "hashed_password",
-                User = new User
-                {
-                    Username = "NewDalUser",
-                    ProfilePictureId = 2
-                }
-            };
+            User user = new User();
+            user.Username = "newUser";
+            Account account = new Account();
+            account.Email = "newAccountWithUser@email.com";
+            account.PasswordHash = "passwordHash";
 
-            // Act
-            accountDAO.AddAccount(account);
+            result = accountDAO.AddUserWithAccount(user, account);
 
-            // Assert
-            using (var context = new BevososContext())
-            {
-                Account addedAccount = context.Accounts.FirstOrDefault(a => a.Email == "newaccount@example.com");
-                Assert.NotNull(addedAccount);
-                Assert.Equal("newaccount@example.com", addedAccount.Email);
-                Assert.Equal("NewDalUser", addedAccount.User.Username);
-            }
-        }
+            var accountResult = accountDAO.GetAccountByEmail(account.Email);
+            var userResult = new UserDAO().GetUserByEmail(account.Email);
+
+            Assert.Equal(userResult.UserId, accountResult.UserId);
+        } 
     }
 }
 

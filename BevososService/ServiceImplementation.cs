@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Principal;
 using System.ServiceModel;
 using System.Text;
 using BevososService.Utils;
 using DataAccess.DAO;
+using DataAccess.Models;
+using static BevososService.Utils.Hasher;
 
 namespace BevososService
 {
@@ -24,9 +27,16 @@ namespace BevososService
             return new UserDAO().UsernameExists(username);
         }
 
-        public bool RegisterUser(UserDto user)
+        public bool RegisterUser(string email, string username, string password)
         {
-            throw new NotImplementedException();
+            User user = new User();
+            user.Username = username;
+
+            Account account = new Account();
+            account.Email = email;
+            account.PasswordHash = SimpleHashing.HashPassword(password);
+
+            return new AccountDAO().AddUserWithAccount(user, account);
         }
 
         public void SendToken(string email)
@@ -58,8 +68,32 @@ namespace BevososService
         
         public UserDto LogIn(string email, string password)
         {
-            throw new NotImplementedException();
-        }
+            AccountDAO accountDAO = new AccountDAO();
+            UserDAO userDAO = new UserDAO();
 
+
+            Account account = accountDAO.GetAccountByEmail(email);
+
+            if (account == null)
+            {
+                return null;
+            }
+
+                if (SimpleHashing.VerifyPassword(password, account.PasswordHash))
+                {
+                    User user = userDAO.GetUserById(account.UserId);
+
+                    UserDto userDto = new UserDto
+                    {
+                        UserId = user.UserId,
+                        Username = user.Username,
+                        Email = account.Email,
+                        ProfilePictureId = user.ProfilePictureId
+                    };
+
+                    return userDto;
+                }
+            return null;
+        }
     }
 }
