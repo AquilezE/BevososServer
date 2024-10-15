@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Models;
@@ -14,9 +17,6 @@ namespace BevososService
 {
     public partial class ServiceImplementation : IUsersManager
     {
-
-
-
         public bool IsEmailTaken(string email)
         {
              return new AccountDAO().EmailExists(email);
@@ -94,6 +94,80 @@ namespace BevososService
                     return userDto;
                 }
             return null;
+        }
+
+
+    }
+
+
+
+    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Reentrant)]
+
+    public partial class ServiceImplementation: ILobbyManager
+    {
+
+        private static int _currentLobbyId = 4;
+        static ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>> activeLobbiesDict = new ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>();
+
+
+        private int GenerateUniqueLobbyId()
+        {
+            return Interlocked.Increment(ref _currentLobbyId);
+        }
+
+
+        public void NewLobbyCreated(int userId)
+        {
+
+            int lobbyId = GenerateUniqueLobbyId();
+
+
+            ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
+            if (!activeLobbiesDict.ContainsKey(lobbyId))
+            {
+                activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+                
+            }
+
+            activeLobbiesDict[lobbyId].TryAdd(userId, callback);
+            callback.OnNewLobbyCreated(lobbyId, userId);  
+        }
+
+        public void JoinLobby(int lobbyId, UserDto userDto)
+        {
+            ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
+            if (!activeLobbiesDict.ContainsKey(lobbyId))
+            {
+                activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+            }
+            activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
+
+            foreach (var user in activeLobbiesDict[lobbyId])
+            {
+                user.Value.OnJoinLobby(lobbyId, userDto);
+            }
+        }
+
+        public void LeaveLobby(int lobbyId, int userId)
+        {
+            activeLobbiesDict[lobbyId].TryRemove(userId, out ILobbyManagerCallback callback);
+            foreach (var user in activeLobbiesDict[lobbyId])
+            {
+                user.Value.OnLeaveLobby(lobbyId, userId);
+            }
+        }
+
+        public void SendMessage(int lobbyId, int userId, string message)
+        {
+            foreach (var user in activeLobbiesDict[lobbyId])
+            {
+                user.Value.OnSendMessage(userId, message);
+            }
+        }
+
+        public void KickUser(int lobbyId, int userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -11,15 +11,15 @@ namespace DataAccess.Models
     public class Token
     {
         [Key]
-        public int TokenId { get; set; } // Primary Key
+        public int TokenId { get; set; }
 
         [Required]
-        public string Email { get; set; } // The email for token verification
+        public string Email { get; set; }
 
         [Required]
-        public string TokenValue { get; set; } // 6-digit token
+        public string TokenValue { get; set; }
 
         [Required]
-        public DateTime ExpiryDate { get; set; } // Token expiry time
+        public DateTime ExpiryDate { get; set; } 
     }
 }

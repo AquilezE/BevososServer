@@ -21,32 +21,30 @@ namespace DataAccess
         // Default constructor for production
         public BevososContext() : base("name=BevososContext")
         {
+
         }
 
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            // Unique constraint on User.Username
             modelBuilder.Entity<User>()
                 .Property(u => u.Username)
                 .HasColumnAnnotation(
                     IndexAnnotation.AnnotationName,
                     new IndexAnnotation(
-                        new IndexAttribute("IX_UserUsername") { IsUnique = true }));
+                        new IndexAttribute("IX_UserUsername") { IsUnique = true })); //Unique
 
-            // Unique constraint on Account.Email
             modelBuilder.Entity<Account>()
                 .Property(a => a.Email)
                 .HasColumnAnnotation(
                     IndexAnnotation.AnnotationName,
                     new IndexAnnotation(
-                        new IndexAttribute("IX_AccountEmail") { IsUnique = true }));
+                        new IndexAttribute("IX_AccountEmail") { IsUnique = true })); //Unique
 
-            // Define one-to-one relationship between User and Account
             modelBuilder.Entity<User>()
                 .HasOptional(u => u.Account)
                 .WithRequired(a => a.User)
-                .WillCascadeOnDelete(true); // Set cascading delete as needed
+                .WillCascadeOnDelete(true); // Cascadeo
 
             base.OnModelCreating(modelBuilder);
         }

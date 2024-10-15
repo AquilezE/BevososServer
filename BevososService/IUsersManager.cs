@@ -33,7 +33,7 @@ namespace BevososService
         [OperationContract]
 
         UserDto LogIn(string email, string password);
-        
+
     }
 
 
