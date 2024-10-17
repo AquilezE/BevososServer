@@ -39,15 +39,15 @@ namespace BevososService
             return new AccountDAO().AddUserWithAccount(user, account);
         }
 
-        public void SendToken(string email)
+        public bool SendToken(string email)
         {
             if(new TokenDAO().HasToken(email))
             {
-               EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
+                return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
             }else
             {
                 new TokenDAO().AsignToken(email);
-                EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
+                return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
             }
         }
 
@@ -63,9 +63,6 @@ namespace BevososService
             }
             return false;
         }
-
-
-        
         public UserDto LogIn(string email, string password)
         {
             AccountDAO accountDAO = new AccountDAO();
@@ -101,13 +98,22 @@ namespace BevososService
 
 
 
-    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Reentrant)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 
     public partial class ServiceImplementation: ILobbyManager
     {
 
         private static int _currentLobbyId = 4;
+
+        // Lobby ID -> (User ID -> Callback)
         static ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>> activeLobbiesDict = new ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>();
+
+        // Callback -> (Lobby ID, User ID)
+        static ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)> clientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
+
+        // User ID -> UserDto
+        private static ConcurrentDictionary<int, UserDto> connectedUsersDict = new ConcurrentDictionary<int, UserDto>();
+
 
 
         private int GenerateUniqueLobbyId()
@@ -116,58 +122,163 @@ namespace BevososService
         }
 
 
-        public void NewLobbyCreated(int userId)
+        public void NewLobbyCreated(UserDto userDto)
         {
-
             int lobbyId = GenerateUniqueLobbyId();
 
-
             ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
-            if (!activeLobbiesDict.ContainsKey(lobbyId))
-            {
-                activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
-                
-            }
+            ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
-            activeLobbiesDict[lobbyId].TryAdd(userId, callback);
-            callback.OnNewLobbyCreated(lobbyId, userId);  
+            clientChannel.Closed += ClientChannel_Closed;
+            clientChannel.Faulted += ClientChannel_Faulted;
+
+            activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+            activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
+
+            clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+            connectedUsersDict.TryAdd(userDto.UserId, userDto);
+
+            callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
         }
 
         public void JoinLobby(int lobbyId, UserDto userDto)
         {
             ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
+            ICommunicationObject clientChannel = (ICommunicationObject)callback;
+
+            clientChannel.Closed += ClientChannel_Closed;
+            clientChannel.Faulted += ClientChannel_Faulted;
+
             if (!activeLobbiesDict.ContainsKey(lobbyId))
             {
-                activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+                //NEEDS TO SEND A MESSAGE TO THE CLIENT
+                return;
             }
+
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
+            clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+
+            connectedUsersDict.TryAdd(userDto.UserId, userDto);
+
+            var existingUsers = activeLobbiesDict[lobbyId]
+                .Where(u => u.Key != userDto.UserId)
+                .Select(u => connectedUsersDict[u.Key])
+                .ToList();
+
+            callback.OnLobbyUsersUpdate(lobbyId, existingUsers);
+
 
             foreach (var user in activeLobbiesDict[lobbyId])
             {
-                user.Value.OnJoinLobby(lobbyId, userDto);
+                if (user.Key != userDto.UserId)
+                {
+                    try
+                    {
+                        user.Value.OnJoinLobby(lobbyId, userDto);
+                    }
+                    catch (Exception)
+                    {
+                        RemoveClient(user.Value);
+                    }
+                }
             }
+        
         }
 
         public void LeaveLobby(int lobbyId, int userId)
         {
-            activeLobbiesDict[lobbyId].TryRemove(userId, out ILobbyManagerCallback callback);
-            foreach (var user in activeLobbiesDict[lobbyId])
-            {
-                user.Value.OnLeaveLobby(lobbyId, userId);
-            }
+
+            RemoveClientFromLobby(lobbyId, userId);
+
+            connectedUsersDict.TryRemove(userId, out _);
+
         }
 
         public void SendMessage(int lobbyId, int userId, string message)
         {
             foreach (var user in activeLobbiesDict[lobbyId])
             {
-                user.Value.OnSendMessage(userId, message);
+                try { 
+                    user.Value.OnSendMessage(userId, message);
+                }catch(Exception)
+                {
+                    RemoveClient(user.Value);
+                }
             }
         }
 
         public void KickUser(int lobbyId, int userId)
         {
             throw new NotImplementedException();
+        }
+
+        private void ClientChannel_Closed(object sender, EventArgs e)
+        {
+            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
+            RemoveClient(callback);
+            Console.WriteLine("Client Closed");
+        }
+
+        private void ClientChannel_Faulted(object sender, EventArgs e)
+        {
+            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
+            RemoveClient(callback);
+            Console.WriteLine("Client faulted");
+        }
+
+        private void RemoveClient(ILobbyManagerCallback callback)
+        {
+            if (clientCallbackMapping.TryRemove(callback, out var clientInfo))
+            {
+                int lobbyId = clientInfo.LobbyId;
+                int userId = clientInfo.UserId;
+
+                RemoveClientFromLobby(lobbyId, userId);
+
+                connectedUsersDict.TryRemove(userId, out _);
+            }
+        }
+
+        private void RemoveClientFromLobby(int lobbyId, int userId)
+        {
+            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            {
+                lobby.TryRemove(userId, out var callback);
+
+                clientCallbackMapping.TryRemove(callback, out _);
+                Console.WriteLine(userId + " removed from lobby: " + lobbyId);
+                foreach (var user in lobby)
+                {
+                    try
+                    {
+                        user.Value.OnLeaveLobby(lobbyId, userId);
+                        
+                    }
+                    catch (Exception)
+                    {
+                        RemoveClient(user.Value);
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    public partial class ServiceImplementation : ILobbyChecker
+    {
+        public bool IsLobbyOpen(int lobbyId)
+        {
+            return activeLobbiesDict.ContainsKey(lobbyId);
+        }
+
+        public bool IsLobbyFull(int lobbyId)
+        {
+            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            {
+                return lobby.Count >= 4;
+            }
+            return false;
         }
     }
 }

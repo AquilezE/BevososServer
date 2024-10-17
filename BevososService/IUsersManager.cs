@@ -20,7 +20,7 @@ namespace BevososService
 
 
         [OperationContract]
-        void SendToken(string email);
+        bool SendToken(string email);
 
         [OperationContract]
         bool VerifyToken(string email, string token);

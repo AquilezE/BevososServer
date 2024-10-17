@@ -14,7 +14,7 @@ namespace BevososService
     public interface ILobbyManager
     {
         [OperationContract(IsOneWay = true)]
-        void NewLobbyCreated(int UserId);
+        void NewLobbyCreated(UserDto userDto);
 
         [OperationContract(IsOneWay = true)]
         void JoinLobby(int lobbyId, UserDto userDto);
@@ -44,6 +44,9 @@ namespace BevososService
         [OperationContract]
         void OnSendMessage(int UserId, string message);
 
+        [OperationContract]
+        void OnLobbyUsersUpdate(int lobbyId, List<UserDto> users);
+
     }
 
     [ServiceContract]
@@ -55,7 +58,4 @@ namespace BevososService
         [OperationContract]
         bool IsLobbyFull(int lobbyId);
     }
-
-
-
 }

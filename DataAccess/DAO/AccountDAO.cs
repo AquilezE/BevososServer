@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,9 +36,17 @@ namespace DataAccess.DAO
                 context.Accounts.Add(account);
                 context.Users.Add(user);
                 account.User = user;
-                account.UserId = user.UserId; // Set Account.UserId to the same ID as User.Id
-                int alteredRows = context.SaveChanges();
-                return alteredRows == 2;
+                account.UserId = user.UserId;
+                try
+                {
+                    int alteredRows = context.SaveChanges();
+                    return alteredRows == 2;
+                }
+                catch (DbUpdateException ex)
+                {
+                    //ask revo to set up log4net :/
+                    return false;
+                }
             }
         }
 
