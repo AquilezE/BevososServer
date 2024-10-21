@@ -281,4 +281,33 @@ namespace BevososService
             return false;
         }
     }
+
+    public partial class ServiceImplementation : IProfileManager
+    {
+        public void UpdateProfile(int userId, string username, int profilePictureId)
+        {
+            IProfileManagerCallback callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
+
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.GetUserById(userId);
+            try{
+                if (user != null)
+                {
+                    user.Username = username;
+                    user.ProfilePictureId = profilePictureId;
+
+                    bool result = userDAO.UpdateUser(user);
+
+                    if (result)
+                    {
+                        callback.OnProfileUpdate(username, profilePictureId, null);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
 }
