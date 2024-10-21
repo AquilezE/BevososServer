@@ -93,6 +93,12 @@ namespace BevososService
             return null;
         }
 
+        public bool RecoverPassword(string email, string password)
+        {
+            string hashedPassword = SimpleHashing.HashPassword(password);
+            AccountDAO accountDAO = new AccountDAO();
+            return accountDAO.UpdatePasswordByEmail(email, hashedPassword);
+        }
 
     }
 

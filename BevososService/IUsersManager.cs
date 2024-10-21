@@ -34,6 +34,10 @@ namespace BevososService
 
         UserDto LogIn(string email, string password);
 
+        [OperationContract]
+        bool RecoverPassword(string email, string newPasswordHash);
+
+        
     }
 
 
