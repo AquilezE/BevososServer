@@ -63,7 +63,6 @@ namespace TEST
             result = accountDAO.UpdatePasswordByEmail(email, newHashedPassword);
 
             Assert.True(result);
-
         }
 
 
