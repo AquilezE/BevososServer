@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccess.Models;
@@ -69,8 +71,15 @@ namespace DataAccess.DAO
             }
         }
 
-
-
+        public bool UpdateUser(User user)
+        {
+            using (var context = new BevososContext())
+            {
+                context.Entry(user).State = EntityState.Modified;
+                int alteredRows = context.SaveChanges();
+                return alteredRows == 1;
+            }
+        }
 
     }
 }
