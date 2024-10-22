@@ -11,6 +11,15 @@ namespace DataAccess.DAO
 {
     public class AccountDAO
     {
+        public Account GetAccountByUserId(int accountId)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.Accounts.Include(a => a.User)
+                                       .FirstOrDefault(a => a.UserId == accountId);
+            }
+        }
+
         public Account GetAccountByEmail(string email)
         {
             using (var context = new BevososContext())
@@ -55,6 +64,17 @@ namespace DataAccess.DAO
             using (var context = new BevososContext())
             {
                 var account = context.Accounts.FirstOrDefault(a => a.Email == email);
+                account.PasswordHash = newHashedPassword;
+                int alteredRows = context.SaveChanges();
+                return alteredRows == 1;
+            }
+        }
+
+        public bool UpdatePasswordByUserId(int userId, string newHashedPassword)
+        {
+            using (var context = new BevososContext())
+            {
+                var account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
                 account.PasswordHash = newHashedPassword;
                 int alteredRows = context.SaveChanges();
                 return alteredRows == 1;

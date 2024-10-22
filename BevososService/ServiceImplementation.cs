@@ -290,15 +290,64 @@ namespace BevososService
 
     public partial class ServiceImplementation : IProfileManager
     {
+        public void ChangePassword(int userId, string oldPassword, string newPassword)
+        {
+            IProfileManagerCallback callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
+
+            AccountDAO accountDAO = new AccountDAO();
+            Account account = accountDAO.GetAccountByUserId(userId);
+
+            if (SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
+            {
+                string newHashedPassword = SimpleHashing.HashPassword(newPassword);
+                bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
+
+                if (result)
+                {
+                    callback.OnPasswordChange(null);
+                }
+                else
+                {
+                    callback.OnPasswordChange("Failed to update password.");
+                }
+            }
+            else
+            {
+                callback.OnPasswordChange("Incorrect password.");
+            }
+
+        }
+
         public void UpdateProfile(int userId, string username, int profilePictureId)
         {
             IProfileManagerCallback callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
 
             UserDAO userDAO = new UserDAO();
             User user = userDAO.GetUserById(userId);
-            try{
-                if (user != null)
+
+            try
+            {
+                if (new UserDAO().UsernameExists(username) == true)
                 {
+                    user.ProfilePictureId = profilePictureId;
+                    bool result = userDAO.UpdateUser(user);
+
+                    if (result)
+                    {
+                        callback.OnProfileUpdate( "Not changed", profilePictureId, "Username exists");
+                    }
+                }
+                else if(username == "Not changed"){
+                    user.ProfilePictureId = profilePictureId;
+                    bool result = userDAO.UpdateUser(user);
+
+                    if (result)
+                    {
+                        callback.OnProfileUpdate(username, profilePictureId, "");
+                    }
+                }
+                else {
+                    
                     user.Username = username;
                     user.ProfilePictureId = profilePictureId;
 
@@ -306,9 +355,10 @@ namespace BevososService
 
                     if (result)
                     {
-                        callback.OnProfileUpdate(username, profilePictureId, null);
+                        callback.OnProfileUpdate(username, profilePictureId, "");
                     }
                 }
+
             }
             catch (Exception e)
             {
