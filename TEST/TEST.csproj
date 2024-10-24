@@ -90,7 +90,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccountDALTests.cs" />
+    <Compile Include="AccountDAOTests.cs" />
     <Compile Include="BlockedDAOTest.cs" />
     <Compile Include="FriendRequestDAOTest.cs" />
     <Compile Include="FriendshipsDAOTests.cs" />

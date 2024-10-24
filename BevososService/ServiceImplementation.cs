@@ -8,6 +8,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using BevososService.Utils;
+using BevososService.DTOs; 
 using DataAccess.DAO;
 using DataAccess.Models;
 using static BevososService.Utils.Hasher;

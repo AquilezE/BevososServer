@@ -115,6 +115,8 @@ namespace DataAccess.DAO
             }
         }
 
+
+        //this stuff is taking way to long! 4 seconds is insanity
         public List<FriendRequest> GetPendingFriendRequests(int userId)
         {
             using (var context = new BevososContext())

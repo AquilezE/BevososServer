@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
+using BevososService.DTOs;
 using System.Text;
 
 namespace BevososService
@@ -39,24 +40,6 @@ namespace BevososService
 
         
     }
-
-
-    [DataContract]
-    public class UserDto
-    {
-        [DataMember]
-        public int UserId { get; set; }
-
-        [DataMember]
-        public string Username { get; set; }
-
-        [DataMember]
-        public string Email { get; set; }
-
-        [DataMember]
-        public int ProfilePictureId { get; set; }
-    }
-
 
 
 }

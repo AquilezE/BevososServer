@@ -14,13 +14,13 @@ using Xunit;
 
 namespace TEST
 {
-    public class AccountDALTests : IClassFixture<DatabaseFixture>
+    public class AccountDAOTests : IClassFixture<DatabaseFixture>
     {
 
 
         private readonly DatabaseFixture _fixture;
 
-        public AccountDALTests(DatabaseFixture fixture)
+        public AccountDAOTests(DatabaseFixture fixture)
         {
             _fixture = fixture;
         }

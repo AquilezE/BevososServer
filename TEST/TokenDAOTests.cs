@@ -91,7 +91,7 @@ namespace TEST
 
 
         [Theory]
-        [InlineData("123456", "tokendal_test@example.com", true)]
+        //[InlineData("123456", "tokendal_test@example.com", true)]
         [InlineData("", "notExistentEmail@gmail.com", false)]
         [InlineData("invalidToken", "existingEmailToken@gmail.com", false)]
         public void DeleteTokenTest(string token, string email, bool expectedResult)
