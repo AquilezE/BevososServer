@@ -11,17 +11,17 @@ namespace DataAccess.DAO
     { 
         public bool AddFriendship(int user1Id, int user2Id)
         {
-
+            return true;
         }
 
         public bool RemoveFriendship(int user1Id, int user2Id)
         {
-
+            return true;
         }
 
         public List<Friendship> GetFriendshipList(int userId)
         {
-
+            return new List<Friendship>();
         }
     }
 }
