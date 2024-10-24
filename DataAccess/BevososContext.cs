@@ -22,7 +22,7 @@ namespace DataAccess
         public DbSet<Blocked> BlockedList { get; set; }
 
 
-        // Default constructor for production
+        // Default constructor
         public BevososContext() : base("name=BevososContext")
         {
 

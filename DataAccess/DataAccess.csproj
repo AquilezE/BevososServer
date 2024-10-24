@@ -55,7 +55,7 @@
     <Compile Include="DAO\AccountDAO.cs" />
     <Compile Include="DAO\BlockedDAO.cs" />
     <Compile Include="DAO\FriendRequestDAO.cs" />
-    <Compile Include="DAO\FriendshipsDAO.cs" />
+    <Compile Include="DAO\FriendshipDAO.cs" />
     <Compile Include="DAO\TokenDAO.cs" />
     <Compile Include="DAO\UserDAO.cs" />
     <Compile Include="Migrations\202410132228082_InitialCreate.cs" />
