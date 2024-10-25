@@ -86,7 +86,7 @@ namespace TEST
         }
 
         [Fact]
-        public void Test_UpdatePasswordByUserId_ReturnsTrue_WhenUserIdExists()
+        public void Test_UpdatePasswordByUserId_ReturnsTrue_WhenAccountExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -115,6 +115,29 @@ namespace TEST
 
                 Assert.True(result);
             }
+        }
+
+        [Fact]
+        public void Test_UpdatePasswordByUserId_ReturnsFalse_WhenAccountDoesNotExist()
+        {
+            
+            var accountDAO = new AccountDAO();
+            var nonExistingAccount = new Account
+            {
+                Email = "notExistingUser@gmail.com",
+                PasswordHash = "hashed_password",
+                UserId = -1,
+                User = new User
+                {
+                    UserId = -1,
+                    Username = "NonExistentUser",
+                    ProfilePictureId = 2,
+                }
+            };
+            
+            var result = accountDAO.UpdatePasswordByUserId(nonExistingAccount.UserId, "newPasswordHashed");
+
+            Assert.False(result);
         }
     }
 }

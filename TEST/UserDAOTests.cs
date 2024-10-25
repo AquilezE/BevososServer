@@ -192,8 +192,18 @@ namespace TEST
         {
             // Arrange
             var userDAO = new UserDAO();
-            var nonExistingUser = new User { UserId = 123 };
-
+            var nonExistingUser = new User
+            {
+                UserId = -1,
+                Username = "NonExistentUser",
+                ProfilePictureId = 2,
+                 Account = new Account
+                 {
+                     Email = "notExistingUser@gmail.com",
+                     PasswordHash = "hashed_password",
+                     UserId = -1
+                 }
+            };
             // Act
             var result = userDAO.UpdateUser(nonExistingUser);
 

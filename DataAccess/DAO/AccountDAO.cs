@@ -72,12 +72,22 @@ namespace DataAccess.DAO
 
         public bool UpdatePasswordByUserId(int userId, string newHashedPassword)
         {
+            try { 
             using (var context = new BevososContext())
             {
                 var account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
                 account.PasswordHash = newHashedPassword;
                 int alteredRows = context.SaveChanges();
                 return alteredRows == 1;
+            }
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
             }
         }
 
