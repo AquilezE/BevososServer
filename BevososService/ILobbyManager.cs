@@ -27,26 +27,32 @@ namespace BevososService
         void LeaveLobby(int lobbyId, int UserId);
 
         [OperationContract(IsOneWay = true)]
-        void KickUser(int lobbyId, int UserId);
+        void KickUser(int lobbyId, int kickerId, int targetUserId, string reason);
     }
 
     [ServiceContract]
     internal interface ILobbyManagerCallback
     {
-        [OperationContract]
+        [OperationContract(IsOneWay = true)]
         void OnNewLobbyCreated(int lobbyId, int UserId);
 
-        [OperationContract]
+        [OperationContract(IsOneWay = true)]
         void OnJoinLobby(int lobbyId, UserDto userDto);
 
-        [OperationContract]
+        [OperationContract(IsOneWay = true)]
         void OnLeaveLobby(int lobbyId, int UserId);
 
-        [OperationContract]
+        [OperationContract(IsOneWay = true)]
         void OnSendMessage(int UserId, string message);
-
-        [OperationContract]
+        
+        [OperationContract(IsOneWay = true)]
         void OnLobbyUsersUpdate(int lobbyId, List<UserDto> users);
+
+        [OperationContract(IsOneWay = true)]
+        void OnLeaderChanged(int lobbyId, int newLeaderId);
+
+        [OperationContract(IsOneWay = true)]
+        void OnKicked(int lobbyId, string reason);
 
     }
 
