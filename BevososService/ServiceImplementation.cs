@@ -120,13 +120,14 @@ namespace BevososService
         // User ID -> UserDto
         private static ConcurrentDictionary<int, UserDto> connectedUsersDict = new ConcurrentDictionary<int, UserDto>();
 
+        //  ID -> Lobby ID
+        private static ConcurrentDictionary<int, int> lobbyLeaders = new ConcurrentDictionary<int, int>();
 
 
         private int GenerateUniqueLobbyId()
         {
             return Interlocked.Increment(ref _currentLobbyId);
         }
-
 
         public void NewLobbyCreated(UserDto userDto)
         {
@@ -141,12 +142,13 @@ namespace BevososService
             activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
 
+            lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
+
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
             connectedUsersDict.TryAdd(userDto.UserId, userDto);
 
             callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
         }
-
         public void JoinLobby(int lobbyId, UserDto userDto)
         {
             ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
@@ -157,7 +159,6 @@ namespace BevososService
 
             if (!activeLobbiesDict.ContainsKey(lobbyId))
             {
-                //NEEDS TO SEND A MESSAGE TO THE CLIENT
                 return;
             }
 
@@ -173,6 +174,10 @@ namespace BevososService
 
             callback.OnLobbyUsersUpdate(lobbyId, existingUsers);
 
+            if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId))
+            {
+                callback.OnLeaderChanged(lobbyId, leaderId);
+            }
 
             foreach (var user in activeLobbiesDict[lobbyId])
             {
@@ -190,14 +195,9 @@ namespace BevososService
             }
         
         }
-
         public void LeaveLobby(int lobbyId, int userId)
         {
-
-            RemoveClientFromLobby(lobbyId, userId);
-
-            connectedUsersDict.TryRemove(userId, out _);
-
+            HandleUserLeavingLobby(lobbyId, userId);
         }
 
         public void SendMessage(int lobbyId, int userId, string message)
@@ -213,25 +213,43 @@ namespace BevososService
             }
         }
 
-        public void KickUser(int lobbyId, int userId)
+        public void KickUser(int lobbyId, int kickerId, int targetUserId, string reason)
         {
-            throw new NotImplementedException();
+            if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == kickerId)
+            {
+                if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+                {
+                    if (lobby.TryGetValue(targetUserId, out var targetCallback))
+                    {
+                        try
+                        {
+                            targetCallback.OnKicked(lobbyId, reason);
+
+                            RemoveClientFromLobby(lobbyId, targetUserId);
+                            connectedUsersDict.TryRemove(targetUserId, out _);
+                        }
+                        catch (Exception)
+                        {
+                            RemoveClient(targetCallback);
+                        }
+                    }
+                }
+            }
         }
 
         private void ClientChannel_Closed(object sender, EventArgs e)
         {
-            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
+            var callback = (ILobbyManagerCallback)sender;
             RemoveClient(callback);
             Console.WriteLine("Client Closed");
         }
 
         private void ClientChannel_Faulted(object sender, EventArgs e)
         {
-            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
+            var callback = (ILobbyManagerCallback)sender;
             RemoveClient(callback);
-            Console.WriteLine("Client faulted");
+            Console.WriteLine("Client Faulted");
         }
-
         private void RemoveClient(ILobbyManagerCallback callback)
         {
             if (clientCallbackMapping.TryRemove(callback, out var clientInfo))
@@ -239,34 +257,73 @@ namespace BevososService
                 int lobbyId = clientInfo.LobbyId;
                 int userId = clientInfo.UserId;
 
-                RemoveClientFromLobby(lobbyId, userId);
-
-                connectedUsersDict.TryRemove(userId, out _);
+                HandleUserLeavingLobby(lobbyId, userId);
             }
+
         }
 
         private void RemoveClientFromLobby(int lobbyId, int userId)
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
             {
-                lobby.TryRemove(userId, out var callback);
-
-                clientCallbackMapping.TryRemove(callback, out _);
-                Console.WriteLine(userId + " removed from lobby: " + lobbyId);
-                foreach (var user in lobby)
+                if (lobby.TryRemove(userId, out var callback))
                 {
-                    try
+                    Console.WriteLine($"{userId} removed from lobby: {lobbyId}");
+
+                    foreach (var user in lobby.Values)
                     {
-                        user.Value.OnLeaveLobby(lobbyId, userId);
-                        
-                    }
-                    catch (Exception)
-                    {
-                        RemoveClient(user.Value);
+                        try
+                        {
+                            user.OnLeaveLobby(lobbyId, userId);
+                        }
+                        catch (Exception)
+                        {
+                            RemoveClient(user);
+                        }
                     }
                 }
+
+                clientCallbackMapping.TryRemove(callback, out _);
             }
         }
+
+        private void HandleUserLeavingLobby(int lobbyId, int userId)
+        {
+            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            {
+                if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == userId)
+                {
+                    var remainingUsers = lobby.Keys.Where(k => k != userId).ToList();
+                    if (remainingUsers.Any())
+                    {
+                        int newLeaderId = remainingUsers.First();
+                        lobbyLeaders.TryUpdate(lobbyId, newLeaderId, userId);
+
+                        foreach (var user in lobby.Values)
+                        {
+                            try
+                            {
+                                user.OnLeaderChanged(lobbyId, newLeaderId);
+                            }
+                            catch (Exception)
+                            {
+                                RemoveClient(user);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        activeLobbiesDict.TryRemove(lobbyId, out _);
+                        lobbyLeaders.TryRemove(lobbyId, out _);
+                    }
+                }
+
+                RemoveClientFromLobby(lobbyId, userId);
+            }
+
+            connectedUsersDict.TryRemove(userId, out _);
+        }
+
 
     }
 
