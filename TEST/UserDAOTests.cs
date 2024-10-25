@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using DataAccess;
 using DataAccess.DAO;
 using DataAccess.Models;
@@ -134,20 +135,70 @@ namespace TEST
         [Fact]
         public void Test_UpdateUserNames_UpdatesUsernameInDatabase()
         {
+            using (var scope = new TransactionScope())
+            {
+                var userDao = new UserDAO();
+                User userTest = userDao.GetUserByEmail("accountdal_test@example.com");
+                int userId = userTest.UserId;
+                var newUsername = "newUsername";
 
-            var userDao = new UserDAO();
-            User userTest= userDao.GetUserByEmail("accountdal_test@example.com");
-            int userId = userTest.UserId;
-            var newUsername = "newUsername";
 
+                // Act
+                userDao.UpdateUserNames(userId, newUsername);
+
+                // Assert
+                var updatedUser = userDao.GetUserById(userId);
+                Assert.NotNull(updatedUser);
+                Assert.Equal(newUsername, updatedUser.Username);
+            }
+        }
+
+        [Fact]
+        public void Test_UpdateUser_ReturnsTrueIfUpdatesUserInDataBase()
+        {
+
+            using (var scope = new TransactionScope())
+            {
+                using (var context = new BevososContext())
+                {
+                    var user1 = new User
+                    {
+                        Username = "User1",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "userTestUpdate@example.com",
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+
+                    context.Users.Add(user1);
+                    context.SaveChanges();
+                }
+                    var userDao = new UserDAO();
+                    User userTest = userDao.GetUserByEmail("userTestUpdate@example.com");
+
+                    userTest.Username = "newUsername";
+                    userTest.ProfilePictureId = 2;
+
+                    var result = userDao.UpdateUser(userTest);
+
+                    Assert.True(result);
+            }
+        }
+
+        [Fact]
+        public void Test_UpdateUser_ReturnsFalseIfUpdatesUserInDataBase()
+        {
+            // Arrange
+            var userDAO = new UserDAO();
+            var nonExistingUser = new User { UserId = 123 };
 
             // Act
-            userDao.UpdateUserNames(userId, newUsername);
+            var result = userDAO.UpdateUser(nonExistingUser);
 
             // Assert
-            var updatedUser = userDao.GetUserById(userId);
-            Assert.NotNull(updatedUser);
-            Assert.Equal(newUsername, updatedUser.Username);
+            Assert.False(result);
         }
     }
 }

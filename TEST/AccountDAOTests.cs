@@ -83,7 +83,39 @@ namespace TEST
             var userResult = new UserDAO().GetUserByEmail(account.Email);
 
             Assert.Equal(userResult.UserId, accountResult.UserId);
-        } 
+        }
+
+        [Fact]
+        public void Test_UpdatePasswordByUserId_ReturnsTrue_WhenUserIdExists()
+        {
+            using (var scope = new TransactionScope())
+            {
+                using (var context = new BevososContext())
+                {
+                    var user1 = new User
+                    {
+                        Username = "User1",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "accountTestUpdate@example.com",
+                            PasswordHash = "test_hashed_password"
+                        }
+                    };
+
+                    context.Users.Add(user1);
+                    context.SaveChanges();
+                }
+                var accountDAO = new AccountDAO();
+                var accountTest = new AccountDAO().GetAccountByEmail("accountTestUpdate@example.com");
+
+                accountTest.PasswordHash = "new_hashed_password";
+
+                var result = accountDAO.UpdatePasswordByUserId(accountTest.UserId, accountTest.PasswordHash);
+
+                Assert.True(result);
+            }
+        }
     }
 }
 
