@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using DataAccess.DAO;
 
 
 namespace BevososService.DTOs
@@ -21,5 +22,17 @@ namespace BevososService.DTOs
         public int ProfilePictureId { get; set; }
         [DataMember]
         public bool IsConnected {  get; set; } = false;
+
+        public static explicit operator FriendDTO(FriendData friendData)
+        {
+            return new FriendDTO
+            {
+                FriendshipId = friendData.FriendshipId,
+                FriendId = friendData.FriendId,
+                FriendName = friendData.FriendName,
+                ProfilePictureId = friendData.ProfilePictureId,
+                IsConnected = friendData.IsConnected
+            };
+        }
     }
 }

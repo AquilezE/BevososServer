@@ -12,6 +12,7 @@ using BevososService.DTOs;
 using DataAccess.DAO;
 using DataAccess.Models;
 using static BevososService.Utils.Hasher;
+using System.Collections.ObjectModel;
 
 namespace BevososService
 {
@@ -421,6 +422,24 @@ namespace BevososService
             {
                 Console.WriteLine(e.Message);
             }
+        }
+    }
+
+    public partial class ServiceImplementation : ISocialManager
+    {
+        public List<FriendDTO> GetFriends(int userId)
+        {
+            if (new UserDAO().UserExists(userId))
+            {
+                List<FriendData> friendshipList =new FriendshipDAO().GetFriendsForUser(userId);
+                List<FriendDTO> friends = new List<FriendDTO>();
+                foreach (FriendData friend in friendshipList)
+                {
+                    friends.Add((FriendDTO) friend);
+                }
+                return friends;
+            }
+            return null;
         }
     }
 }

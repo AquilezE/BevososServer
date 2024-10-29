@@ -175,15 +175,15 @@ namespace TEST
                     context.Users.Add(user1);
                     context.SaveChanges();
                 }
-                    var userDao = new UserDAO();
-                    User userTest = userDao.GetUserByEmail("userTestUpdate@example.com");
+                var userDao = new UserDAO();
+                User userTest = userDao.GetUserByEmail("userTestUpdate@example.com");
 
-                    userTest.Username = "newUsername";
-                    userTest.ProfilePictureId = 2;
+                userTest.Username = "newUsername";
+                userTest.ProfilePictureId = 2;
 
-                    var result = userDao.UpdateUser(userTest);
+                var result = userDao.UpdateUser(userTest);
 
-                    Assert.True(result);
+                Assert.True(result);
             }
         }
 
@@ -197,12 +197,12 @@ namespace TEST
                 UserId = -1,
                 Username = "NonExistentUser",
                 ProfilePictureId = 2,
-                 Account = new Account
-                 {
-                     Email = "notExistingUser@gmail.com",
-                     PasswordHash = "hashed_password",
-                     UserId = -1
-                 }
+                Account = new Account
+                {
+                    Email = "notExistingUser@gmail.com",
+                    PasswordHash = "hashed_password",
+                    UserId = -1
+                }
             };
             // Act
             var result = userDAO.UpdateUser(nonExistingUser);

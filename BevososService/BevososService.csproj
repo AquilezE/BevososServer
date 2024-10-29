@@ -50,6 +50,7 @@
     <Compile Include="DTOs\UserDTO.cs" />
     <Compile Include="ILobbyManager.cs" />
     <Compile Include="IProfileManager.cs" />
+    <Compile Include="ISocialManager.cs" />
     <Compile Include="IUsersManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceImplementation.cs" />
