@@ -93,5 +93,13 @@ namespace DataAccess.DAO
             }
         }
 
+        public bool UserExists(int userId)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.Users.Any(u => u.UserId == userId);
+            }
+        }
+
     }
 }

@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 
 namespace DataAccess.DAO
 {
+    public class FriendData
+    {
+        public int FriendshipId { get; set; }
+        public int FriendId { get; set; }
+        public string FriendName { get; set; }
+        public int ProfilePictureId { get; set; }
+        public bool IsConnected { get; set; }
+    }
     public class FriendshipDAO
     {
         public bool AddFriendship(int user1Id, int user2Id)
@@ -111,6 +119,26 @@ namespace DataAccess.DAO
                 var friends = context.Friendships
                     .Where(f => f.User1Id == userId || f.User2Id == userId)
                     .Select(f => f.User1Id == userId ? f.User2 : f.User1)
+                    .ToList();
+
+                return friends;
+            }
+        }
+
+        public List<FriendData> GetFriendsForUser(int currentUserId)
+        {
+            using (var context = new BevososContext())
+            {
+                var friends = context.Friendships
+                    .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
+                    .Select(f => new FriendData
+                    {
+                        FriendshipId = f.Id,
+                        FriendId = f.User1Id == currentUserId ? f.User2.UserId : f.User1.UserId,
+                        FriendName = f.User1Id == currentUserId ? f.User2.Username : f.User1.Username,
+                        ProfilePictureId = f.User1Id == currentUserId ? f.User2.ProfilePictureId : f.User1.ProfilePictureId,
+                        IsConnected = false
+                    })
                     .ToList();
 
                 return friends;

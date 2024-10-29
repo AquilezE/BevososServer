@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BevososService
 {
-    [ServiceContract (CallbackContract = typeof (IProfileManagerCallback))]
+    [ServiceContract (CallbackContract = typeof ( IProfileManagerCallback))]
 
     internal interface IProfileManager
     {

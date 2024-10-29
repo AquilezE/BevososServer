@@ -120,7 +120,7 @@ namespace TEST
         [Fact]
         public void Test_UpdatePasswordByUserId_ReturnsFalse_WhenAccountDoesNotExist()
         {
-            
+
             var accountDAO = new AccountDAO();
             var nonExistingAccount = new Account
             {
@@ -134,7 +134,7 @@ namespace TEST
                     ProfilePictureId = 2,
                 }
             };
-            
+
             var result = accountDAO.UpdatePasswordByUserId(nonExistingAccount.UserId, "newPasswordHashed");
 
             Assert.False(result);
