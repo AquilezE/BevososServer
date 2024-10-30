@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace DataAccess.DAO
 {
+    public class BlockedData
+    {
+        public int BlockId { get; set; }
+        public int BlockedId { get; set; }
+        public string BlockerUsername { get; set; }
+        public int ProfilePictureId { get; set; }
+    }
     public class BlockedDAO
     {
         public bool AddBlock(int blockerId, int blockeeId)
@@ -79,6 +86,25 @@ namespace DataAccess.DAO
                                           .Where(b => b.BlockerId == blockerId)
                                           .Select(b => b.Blockee) 
                                           .ToList();
+
+                return blockedUsers;
+            }
+        }
+
+        public List<BlockedData> GetBlockedListForUser(int currentUserId)
+        {
+            using (var context = new BevososContext())
+            {
+                var blockedUsers = context.BlockedList
+                    .Where(b => b.BlockerId == currentUserId)
+                    .Select(b => new BlockedData
+                        {
+                            BlockId = b.Id,
+                            BlockedId = b.Blockee.UserId,
+                            BlockerUsername = b.Blockee.Username,
+                            ProfilePictureId = b.Blockee.ProfilePictureId
+                        })
+                    .ToList();
 
                 return blockedUsers;
             }

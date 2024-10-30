@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-
+using DataAccess.DAO;
 namespace BevososService.DTOs
 {
     [DataContract]
@@ -18,5 +18,16 @@ namespace BevososService.DTOs
         public string BlockerUsername { get; set; }
         [DataMember]
         public int ProfilePictureId { get; set; }
+
+        public static explicit operator BlockedDTO(BlockedData blockedData)
+        {
+            return new BlockedDTO
+            {
+                BlockId = blockedData.BlockId,
+                BlockedId = blockedData.BlockedId,
+                BlockerUsername = blockedData.BlockerUsername,
+                ProfilePictureId = blockedData.ProfilePictureId
+            };
+        }
     }
 }
