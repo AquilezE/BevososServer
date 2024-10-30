@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using DataAccess.DAO;
 
 namespace BevososService.DTOs
 {
@@ -18,5 +19,16 @@ namespace BevososService.DTOs
         public string SenderName { get; set; }
         [DataMember]
         public int ProfilePictureId { get; set; }
+
+        public static explicit operator FriendRequestDTO(FriendRequestData friendRequestData)
+        {
+            return new FriendRequestDTO
+            {
+                FriendRequestId = friendRequestData.FriendRequestId,
+                SenderId = friendRequestData.SenderId,
+                SenderName = friendRequestData.SenderName,
+                ProfilePictureId = friendRequestData.ProfilePictureId
+            };
+        }
     }
 }

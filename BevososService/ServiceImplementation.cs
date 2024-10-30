@@ -427,6 +427,22 @@ namespace BevososService
 
     public partial class ServiceImplementation : ISocialManager
     {
+        public List<FriendRequestDTO> GetFriendRequests(int userId)
+        {
+            if (new UserDAO().UserExists(userId))
+            {
+                List<FriendRequestData> friendRequestsList = new FriendRequestDAO().GetFriendRequestForUser(userId);
+                List<FriendRequestDTO> friendRequests = new List<FriendRequestDTO>();
+                foreach (FriendRequestData friendRequest in friendRequestsList)
+                {
+                    friendRequests.Add((FriendRequestDTO)friendRequest);
+                }
+                return friendRequests;
+            }
+            return null;
+        }
+
+
         public List<FriendDTO> GetFriends(int userId)
         {
             if (new UserDAO().UserExists(userId))

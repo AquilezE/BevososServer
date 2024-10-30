@@ -8,7 +8,14 @@ using System.Threading.Tasks;
 
 namespace DataAccess.DAO
 {
-    public class FriendRequestDAO
+    public class FriendRequestData
+    {
+        public int FriendRequestId { get; set; }
+        public int SenderId { get; set; }
+        public string SenderName { get; set; }
+        public int ProfilePictureId { get; set; }
+    }
+        public class FriendRequestDAO
     {
         public bool SendFriendRequest(int requesterId, string requesteeUsername)
         {
@@ -131,5 +138,23 @@ namespace DataAccess.DAO
             }
         }
 
+        public List<FriendRequestData> GetFriendRequestForUser(int currentUserId)
+        {
+            using (var context = new BevososContext())
+            {
+                var friendRequests = context.FriendRequests
+                    .Where(fr => fr.RequesteeId == currentUserId)
+                    .Select(fr => new FriendRequestData
+                    {
+                        FriendRequestId = fr.Id,
+                        SenderId = fr.Requester.UserId,
+                        SenderName = fr.Requester.Username,
+                        ProfilePictureId = fr.Requester.ProfilePictureId
+                    })
+                    .ToList();
+
+                return friendRequests;
+            }
+        }
     }
 }
