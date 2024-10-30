@@ -23,7 +23,8 @@ namespace BevososService
         [OperationContract]
         List<FriendDTO> GetFriends(int userId);
         //void GetFriends(int userId);
-        //void GetFriendRequests(int userId);
+        [OperationContract]
+        List<FriendRequestDTO>GetFriendRequests(int userId);
         //void GetBlockedUsers(int userId);
         //void GetReportedUsers(int userId);
     }
