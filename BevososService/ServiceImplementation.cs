@@ -427,6 +427,21 @@ namespace BevososService
 
     public partial class ServiceImplementation : ISocialManager
     {
+        public List<BlockedDTO> GetBlockedUsers(int userId)
+        {
+            if(new UserDAO().UserExists(userId))
+            {
+                List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
+                List<BlockedDTO> blockedUsers = new List<BlockedDTO>();
+                foreach (BlockedData blockedUser in blockedUsersList)
+                {
+                    blockedUsers.Add((BlockedDTO)blockedUser);
+                }
+                return blockedUsers;
+            }
+            return null;
+        }
+
         public List<FriendRequestDTO> GetFriendRequests(int userId)
         {
             if (new UserDAO().UserExists(userId))
