@@ -14,14 +14,19 @@ namespace BevososService
     {
         //void AddFriend(int userId, int friendId);
         //void RemoveFriend(int userId, int friendId);
-        //void AcceptFriendRequest(int userId, int friendId);
-        //void DeclineFriendRequest(int userId, int friendId);
+        [OperationContract]
+        bool AcceptFriendRequest(int userId, int friendId, int requestId);
+        [OperationContract]
+        bool DeclineFriendRequest(int requestId);
         //void SendFriendRequest(int userId, int friendId);
-        //void BlockUser(int userId, int friendId);
-        //void UnblockUser(int userId, int friendId);
-        //void ReportUser(int userId, int friendId);
+        [OperationContract]
+        bool BlockFriend(int userId, int friendId);
+        [OperationContract]
+        bool UnblockUser(int userId, int friendId);
         [OperationContract]
         List<FriendDTO> GetFriends(int userId);
+        [OperationContract]
+        bool DeleteFriend(int userId, int friendId);
         //void GetFriends(int userId);
         [OperationContract]
         List<FriendRequestDTO>GetFriendRequests(int userId);

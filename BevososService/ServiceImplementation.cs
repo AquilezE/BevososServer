@@ -427,6 +427,28 @@ namespace BevososService
 
     public partial class ServiceImplementation : ISocialManager
     {
+        public bool DeleteFriend(int userId, int friendId)
+        {
+            if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+            {
+                return new FriendshipDAO().RemoveFriendship(userId, friendId);
+            }
+            return false;
+        }
+
+        public bool BlockFriend(int userId, int friendId)
+        {
+            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+            {
+                bool result = new FriendshipDAO().RemoveFriendship(userId, friendId);
+                if (result)
+                {
+                    return new BlockedDAO().AddBlock(userId, friendId);
+                }
+            }
+            return false;
+        }
+
         public List<BlockedDTO> GetBlockedUsers(int userId)
         {
             if(new UserDAO().UserExists(userId))
@@ -471,6 +493,38 @@ namespace BevososService
                 return friends;
             }
             return null;
+        }
+
+        public bool AcceptFriendRequest(int userId, int friendId, int requestId)
+        {
+            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+            {
+                bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
+                if (result)
+                {
+                    return new FriendshipDAO().AddFriendship(userId, friendId);
+                }
+                return false;
+            }
+            return false;
+        }
+
+        public bool DeclineFriendRequest(int requestId)
+        {
+            if (new FriendRequestDAO().FriendRequestExists(requestId))
+            {
+                return new FriendRequestDAO().DeclineFriendRequest(requestId);
+            }
+            return false;
+        }
+
+        public bool UnblockUser(int userId, int blockedId)
+        {
+            if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockedId))
+            {
+                return new BlockedDAO().DeleteBlock(userId, blockedId);
+            }
+            return false;
         }
     }
 }
