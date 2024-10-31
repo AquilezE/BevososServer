@@ -156,5 +156,13 @@ namespace DataAccess.DAO
                 return friendRequests;
             }
         }
+
+        public bool FriendRequestExists(int requestId)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.FriendRequests.Any(fr => fr.Id == requestId);
+            }
+        }
     }
 }
