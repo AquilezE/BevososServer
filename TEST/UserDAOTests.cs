@@ -12,68 +12,106 @@ using Xunit;
 
 namespace TEST
 {
-    public class UserDAOTests : IClassFixture<DatabaseFixture>
+    public class UserDAOTests
     {
-        private readonly DatabaseFixture _fixture;
 
-        public UserDAOTests(DatabaseFixture fixture)
-        {
-            _fixture = fixture;
-        }
 
         [Fact]
         public void Test_UsernameExists_ReturnsTrue_WhenUsernameExists()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var username = "AccountDALTestUser";
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var userDAO = new UserDAO();
+                var username = "AccountDALTestUser";
 
-            // Act
-            var result = userDAO.UsernameExists(username);
+                using (var context = new BevososContext())
+                {
+                    var user = new User
+                    {
+                        Username = username,
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "testuser@example.com",
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                }
 
-            // Assert
-            Assert.True(result);
+                // Act
+                var result = userDAO.UsernameExists(username);
+
+                // Assert
+                Assert.True(result);
+            }
+            // TransactionScope ensures the database changes are rolled back
         }
 
         [Fact]
         public void Test_UsernameExists_ReturnsFalse_WhenUsernameDoesNotExist()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var username = "nonExistingUsername";
+            using (var scope = new TransactionScope())
+            {
+                var userDAO = new UserDAO();
+                var username = "nonExistingUsername";
 
-            // Act
-            var result = userDAO.UsernameExists(username);
+                var result = userDAO.UsernameExists(username);
 
-            // Assert
-            Assert.False(result);
+                Assert.False(result);
+            }
         }
 
         [Fact]
         public void Test_GetUserByEmail_ReturnsUser_WhenEmailExists()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var email = "accountdal_test@example.com";
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var userDAO = new UserDAO();
+                var email = "accountdal_test@example.com";
+                var username = "AccountDALTestUser";
 
-            // Act
-            var result = userDAO.GetUserByEmail(email);
+                // Create a user with the specified email
+                using (var context = new BevososContext())
+                {
+                    var user = new User
+                    {
+                        Username = username,
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = email,
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                }
 
-            Assert.Equal("AccountDALTestUser", result.Username);
+                // Act
+                var result = userDAO.GetUserByEmail(email);
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(username, result.Username);
+            }
         }
 
         [Fact]
         public void Test_GetUserByEmail_ReturnsNull_WhenEmailDoesNotExist()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var email = "nonExistingEmail@example.com";
+            using (var scope = new TransactionScope())
+            {
+                var userDAO = new UserDAO();
+                var email = "nonExistingEmail@example.com";
 
-            // Act
-            var result = userDAO.GetUserByEmail(email);
+                var result = userDAO.GetUserByEmail(email);
 
-            // Assert
-            Assert.Null(result);
+                Assert.Null(result);
+            }
         }
 
 
@@ -81,53 +119,55 @@ namespace TEST
         [Fact]
         public void Test_GetUserById_ReturnsUser_WhenUserIdExists()
         {
-
-            int testUserId;
-            string testUsername;
-            using (var context = new BevososContext())
+            using (var scope = new TransactionScope())
             {
-
-                var testUser = new User
+                // Arrange
+                int testUserId;
+                string testUsername;
+                using (var context = new BevososContext())
                 {
-                    Username = "TestUser1",
-                    ProfilePictureId = 1,
-                    Account = new Account
+                    var testUser = new User
                     {
-                        Email = "testuser1@example.com",
-                        PasswordHash = "hashed_password"
-                    }
-                };
+                        Username = "TestUser1",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "testuser1@example.com",
+                            PasswordHash = "hashed_password"
+                        }
+                    };
 
-                context.Users.Add(testUser);
-                context.SaveChanges();
+                    context.Users.Add(testUser);
+                    context.SaveChanges();
 
+                    testUserId = testUser.UserId;
+                    testUsername = testUser.Username;
+                }
+                var userDAO = new UserDAO();
 
-                testUserId = testUser.UserId;
-                testUsername = testUser.Username;
+                // Act
+                var result = userDAO.GetUserById(testUserId);
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(testUserId, result.UserId);
+                Assert.Equal(testUsername, result.Username);
             }
-            var userDAO = new UserDAO();
-
-
-            var result = userDAO.GetUserById(testUserId);
-
-            Assert.NotNull(result);
-            Assert.Equal(testUserId, result.UserId);
-            Assert.Equal(testUsername, result.Username);
-            Assert.NotNull(result);
         }
+
 
         [Fact]
         public void Test_GetUserById_ReturnsNull_WhenUserIdDoesNotExist()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var userId = 999;
+            using (var scope = new TransactionScope())
+            {
+                var userDAO = new UserDAO();
+                var userId = -1;
 
-            // Act
-            var result = userDAO.GetUserById(userId);
+                var result = userDAO.GetUserById(userId);
 
-            // Assert
-            Assert.Null(result);
+                Assert.Null(result);
+            }
         }
 
 
@@ -137,11 +177,31 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
+                // Arrange
                 var userDao = new UserDAO();
-                User userTest = userDao.GetUserByEmail("accountdal_test@example.com");
-                int userId = userTest.UserId;
+                var email = "accountdal_test@example.com";
+                var originalUsername = "OriginalUser";
                 var newUsername = "newUsername";
 
+                // Create user
+                using (var context = new BevososContext())
+                {
+                    var user = new User
+                    {
+                        Username = originalUsername,
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = email,
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                }
+
+                User userTest = userDao.GetUserByEmail(email);
+                int userId = userTest.UserId;
 
                 // Act
                 userDao.UpdateUserNames(userId, newUsername);
@@ -156,59 +216,78 @@ namespace TEST
         [Fact]
         public void Test_UpdateUser_ReturnsTrueIfUpdatesUserInDataBase()
         {
-
             using (var scope = new TransactionScope())
             {
+                // Arrange
+                var userDao = new UserDAO();
+                var email = "userTestUpdate@example.com";
+                var originalUsername = "User1";
+                var newUsername = "newUsername";
+
+                // Create user
+                int userId;
                 using (var context = new BevososContext())
                 {
                     var user1 = new User
                     {
-                        Username = "User1",
+                        Username = originalUsername,
                         ProfilePictureId = 1,
                         Account = new Account
                         {
-                            Email = "userTestUpdate@example.com",
+                            Email = email,
                             PasswordHash = "hashed_password"
                         }
                     };
-
                     context.Users.Add(user1);
                     context.SaveChanges();
-                }
-                var userDao = new UserDAO();
-                User userTest = userDao.GetUserByEmail("userTestUpdate@example.com");
 
-                userTest.Username = "newUsername";
+                    userId = user1.UserId;
+                }
+
+                User userTest = userDao.GetUserById(userId);
+
+                // Modify user
+                userTest.Username = newUsername;
                 userTest.ProfilePictureId = 2;
 
+                // Act
                 var result = userDao.UpdateUser(userTest);
 
+                // Assert
                 Assert.True(result);
+
+                // Verify the changes
+                var updatedUser = userDao.GetUserById(userId);
+                Assert.NotNull(updatedUser);
+                Assert.Equal(newUsername, updatedUser.Username);
+                Assert.Equal(2, updatedUser.ProfilePictureId);
             }
         }
 
         [Fact]
         public void Test_UpdateUser_ReturnsFalseIfUpdatesUserInDataBase()
         {
-            // Arrange
-            var userDAO = new UserDAO();
-            var nonExistingUser = new User
+            using (var scope = new TransactionScope())
             {
-                UserId = -1,
-                Username = "NonExistentUser",
-                ProfilePictureId = 2,
-                Account = new Account
+                var userDAO = new UserDAO();
+                var nonExistingUser = new User
                 {
-                    Email = "notExistingUser@gmail.com",
-                    PasswordHash = "hashed_password",
-                    UserId = -1
-                }
-            };
-            // Act
-            var result = userDAO.UpdateUser(nonExistingUser);
+                    UserId = -1,
+                    Username = "NonExistentUser",
+                    ProfilePictureId = 2,
+                    Account = new Account
+                    {
+                        Email = "notExistingUser@gmail.com",
+                        PasswordHash = "hashed_password",
+                        UserId = -1
+                    }
+                };
 
-            // Assert
-            Assert.False(result);
+                var result = userDAO.UpdateUser(nonExistingUser);
+
+                Assert.False(result);
+            }
         }
+
     }
 }

@@ -9,6 +9,7 @@ using Xunit;
 namespace TEST { 
     public class BlockedDAOTest
     {
+
         [Fact]
         public void AddBlock_ShouldAddBlock_WhenUsersExist()
         {

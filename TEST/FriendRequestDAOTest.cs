@@ -12,8 +12,8 @@ using Xunit;
 
 namespace TEST
 {
-    public class FriendRequestDAOTest
-    {
+    public class FriendRequestDAOTest { 
+
         [Fact]
         public void SendFriendRequest_ShouldSendRequest_WhenUsersExistAndNoExistingRequest()
         {

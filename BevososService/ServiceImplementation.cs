@@ -119,7 +119,7 @@ namespace BevososService
         static ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)> clientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
 
         // User ID -> UserDto
-        private static ConcurrentDictionary<int, UserDto> connectedUsersDict = new ConcurrentDictionary<int, UserDto>();
+        private static ConcurrentDictionary<int, UserDto> lobbyUsersDetails = new ConcurrentDictionary<int, UserDto>();
 
         //  ID -> Lobby ID
         private static ConcurrentDictionary<int, int> lobbyLeaders = new ConcurrentDictionary<int, int>();
@@ -137,8 +137,8 @@ namespace BevososService
             ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
             ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
-            clientChannel.Closed += ClientChannel_Closed;
-            clientChannel.Faulted += ClientChannel_Faulted;
+            clientChannel.Closed += LobbyChannel_Closed;
+            clientChannel.Faulted += LobbyChannel_Faulted;
 
             activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
@@ -146,7 +146,7 @@ namespace BevososService
             lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
 
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
-            connectedUsersDict.TryAdd(userDto.UserId, userDto);
+            lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
         }
@@ -155,8 +155,8 @@ namespace BevososService
             ILobbyManagerCallback callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
             ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
-            clientChannel.Closed += ClientChannel_Closed;
-            clientChannel.Faulted += ClientChannel_Faulted;
+            clientChannel.Closed += LobbyChannel_Closed;
+            clientChannel.Faulted += LobbyChannel_Faulted;
 
             if (!activeLobbiesDict.ContainsKey(lobbyId))
             {
@@ -166,11 +166,11 @@ namespace BevososService
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
-            connectedUsersDict.TryAdd(userDto.UserId, userDto);
+            lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             var existingUsers = activeLobbiesDict[lobbyId]
                 .Where(u => u.Key != userDto.UserId)
-                .Select(u => connectedUsersDict[u.Key])
+                .Select(u => lobbyUsersDetails[u.Key])
                 .ToList();
 
             callback.OnLobbyUsersUpdate(lobbyId, existingUsers);
@@ -190,7 +190,7 @@ namespace BevososService
                     }
                     catch (Exception)
                     {
-                        RemoveClient(user.Value);
+                        RemoveLobbyClient(user.Value);
                     }
                 }
             }
@@ -209,7 +209,7 @@ namespace BevososService
                     user.Value.OnSendMessage(userId, message);
                 }catch(Exception)
                 {
-                    RemoveClient(user.Value);
+                    RemoveLobbyClient(user.Value);
                 }
             }
         }
@@ -227,31 +227,31 @@ namespace BevososService
                             targetCallback.OnKicked(lobbyId, reason);
 
                             RemoveClientFromLobby(lobbyId, targetUserId);
-                            connectedUsersDict.TryRemove(targetUserId, out _);
+                            lobbyUsersDetails.TryRemove(targetUserId, out _);
                         }
                         catch (Exception)
                         {
-                            RemoveClient(targetCallback);
+                            RemoveLobbyClient(targetCallback);
                         }
                     }
                 }
             }
         }
 
-        private void ClientChannel_Closed(object sender, EventArgs e)
+        private void LobbyChannel_Closed(object sender, EventArgs e)
         {
             var callback = (ILobbyManagerCallback)sender;
-            RemoveClient(callback);
+            RemoveLobbyClient(callback);
             Console.WriteLine("Client Closed");
         }
 
-        private void ClientChannel_Faulted(object sender, EventArgs e)
+        private void LobbyChannel_Faulted(object sender, EventArgs e)
         {
             var callback = (ILobbyManagerCallback)sender;
-            RemoveClient(callback);
+            RemoveLobbyClient(callback);
             Console.WriteLine("Client Faulted");
         }
-        private void RemoveClient(ILobbyManagerCallback callback)
+        private void RemoveLobbyClient(ILobbyManagerCallback callback)
         {
             if (clientCallbackMapping.TryRemove(callback, out var clientInfo))
             {
@@ -279,11 +279,10 @@ namespace BevososService
                         }
                         catch (Exception)
                         {
-                            RemoveClient(user);
+                            RemoveLobbyClient(user);
                         }
                     }
                 }
-
                 clientCallbackMapping.TryRemove(callback, out _);
             }
         }
@@ -308,7 +307,7 @@ namespace BevososService
                             }
                             catch (Exception)
                             {
-                                RemoveClient(user);
+                                RemoveLobbyClient(user);
                             }
                         }
                     }
@@ -322,12 +321,9 @@ namespace BevososService
                 RemoveClientFromLobby(lobbyId, userId);
             }
 
-            connectedUsersDict.TryRemove(userId, out _);
+            lobbyUsersDetails.TryRemove(userId, out _);
         }
-
-
     }
-
 
     public partial class ServiceImplementation : ILobbyChecker
     {
@@ -427,6 +423,109 @@ namespace BevososService
 
     public partial class ServiceImplementation : ISocialManager
     {
+
+        private static readonly ConcurrentDictionary<int, ISocialManagerCallback> connectedClients = new ConcurrentDictionary<int, ISocialManagerCallback>();
+        
+        private readonly object _lock = new object();
+
+        public void Connect(int userid)
+        {
+            var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+            ICommunicationObject clientChannel = (ICommunicationObject)callback;
+
+            Console.WriteLine("Client connected: " + userid);
+
+            clientChannel.Closed += ClientChannel_Closed;
+            clientChannel.Faulted += ClientChannel_Faulted;
+
+            lock (_lock)
+            {
+                connectedClients.TryAdd(userid, callback);
+            }
+        
+            NotifyFriendsUserOnline(userid);
+        }
+
+        public void Disconnect(int userid)
+        {
+            lock (_lock)
+            {
+                connectedClients.TryRemove(userid, out _);
+            }
+
+            NotifyFriendsUserOffline(userid);
+        }
+
+        private void ClientChannel_Closed(object sender, EventArgs e)
+        {
+            var callback = (ISocialManagerCallback)sender;
+            RemoveClient(callback);
+        }
+
+        private void ClientChannel_Faulted(object sender, EventArgs e)
+        {
+            var callback = (ISocialManagerCallback)sender;
+           RemoveClient(callback);
+        }
+
+        private void RemoveClient(ISocialManagerCallback callback)
+        {
+            var user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
+            if (user.Key != 0)
+            {
+                Disconnect(user.Key);
+            }
+        }
+
+        private void NotifyFriendsUserOnline(int userId)
+        {
+            Console.WriteLine("User online: " + userId);
+            var friends = GetFriendIds(userId);
+            foreach (var friendId in friends)
+            {
+                Console.WriteLine("Notifying friend: " + friendId);
+
+                if (connectedClients.TryGetValue(friendId, out var friendCallback))
+                {
+                    try
+                    {
+                        
+                        friendCallback.OnFriendOnline(userId);
+                        Console.WriteLine("Notified friend: " + friendId);
+                    }
+                    catch (Exception)
+                    {
+                        // Handle exceptions and possibly remove the faulty client
+                    }
+                }
+            }
+        }
+
+        private void NotifyFriendsUserOffline(int userId)
+        {
+            var friends = GetFriendIds(userId);
+            foreach (var friendId in friends)
+            {
+                if (connectedClients.TryGetValue(friendId, out var friendCallback))
+                {
+                    try
+                    {
+                        friendCallback.OnFriendOffline(userId);
+                    }
+                    catch (Exception)
+                    {
+                        // Handle exceptions and possibly remove the faulty client
+                    }
+                }
+            }
+        }
+
+        private List<int> GetFriendIds(int userId)
+        {
+            var friends = GetFriends(userId);
+            return friends.Select(f => f.FriendId).ToList();
+        }
+
         public bool DeleteFriend(int userId, int friendId)
         {
             if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
@@ -479,7 +578,6 @@ namespace BevososService
             return null;
         }
 
-
         public List<FriendDTO> GetFriends(int userId)
         {
             if (new UserDAO().UserExists(userId))
@@ -488,11 +586,21 @@ namespace BevososService
                 List<FriendDTO> friends = new List<FriendDTO>();
                 foreach (FriendData friend in friendshipList)
                 {
+                    if (connectedClients.TryGetValue(friend.FriendId, out var friendCallback))
+                    {
+                        friend.IsConnected = true;
+                    }
+
                     friends.Add((FriendDTO) friend);
                 }
                 return friends;
             }
             return null;
+        }
+
+        public bool SendFriendRequest(int userId, string requesteeUserName)
+        {
+            return new FriendRequestDAO().SendFriendRequest(userId, requesteeUserName);
         }
 
         public bool AcceptFriendRequest(int userId, int friendId, int requestId)
@@ -502,13 +610,49 @@ namespace BevososService
                 bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
                 if (result)
                 {
-                    return new FriendshipDAO().AddFriendship(userId, friendId);
+                    Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
+                    if (friendship != null)
+                    {
+                        int friendshipId = friendship.Id; // Correct property
+
+                        var userDao = new UserDAO();
+                        var currentUser = userDao.GetUserById(userId);
+                        var friendUser = userDao.GetUserById(friendId);
+
+                        var friendDto = new FriendDTO
+                        {
+                            FriendshipId = friendshipId,
+                            FriendId = friendId,
+                            FriendName = friendUser.Username,
+                            ProfilePictureId = friendUser.ProfilePictureId,
+                            IsConnected = connectedClients.ContainsKey(friendId)
+                        };
+
+                        if (connectedClients.TryGetValue(userId, out var userCallback))
+                        {
+                            userCallback.OnNewFriend(friendDto);
+                        }
+
+                        var friendDtoForFriend = new FriendDTO
+                        {
+                            FriendshipId = friendshipId,
+                            FriendId = userId,
+                            FriendName = currentUser.Username,
+                            ProfilePictureId = currentUser.ProfilePictureId,
+                            IsConnected = connectedClients.ContainsKey(userId)
+                        };
+
+                        if (connectedClients.TryGetValue(friendId, out var friendCallback))
+                        {
+                            friendCallback.OnNewFriend(friendDtoForFriend);
+                        }
+
+                        return true;
+                    }
                 }
-                return false;
             }
             return false;
         }
-
         public bool DeclineFriendRequest(int requestId)
         {
             if (new FriendRequestDAO().FriendRequestExists(requestId))
@@ -517,7 +661,6 @@ namespace BevososService
             }
             return false;
         }
-
         public bool UnblockUser(int userId, int blockedId)
         {
             if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockedId))

@@ -11,10 +11,10 @@ using Xunit;
 
 namespace TEST
 {
-    public class FriendshipsDAOTests
-    {
+    public class FriendshipsDAOTests { 
+
         [Fact]
-        public void AddFriendship_ShouldReturnFalse_WhenUsersDoNotExist()
+        public void AddFriendship_ShouldReturnNull_WhenUsersDoNotExist()
         {
             using (var scope = new TransactionScope())
             {
@@ -25,13 +25,13 @@ namespace TEST
 
                 var result = friendshipDAO.AddFriendship(nonExistentUserId1, nonExistentUserId2);
 
-                Assert.False(result);
+                Assert.Null(result);
 
             }
         }
 
         [Fact]
-        public void AddFriendship_ShouldReturnFalse_WhenFriendshipAlreadyExists()
+        public void AddFriendship_ShouldReturnNull_WhenFriendshipAlreadyExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -81,10 +81,68 @@ namespace TEST
 
                 var result = friendshipDAO.AddFriendship(user1Id, user2Id);
 
-                Assert.False(result); 
+                Assert.Null(result); 
 
             }
         }
+
+        [Fact]
+        public void AddFriendship_ShouldReturnFriendshipIfWorks()
+        {
+            using (var scope = new TransactionScope())
+            {
+                int user1Id, user2Id;
+
+                using (var context = new BevososContext())
+                {
+                    var user1 = new User
+                    {
+                        Username = "User1",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "user1@example.com",
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+
+                    var user2 = new User
+                    {
+                        Username = "User2",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = "user2@example.com",
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+
+                    context.Users.Add(user1);
+                    context.Users.Add(user2);
+                    context.SaveChanges();
+
+                    user1Id = user1.UserId;
+                    user2Id = user2.UserId;
+
+                    context.SaveChanges();
+                }
+
+                var friendshipDAO = new FriendshipDAO();
+
+                Friendship result = friendshipDAO.AddFriendship(user1Id, user2Id);
+
+                Friendship expected = new Friendship
+                {
+                    User1Id = user1Id,
+                    User2Id = user2Id
+                };
+
+                Assert.Equal(expected.User1Id, result.User1Id);
+                Assert.Equal(expected.User2Id, result.User2Id);
+
+            }
+        }
+
         [Fact]
         public void GetFriendshipList_ShouldReturnFriends_WhenFriendshipsExist()
         {
@@ -281,14 +339,15 @@ namespace TEST
                 
                 var result = friendshipDAO.AddFriendship(user2Id, user1Id); // Reverse order
 
-             
-                Assert.True(result);
+                Friendship expected = new Friendship
+                {
+                    User1Id = user1Id,
+                    User2Id = user2Id
+                };
 
                 using (var context = new BevososContext())
                 {
-                    var friendshipExists = context.Friendships.Any(f =>
-                        (f.User1Id == user1Id && f.User2Id == user2Id) ||
-                        (f.User1Id == user2Id && f.User2Id == user1Id));
+                    var friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
 
                     Assert.True(friendshipExists);
                 }
@@ -417,6 +476,9 @@ namespace TEST
 
             }
         }
+
+
+
 
     }
 }

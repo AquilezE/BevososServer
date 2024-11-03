@@ -65,12 +65,12 @@ namespace DataAccess.DAO
             }
         }
 
-
         public bool DeleteToken(string token, string email)
         {
             using (var context = new BevososContext())
             {
-                var tokenToDelete = context.Tokens.FirstOrDefault(t => t.TokenValue == token);
+                var tokenToDelete = context.Tokens.FirstOrDefault(t => t.TokenValue == token && t.Email == email);
+
                 if (tokenToDelete != null)
                 {
                     context.Tokens.Remove(tokenToDelete);
@@ -80,6 +80,7 @@ namespace DataAccess.DAO
                 return false;
             }
         }
+
 
 
     }

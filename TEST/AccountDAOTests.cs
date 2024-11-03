@@ -14,82 +14,172 @@ using Xunit;
 
 namespace TEST
 {
-    public class AccountDAOTests : IClassFixture<DatabaseFixture>
+    public class AccountDAOTests
     {
-
-
-        private readonly DatabaseFixture _fixture;
-
-        public AccountDAOTests(DatabaseFixture fixture)
-        {
-            _fixture = fixture;
-        }
 
         [Fact]
         public void GetAccountByEmail_ShouldReturnAccount_WhenEmailExists()
         {
-            Account result;
-            AccountDAO accountDAO = new AccountDAO();
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var accountDAO = new AccountDAO();
+                var email = "accountdal_test@example.com";
+                var username = "AccountDALTestUser";
 
-            result = accountDAO.GetAccountByEmail("accountdal_test@example.com");
+                // Create User and Account
+                using (var context = new BevososContext())
+                {
+                    var user = new User
+                    {
+                        Username = username,
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = email,
+                            PasswordHash = "hashed_password"
+                        }
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                }
 
-            Assert.NotNull(result);
-            Assert.Equal("accountdal_test@example.com", result.Email);
-            Assert.Equal("AccountDALTestUser", result.User.Username);
+                // Act
+                var result = accountDAO.GetAccountByEmail(email);
 
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(email, result.Email);
+                Assert.NotNull(result.User);
+                Assert.Equal(username, result.User.Username);
+            }
         }
 
         [Theory]
-        [InlineData("accountdal_test@example.com", true)]
+        [InlineData("existingEmail@example.com", true)]
         [InlineData("doesntExist@gmail.com", false)]
         public void EmailExistsTest(string email, bool expectedResult)
         {
-            bool result;
-            AccountDAO accountDAO = new AccountDAO();
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var accountDAO = new AccountDAO();
 
-            result = accountDAO.EmailExists(email);
+                if (expectedResult)
+                {
+                    // Create Account only if expectedResult is true
+                    using (var context = new BevososContext())
+                    {
+                        var user = new User
+                        {
+                            Username = "ExistingUser",
+                            ProfilePictureId = 1,
+                            Account = new Account
+                            {
+                                Email = email,
+                                PasswordHash = "hashed_password"
+                            }
+                        };
+                        context.Users.Add(user);
+                        context.SaveChanges();
+                    }
+                }
 
-            Assert.Equal(expectedResult, result);
+                // Act
+                var result = accountDAO.EmailExists(email);
 
+                // Assert
+                Assert.Equal(expectedResult, result);
+            }
         }
+
 
         [Theory]
         [InlineData("accountdal_test@example.com", "newHashedPassword")]
         public void UpdatePasswordTest(string email, string newHashedPassword)
         {
-            bool result;
-            AccountDAO accountDAO = new AccountDAO();
+            using (var scope = new TransactionScope())
+            {
+                var accountDAO = new AccountDAO();
 
-            result = accountDAO.UpdatePasswordByEmail(email, newHashedPassword);
+                using (var context = new BevososContext())
+                {
+                    var user = new User
+                    {
+                        Username = "UserForPasswordUpdate",
+                        ProfilePictureId = 1,
+                        Account = new Account
+                        {
+                            Email = email,
+                            PasswordHash = "old_hashed_password"
+                        }
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                }
 
-            Assert.True(result);
+                var result = accountDAO.UpdatePasswordByEmail(email, newHashedPassword);
+
+                Assert.True(result);
+
+                using (var context = new BevososContext())
+                {
+                    var account = context.Accounts.FirstOrDefault(a => a.Email == email);
+                    Assert.NotNull(account);
+                    Assert.Equal(newHashedPassword, account.PasswordHash);
+                }
+            }
         }
+
 
 
         [Fact]
         public void AddUserWithAccount_ShouldReturnTrue_WhenUserIsAdded()
         {
-            bool result;
-            AccountDAO accountDAO = new AccountDAO();
-            User user = new User();
-            user.Username = "newUser";
-            Account account = new Account();
-            account.Email = "newAccountWithUser@email.com";
-            account.PasswordHash = "passwordHash";
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var accountDAO = new AccountDAO();
+                var userDAO = new UserDAO();
+                var user = new User
+                {
+                    Username = "newUser",
+                    ProfilePictureId = 1,
+                    // Account will be linked via AddUserWithAccount
+                };
+                var account = new Account
+                {
+                    Email = "newAccountWithUser@email.com",
+                    PasswordHash = "passwordHash"
+                    // User will be linked via AddUserWithAccount
+                };
 
-            result = accountDAO.AddUserWithAccount(user, account);
+                var result = accountDAO.AddUserWithAccount(user, account);
 
-            var accountResult = accountDAO.GetAccountByEmail(account.Email);
-            var userResult = new UserDAO().GetUserByEmail(account.Email);
+                Assert.True(result);
 
-            Assert.Equal(userResult.UserId, accountResult.UserId);
+                var accountResult = accountDAO.GetAccountByEmail(account.Email);
+                var userResult = userDAO.GetUserByEmail(account.Email);
+
+                Assert.NotNull(accountResult);
+                Assert.NotNull(userResult);
+                Assert.Equal(userResult.UserId, accountResult.UserId);
+                Assert.Equal(user.Username, userResult.Username);
+            }
         }
+
 
         [Fact]
         public void Test_UpdatePasswordByUserId_ReturnsTrue_WhenAccountExists()
         {
             using (var scope = new TransactionScope())
             {
+                var accountDAO = new AccountDAO();
+                var userDAO = new UserDAO();
+                var email = "accountTestUpdate@example.com";
+                var initialPasswordHash = "test_hashed_password";
+                var newPasswordHash = "new_hashed_password";
+
                 using (var context = new BevososContext())
                 {
                     var user1 = new User
@@ -98,47 +188,45 @@ namespace TEST
                         ProfilePictureId = 1,
                         Account = new Account
                         {
-                            Email = "accountTestUpdate@example.com",
-                            PasswordHash = "test_hashed_password"
+                            Email = email,
+                            PasswordHash = initialPasswordHash
                         }
                     };
 
                     context.Users.Add(user1);
                     context.SaveChanges();
                 }
-                var accountDAO = new AccountDAO();
-                var accountTest = new AccountDAO().GetAccountByEmail("accountTestUpdate@example.com");
 
-                accountTest.PasswordHash = "new_hashed_password";
+                var accountTest = accountDAO.GetAccountByEmail(email);
+                Assert.NotNull(accountTest);
 
-                var result = accountDAO.UpdatePasswordByUserId(accountTest.UserId, accountTest.PasswordHash);
+                var result = accountDAO.UpdatePasswordByUserId(accountTest.UserId, newPasswordHash);
 
                 Assert.True(result);
+
+
+                var updatedAccount = accountDAO.GetAccountByUserId(accountTest.UserId);
+                Assert.NotNull(updatedAccount);
+                Assert.Equal(newPasswordHash, updatedAccount.PasswordHash);
             }
         }
+
 
         [Fact]
         public void Test_UpdatePasswordByUserId_ReturnsFalse_WhenAccountDoesNotExist()
         {
-
-            var accountDAO = new AccountDAO();
-            var nonExistingAccount = new Account
+            using (var scope = new TransactionScope())
             {
-                Email = "notExistingUser@gmail.com",
-                PasswordHash = "hashed_password",
-                UserId = -1,
-                User = new User
-                {
-                    UserId = -1,
-                    Username = "NonExistentUser",
-                    ProfilePictureId = 2,
-                }
-            };
+                var accountDAO = new AccountDAO();
+                var nonExistingUserId = -1;
+                var newPasswordHash = "newPasswordHashed";
 
-            var result = accountDAO.UpdatePasswordByUserId(nonExistingAccount.UserId, "newPasswordHashed");
+                var result = accountDAO.UpdatePasswordByUserId(nonExistingUserId, newPasswordHash);
 
-            Assert.False(result);
+                Assert.False(result);
+            }
         }
+
     }
 }
 

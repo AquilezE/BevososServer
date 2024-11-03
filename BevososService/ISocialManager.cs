@@ -12,13 +12,21 @@ namespace BevososService
     [ServiceContract(CallbackContract = typeof(ISocialManagerCallback))]
     internal interface ISocialManager
     {
-        //void AddFriend(int userId, int friendId);
-        //void RemoveFriend(int userId, int friendId);
+
+        [OperationContract]
+        void Connect(int userId);
+
+        [OperationContract]
+        void Disconnect(int userId);
+
+
+        [OperationContract]
+        bool SendFriendRequest(int userId, string requesteeUserName);
+
         [OperationContract]
         bool AcceptFriendRequest(int userId, int friendId, int requestId);
         [OperationContract]
         bool DeclineFriendRequest(int requestId);
-        //void SendFriendRequest(int userId, int friendId);
         [OperationContract]
         bool BlockFriend(int userId, int friendId);
         [OperationContract]
@@ -27,22 +35,26 @@ namespace BevososService
         List<FriendDTO> GetFriends(int userId);
         [OperationContract]
         bool DeleteFriend(int userId, int friendId);
-        //void GetFriends(int userId);
         [OperationContract]
         List<FriendRequestDTO>GetFriendRequests(int userId);
+       
         [OperationContract]
         List<BlockedDTO> GetBlockedUsers(int userId);
-        //void GetReportedUsers(int userId);
     }
 
     internal interface ISocialManagerCallback
     {
-        [OperationContract (IsOneWay = true)]
-        void OnFriendNew(List<FriendDTO> friends);
-        //void OnFriendsUpdate(int userId, OservableCollection<int> friends);
-        //void OnFriendsUpdate(List<UserDto> friends);
-        //void OnFriendRequestsUpdate(List<UserDto> friendRequests);
-        //void OnBlockedUsersUpdate(List<UserDto> blockedUsers);
-        //void OnReportedUsersUpdate(List<UserDto> reportedUsers);
+        [OperationContract(IsOneWay = true)]
+        void OnFriendOnline(int friendId);
+
+        [OperationContract(IsOneWay = true)]
+        void OnFriendOffline(int friendId);
+
+        [OperationContract(IsOneWay = true)]
+        void OnNewFriend(FriendDTO friend);
+
+        [OperationContract(IsOneWay = true)]
+        void OnNewFriendRequest(FriendRequestDTO friendRequest);
+
     }
 }

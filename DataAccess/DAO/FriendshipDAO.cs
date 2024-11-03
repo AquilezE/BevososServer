@@ -17,7 +17,7 @@ namespace DataAccess.DAO
     }
     public class FriendshipDAO
     {
-        public bool AddFriendship(int user1Id, int user2Id)
+        public Friendship AddFriendship(int user1Id, int user2Id)
         {
             using (var context = new BevososContext())
             {
@@ -28,7 +28,7 @@ namespace DataAccess.DAO
 
                     if (user1 == null || user2 == null)
                     {
-                        return false; 
+                        return null;
                     }
 
                     bool friendshipExists = context.Friendships.Any(f =>
@@ -37,7 +37,7 @@ namespace DataAccess.DAO
 
                     if (friendshipExists)
                     {
-                        return false; 
+                        return null;
                     }
 
                     // Check if there is any friend request between these users
@@ -47,7 +47,7 @@ namespace DataAccess.DAO
 
                     if (friendRequestExists)
                     {
-                        return false; 
+                        return null;
                     }
 
                     // Check if blocked
@@ -57,10 +57,9 @@ namespace DataAccess.DAO
 
                     if (blocked)
                     {
-                        return false; 
+                        return null;
                     }
 
-                 
                     var friendship = new Friendship
                     {
                         User1Id = user1Id,
@@ -70,12 +69,23 @@ namespace DataAccess.DAO
                     context.Friendships.Add(friendship);
                     context.SaveChanges();
 
-                    return true; 
+                    // At this point, friendship.FriendshipId should be populated
+                    return friendship;
                 }
                 catch (Exception)
                 {
-                    return false;
+                    return null;
                 }
+            }
+        }
+
+        public bool FriendshipExists(int user1Id, int user2Id)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.Friendships.Any(f =>
+                    (f.User1Id == user1Id && f.User2Id == user2Id) ||
+                    (f.User1Id == user2Id && f.User2Id == user1Id));
             }
         }
 
