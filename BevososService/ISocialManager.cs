@@ -33,7 +33,7 @@ namespace BevososService
         bool UnblockUser(int userId, int friendId);
 
         [OperationContract]
-        BlockedDTO BlockUser(int userId, int friendId);
+        bool BlockUser(int userId, int friendId);
 
         [OperationContract]
         bool DeleteFriend(int userId, int friendId);
@@ -47,7 +47,7 @@ namespace BevososService
         List<BlockedDTO> GetBlockedUsers(int userId);
 
         [OperationContract]
-        List<UserDto> GetUsersFoundByName(string name);
+        List<UserDto> GetUsersFoundByName(int userId, string name);
     }
 
     internal interface ISocialManagerCallback

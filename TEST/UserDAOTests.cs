@@ -337,7 +337,7 @@ namespace TEST
                     context.Users.Add(userRoberto);
                     context.SaveChanges();
                 }
-                Assert.Equal(expectedCount, userDao.GetUsersByName(name).Count);
+                Assert.Equal(expectedCount, userDao.GetUsersByName(name,1).Count);
             }
         }
     }

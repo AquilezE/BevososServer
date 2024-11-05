@@ -297,5 +297,18 @@ namespace TEST {
 
             }
         }
+
+        [Fact]
+        public void GetBlockList_ShouldReturnEmptyList_WhenBlockerDoesNotExist()
+        {
+            int blockerId = 999;
+
+            var blockService = new BlockedDAO();
+
+            var blockedUsers = blockService.GetBlockList(blockerId);
+
+            Assert.Empty(blockedUsers);
+
+        }
     }
 }
