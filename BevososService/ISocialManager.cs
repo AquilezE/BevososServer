@@ -21,7 +21,7 @@ namespace BevososService
 
 
         [OperationContract]
-        bool SendFriendRequest(int userId, string requesteeUserName);
+        bool SendFriendRequest(int userId, int requesteeId);
 
         [OperationContract]
         void AcceptFriendRequest(int userId, int friendId, int requestId);
@@ -33,15 +33,21 @@ namespace BevososService
         bool UnblockUser(int userId, int friendId);
 
         [OperationContract]
+        BlockedDTO BlockUser(int userId, int friendId);
+
+        [OperationContract]
         bool DeleteFriend(int userId, int friendId);
         [OperationContract]
         List<FriendDTO> GetFriends(int userId);
 
         [OperationContract]
-        List<FriendRequestDTO>GetFriendRequests(int userId);
-       
+        List<FriendRequestDTO> GetFriendRequests(int userId);
+
         [OperationContract]
         List<BlockedDTO> GetBlockedUsers(int userId);
+
+        [OperationContract]
+        List<UserDto> GetUsersFoundByName(string name);
     }
 
     internal interface ISocialManagerCallback
@@ -60,8 +66,6 @@ namespace BevososService
 
         [OperationContract(IsOneWay = true)]
         void OnFriendshipDeleted(int friendId);
-
-
 
     }
 }

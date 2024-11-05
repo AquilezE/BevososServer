@@ -609,9 +609,23 @@ namespace BevososService
             return null;
         }
 
-        public bool SendFriendRequest(int userId, string requesteeUserName)
+        public bool SendFriendRequest(int userId, int requesteeId)
         {
-            return new FriendRequestDAO().SendFriendRequest(userId, requesteeUserName);
+            int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
+
+            if (connectedClients.ContainsKey(requesteeId))
+            {
+                FriendRequestDTO friendRequest = new FriendRequestDTO();
+                User sender = new UserDAO().GetUserById(userId);
+                friendRequest.SenderId = userId;
+                friendRequest.SenderName = sender.Username;
+                friendRequest.ProfilePictureId = sender.ProfilePictureId;
+                friendRequest.FriendRequestId = idFriendRequest;
+
+                connectedClients[requesteeId].OnNewFriendRequest(friendRequest);
+                return true;
+            }
+            return 0 != idFriendRequest;
         }
 
         public void AcceptFriendRequest(int userId, int friendId, int requestId)
@@ -685,6 +699,29 @@ namespace BevososService
                 return new BlockedDAO().DeleteBlock(userId, blockedId);
             }
             return false;
+        }
+
+        public List<UserDto> GetUsersFoundByName(string name)
+        {
+            var users = new List<UserDto>();
+            var usersData = new UserDAO().GetUsersByName(name);
+            foreach (var user in usersData)
+            {
+                users.Add((UserDto)user);
+            }
+            return users;
+        }
+
+        public BlockedDTO BlockUser(int userId, int blockeeId)
+        {
+            //if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
+            //{
+            //    new BlockedDAO().AddBlock(userId, blockeeId);
+
+            //    }
+            //}
+            //return false;
+            return null;
         }
     }
 }

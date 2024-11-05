@@ -56,10 +56,10 @@ namespace TEST
                 var friendService = new FriendRequestDAO();
 
 
-                var result = friendService.SendFriendRequest(requesterId, "RequesteeUser");
+                var result = friendService.SendFriendRequest(requesterId, requesteeId);
 
     
-                Assert.True(result);
+                Assert.True(result != 0);
 
                 using (var context = new BevososContext())
                 {
@@ -121,9 +121,9 @@ namespace TEST
 
                 var friendService = new FriendRequestDAO();
 
-                var result = friendService.SendFriendRequest(requesterId, "RequesteeUser");
+                var result = friendService.SendFriendRequest(requesterId, requesteeId);
 
-                Assert.False(result);
+                Assert.False(result != 0);
 
             }
         }

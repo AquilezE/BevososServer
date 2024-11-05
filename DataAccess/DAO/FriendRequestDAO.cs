@@ -17,7 +17,7 @@ namespace DataAccess.DAO
     }
         public class FriendRequestDAO
     {
-        public bool SendFriendRequest(int requesterId, string requesteeUsername)
+        public int SendFriendRequest(int requesterId, int requesteeId)
         {
             using (var context = new BevososContext())
             {
@@ -26,13 +26,13 @@ namespace DataAccess.DAO
                     var requester = context.Users.FirstOrDefault(u => u.UserId == requesterId);
                     if (requester == null)
                     {
-                        return false; 
+                        return 0; 
                     }
 
-                    var requestee = context.Users.FirstOrDefault(u => u.Username == requesteeUsername);
+                    var requestee = context.Users.FirstOrDefault(u => u.UserId == requesteeId);
                     if (requestee == null)
                     {
-                        return false; 
+                        return 0; 
                     }
 
                     // Check if a friend request exists 
@@ -42,7 +42,7 @@ namespace DataAccess.DAO
 
                     if (requestExists)
                     {
-                        return false;
+                        return 0;
                     }
 
                     // Create a friend request
@@ -55,11 +55,11 @@ namespace DataAccess.DAO
                     context.FriendRequests.Add(friendRequest);
                     context.SaveChanges();
 
-                    return true; 
+                    return friendRequest.Id; 
                 }
                 catch (Exception)
                 {
-                    return false; 
+                    return 0; 
                 }
             }
         }

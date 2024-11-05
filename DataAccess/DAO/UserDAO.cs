@@ -10,7 +10,7 @@ using DataAccess.Models;
 
 namespace DataAccess.DAO
 {
-    public class UserDAO
+        public class UserDAO
     {
 
         public bool UsernameExists(string username)
@@ -39,6 +39,17 @@ namespace DataAccess.DAO
             using (var context = new BevososContext())
             {
                 return context.Users.FirstOrDefault(u => u.UserId == userId);
+            }
+        }
+
+        public List<User> GetUsersByName(string name)
+        {
+            using (var context = new BevososContext())
+            {
+                return context.Users.Include("Account")
+                              .Where(u => u.Username.Contains(name))
+                              .Take(20) 
+                              .ToList();
             }
         }
 

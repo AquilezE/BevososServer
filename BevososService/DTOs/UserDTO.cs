@@ -22,5 +22,16 @@ namespace BevososService.DTOs
 
         [DataMember]
         public int ProfilePictureId { get; set; }
+
+        public static explicit operator UserDto(DataAccess.Models.User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Account.Email,
+                ProfilePictureId = user.ProfilePictureId
+            };
+        }
     }
 }

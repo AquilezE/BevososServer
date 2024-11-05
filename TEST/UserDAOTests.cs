@@ -289,5 +289,56 @@ namespace TEST
             }
         }
 
+        [Theory]
+        [InlineData("name", 3)]
+        [InlineData("notname", 0)]
+        [InlineData("Roberto", 1)]
+
+        public void Test_GetUsersByName_ReturnsListOfUsers_WhenNameExists(string name, int expectedCount)
+        {
+            using (var scope = new TransactionScope())
+            {
+                // Arrange
+                var userDao = new UserDAO();
+                var email = "elpepe1@example.com";
+                var username = "name";
+                var profilePictureId = 2;
+
+                // Create users
+                using (var context = new BevososContext())
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var account = new Account
+                        {
+                            Email = email + i,
+                            PasswordHash = "hashed_password"
+                        };
+                        var user = new User
+                        {
+                            Username = username + i,
+                            ProfilePictureId = profilePictureId,
+                            Account = account
+                        };
+                        context.Users.Add(user);
+                    }
+                    var accountRoberto = new Account
+                    {
+                        Email = email + 3,
+                        PasswordHash = "hashed_password"
+                    };
+                    var userRoberto = new User
+                    {
+                        Username = "Roberto",
+                        ProfilePictureId = profilePictureId,
+                        Account = accountRoberto
+                    };
+
+                    context.Users.Add(userRoberto);
+                    context.SaveChanges();
+                }
+                Assert.Equal(expectedCount, userDao.GetUsersByName(name).Count);
+            }
+        }
     }
 }
