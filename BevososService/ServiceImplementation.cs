@@ -421,6 +421,7 @@ namespace BevososService
         }
     }
 
+
     public partial class ServiceImplementation : ISocialManager
     {
 
@@ -530,10 +531,15 @@ namespace BevososService
         {
             if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
             {
+                if(connectedClients.TryGetValue(friendId, out var friendCallback))
+                {
+                    friendCallback.OnFriendshipDeleted(userId);
+                }
                 return new FriendshipDAO().RemoveFriendship(userId, friendId);
             }
             return false;
         }
+
 
         public bool BlockFriend(int userId, int friendId)
         {
@@ -542,7 +548,12 @@ namespace BevososService
                 bool result = new FriendshipDAO().RemoveFriendship(userId, friendId);
                 if (result)
                 {
+                    if(connectedClients.TryGetValue(friendId, out var friendCallback))
+                    {
+                        friendCallback.OnFriendshipDeleted(userId);
+                    }
                     return new BlockedDAO().AddBlock(userId, friendId);
+
                 }
             }
             return false;
@@ -603,17 +614,19 @@ namespace BevososService
             return new FriendRequestDAO().SendFriendRequest(userId, requesteeUserName);
         }
 
-        public bool AcceptFriendRequest(int userId, int friendId, int requestId)
+        public void AcceptFriendRequest(int userId, int friendId, int requestId)
         {
             if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
             {
                 bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
+                Console.WriteLine("resultado añadir: " + result);
                 if (result)
                 {
                     Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
                     if (friendship != null)
                     {
-                        int friendshipId = friendship.Id; // Correct property
+                        int friendshipId = friendship.Id;
+                        Console.WriteLine("Friendship ID: " + friendshipId);
 
                         var userDao = new UserDAO();
                         var currentUser = userDao.GetUserById(userId);
@@ -631,6 +644,7 @@ namespace BevososService
                         if (connectedClients.TryGetValue(userId, out var userCallback))
                         {
                             userCallback.OnNewFriend(friendDto);
+                            Console.WriteLine("Amigo añadido1");
                         }
 
                         var friendDtoForFriend = new FriendDTO
@@ -645,13 +659,16 @@ namespace BevososService
                         if (connectedClients.TryGetValue(friendId, out var friendCallback))
                         {
                             friendCallback.OnNewFriend(friendDtoForFriend);
+                            Console.WriteLine("Amigo añadido22222");
                         }
 
-                        return true;
+                        Console.WriteLine("Todo Jalo");
+                        return;
                     }
                 }
             }
-            return false;
+            Console.WriteLine("Nadota Jalo");
+            return;
         }
         public bool DeclineFriendRequest(int requestId)
         {

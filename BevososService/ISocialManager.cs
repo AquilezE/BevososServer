@@ -24,17 +24,19 @@ namespace BevososService
         bool SendFriendRequest(int userId, string requesteeUserName);
 
         [OperationContract]
-        bool AcceptFriendRequest(int userId, int friendId, int requestId);
+        void AcceptFriendRequest(int userId, int friendId, int requestId);
         [OperationContract]
         bool DeclineFriendRequest(int requestId);
         [OperationContract]
         bool BlockFriend(int userId, int friendId);
         [OperationContract]
         bool UnblockUser(int userId, int friendId);
-        [OperationContract]
-        List<FriendDTO> GetFriends(int userId);
+
         [OperationContract]
         bool DeleteFriend(int userId, int friendId);
+        [OperationContract]
+        List<FriendDTO> GetFriends(int userId);
+
         [OperationContract]
         List<FriendRequestDTO>GetFriendRequests(int userId);
        
@@ -55,6 +57,11 @@ namespace BevososService
 
         [OperationContract(IsOneWay = true)]
         void OnNewFriendRequest(FriendRequestDTO friendRequest);
+
+        [OperationContract(IsOneWay = true)]
+        void OnFriendshipDeleted(int friendId);
+
+
 
     }
 }
