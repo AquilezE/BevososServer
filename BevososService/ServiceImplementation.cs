@@ -724,5 +724,15 @@ namespace BevososService
             }
             return false;
         }
+
+        public bool IsConnected(string email)
+        {
+            User user= new UserDAO().GetUserByEmail(email);
+            if (user != null) 
+            {
+                return connectedClients.ContainsKey(user.UserId);
+            }
+            return false;
+        }
     }
 }
