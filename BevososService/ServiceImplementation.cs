@@ -701,10 +701,10 @@ namespace BevososService
             return false;
         }
 
-        public List<UserDto> GetUsersFoundByName(string name)
+        public List<UserDto> GetUsersFoundByName(int userId,string name)
         {
             var users = new List<UserDto>();
-            var usersData = new UserDAO().GetUsersByName(name);
+            var usersData = new UserDAO().GetUsersByName(name, userId);
             foreach (var user in usersData)
             {
                 users.Add((UserDto)user);
@@ -712,16 +712,17 @@ namespace BevososService
             return users;
         }
 
-        public BlockedDTO BlockUser(int userId, int blockeeId)
+        public bool BlockUser(int userId, int blockeeId)
         {
-            //if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
-            //{
-            //    new BlockedDAO().AddBlock(userId, blockeeId);
-
-            //    }
-            //}
-            //return false;
-            return null;
+            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
+            {
+                if(new BlockedDAO().AddBlock(userId, blockeeId))
+                { 
+                    return true;
+                }
+                return false;
+            }
+            return false;
         }
     }
 }

@@ -42,16 +42,30 @@ namespace DataAccess.DAO
             }
         }
 
-        public List<User> GetUsersByName(string name)
+        public List<User> GetUsersByName(string name, int currentUserId)
         {
             using (var context = new BevososContext())
             {
+                var blockedUserIds = context.BlockedList
+                    .Where(b => b.BlockerId == currentUserId)
+                    .Select(b => b.BlockeeId)
+                    .ToList();
+
+                var friendUserIds = context.Friendships
+                    .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
+                    .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
+                    .ToList();
+
                 return context.Users.Include("Account")
-                              .Where(u => u.Username.Contains(name))
-                              .Take(20) 
-                              .ToList();
+                              .Where(u => u.Username.Contains(name)
+                                          && u.UserId != currentUserId
+                                          && !blockedUserIds.Contains(u.UserId)
+                                          && !friendUserIds.Contains(u.UserId))
+                                            .Take(20)
+                                            .ToList();
             }
         }
+
 
 
         public int UpdateUserNames(int userId, string username)
