@@ -2,17 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Security.Principal;
 using System.ServiceModel;
-using System.Text;
 using System.Threading;
 using BevososService.Utils;
 using BevososService.DTOs; 
 using DataAccess.DAO;
 using DataAccess.Models;
 using static BevososService.Utils.Hasher;
-using System.Collections.ObjectModel;
+
 
 namespace BevososService
 {
