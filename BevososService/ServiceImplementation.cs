@@ -378,7 +378,7 @@ namespace BevososService
 
             try
             {
-                if (new UserDAO().UsernameExists(username) == true)
+                if (new UserDAO().UsernameExists(username))
                 {
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
@@ -594,7 +594,7 @@ namespace BevososService
                 List<FriendDTO> friends = new List<FriendDTO>();
                 foreach (FriendData friend in friendshipList)
                 {
-                    if (connectedClients.TryGetValue(friend.FriendId, out var friendCallback))
+                    if (connectedClients.TryGetValue(friend.FriendId, out _))
                     {
                         friend.IsConnected = true;
                     }
@@ -679,7 +679,7 @@ namespace BevososService
                 }
             }
             Console.WriteLine("Nadota Jalo");
-            return;
+
         }
         public bool DeclineFriendRequest(int requestId)
         {

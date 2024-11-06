@@ -1,10 +1,9 @@
 ﻿using DataAccess.Models;
 using System;
-
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Text;
+
 
 
 namespace DataAccess.DAO
@@ -64,6 +63,12 @@ namespace DataAccess.DAO
             using (var context = new BevososContext())
             {
                 var account = context.Accounts.FirstOrDefault(a => a.Email == email);
+
+                if (account == null)
+                {
+                    return false;
+                }
+
                 account.PasswordHash = newHashedPassword;
                 int alteredRows = context.SaveChanges();
                 return alteredRows == 1;
@@ -75,7 +80,14 @@ namespace DataAccess.DAO
             try { 
             using (var context = new BevososContext())
             {
+
                 var account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
+
+                if (account == null)
+                {
+                        return false;
+                }
+
                 account.PasswordHash = newHashedPassword;
                 int alteredRows = context.SaveChanges();
                 return alteredRows == 1;

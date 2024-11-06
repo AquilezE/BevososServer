@@ -16,7 +16,7 @@ namespace BevososService.DTOs
         [DataMember]
         public int ProfilePictureId { get; set; }
         [DataMember]
-        public bool IsConnected {  get; set; } = false;
+        public bool IsConnected {  get; set; } 
 
         public static explicit operator FriendDTO(FriendData friendData)
         {

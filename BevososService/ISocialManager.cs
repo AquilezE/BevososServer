@@ -46,6 +46,8 @@ namespace BevososService
         List<UserDto> GetUsersFoundByName(int userId, string name);
     }
 
+    [ServiceContract]
+
     internal interface ISocialManagerCallback
     {
         [OperationContract(IsOneWay = true)]
