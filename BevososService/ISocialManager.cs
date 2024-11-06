@@ -14,7 +14,9 @@ namespace BevososService
 
         [OperationContract]
         void Disconnect(int userId);
-
+        
+        [OperationContract]
+        bool IsConnected(string email);
 
         [OperationContract]
         bool SendFriendRequest(int userId, int requesteeId);
