@@ -45,9 +45,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\BlockedDTO.cs" />
+    <Compile Include="DTOs\CardDTO.cs" />
     <Compile Include="DTOs\FriendDTO.cs" />
     <Compile Include="DTOs\FriendRequestDTO.cs" />
+    <Compile Include="DTOs\GameStateDTO.cs" />
+    <Compile Include="DTOs\MonsterDTO.cs" />
+    <Compile Include="DTOs\PlayerStateDTO.cs" />
     <Compile Include="DTOs\UserDTO.cs" />
+    <Compile Include="GameModels\Card.cs" />
+    <Compile Include="GameModels\Game.cs" />
+    <Compile Include="GameModels\Monster.cs" />
+    <Compile Include="GameModels\PlayerState.cs" />
     <Compile Include="ILobbyManager.cs" />
     <Compile Include="IProfileManager.cs" />
     <Compile Include="ISocialManager.cs" />
