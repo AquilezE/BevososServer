@@ -319,6 +319,7 @@ namespace BevososService
             }
 
             lobbyUsersDetails.TryRemove(userId, out _);
+
         }
     }
 
@@ -352,6 +353,7 @@ namespace BevososService
             {
                 string newHashedPassword = SimpleHashing.HashPassword(newPassword);
                 bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
+
 
                 if (result)
                 {
@@ -417,7 +419,6 @@ namespace BevososService
             }
         }
     }
-
 
     public partial class ServiceImplementation : ISocialManager
     {
