@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataAccess.Models;
+using System;
 
 using System.Net;
 using System.Net.Mail;
@@ -13,6 +14,40 @@ namespace BevososService.Utils
             Random random = new Random();
             int token = random.Next(100000, 999999);
             return token;
+        }
+
+        public static bool SendInvitationByEmail(string recipientEmail, int lobbyId)
+        {
+            bool emailSent = true;
+
+            string senderEmail = "bevososthegame@gmail.com";
+            string senderPassword = "lkzz bghz bwol leiz";
+            string smtpServer = "smtp.gmail.com";
+            int smtpPort = 587;
+
+            MailMessage mail = new MailMessage();
+            SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort);
+
+            mail.From = new MailAddress(senderEmail);
+            mail.To.Add(recipientEmail);
+            mail.Subject = "Bevosos Invite";
+            mail.Body = $"you've been invited to play, join this lobby before it's too late: {lobbyId}";
+
+            smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+            smtpClient.EnableSsl = true;
+
+            try
+            {
+                smtpClient.Send(mail);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send email: {ex.Message}");
+                emailSent = false;
+            }
+
+            return emailSent;
         }
 
         public static bool SendTokenByEmail(string recipientEmail, string token)

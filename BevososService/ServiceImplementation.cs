@@ -9,10 +9,28 @@ using BevososService.DTOs;
 using DataAccess.DAO;
 using DataAccess.Models;
 using static BevososService.Utils.Hasher;
+using BevososService.GameModels;
+using System.Threading.Tasks;
 
 
 namespace BevososService
 {
+
+    public partial class ServiceImplementation
+    {
+        public ServiceImplementation()
+        {
+            GlobalDeck.InitializeDeck();
+
+            foreach (var item in GlobalDeck.Deck)
+            {
+                Console.WriteLine("Card "+item.Value.CardId+" Element "+item.Value.Element+ " Type: " + item.Value.Type + " Damage: " + item.Value.Damage);
+            }
+
+        }
+
+
+    }
     public partial class ServiceImplementation : IUsersManager
     {
         public bool IsEmailTaken(string email)
@@ -100,8 +118,6 @@ namespace BevososService
 
     }
 
-
-
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 
     public partial class ServiceImplementation: ILobbyManager
@@ -116,10 +132,10 @@ namespace BevososService
         static ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)> clientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
 
         // User ID -> UserDto
-        private static ConcurrentDictionary<int, UserDto> lobbyUsersDetails = new ConcurrentDictionary<int, UserDto>();
+        private static ConcurrentDictionary<int, UserDto> _lobbyUsersDetails = new ConcurrentDictionary<int, UserDto>();
 
         //  ID -> Lobby ID
-        private static ConcurrentDictionary<int, int> lobbyLeaders = new ConcurrentDictionary<int, int>();
+        private static ConcurrentDictionary<int, int> _lobbyLeaders = new ConcurrentDictionary<int, int>();
 
 
         private int GenerateUniqueLobbyId()
@@ -140,10 +156,10 @@ namespace BevososService
             activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
 
-            lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
+            _lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
 
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
-            lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
+            _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
         }
@@ -163,16 +179,16 @@ namespace BevososService
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
-            lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
+            _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             var existingUsers = activeLobbiesDict[lobbyId]
                 .Where(u => u.Key != userDto.UserId)
-                .Select(u => lobbyUsersDetails[u.Key])
+                .Select(u => _lobbyUsersDetails[u.Key])
                 .ToList();
 
             callback.OnLobbyUsersUpdate(lobbyId, existingUsers);
 
-            if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId))
+            if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId))
             {
                 callback.OnLeaderChanged(lobbyId, leaderId);
             }
@@ -213,7 +229,7 @@ namespace BevososService
 
         public void KickUser(int lobbyId, int kickerId, int targetUserId, string reason)
         {
-            if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == kickerId)
+            if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == kickerId)
             {
                 if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
                 {
@@ -224,7 +240,7 @@ namespace BevososService
                             targetCallback.OnKicked(lobbyId, reason);
 
                             RemoveClientFromLobby(lobbyId, targetUserId);
-                            lobbyUsersDetails.TryRemove(targetUserId, out _);
+                            _lobbyUsersDetails.TryRemove(targetUserId, out _);
                         }
                         catch (Exception)
                         {
@@ -288,13 +304,13 @@ namespace BevososService
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
             {
-                if (lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == userId)
+                if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == userId)
                 {
                     var remainingUsers = lobby.Keys.Where(k => k != userId).ToList();
                     if (remainingUsers.Any())
                     {
                         int newLeaderId = remainingUsers.First();
-                        lobbyLeaders.TryUpdate(lobbyId, newLeaderId, userId);
+                        _lobbyLeaders.TryUpdate(lobbyId, newLeaderId, userId);
 
                         foreach (var user in lobby.Values)
                         {
@@ -311,16 +327,63 @@ namespace BevososService
                     else
                     {
                         activeLobbiesDict.TryRemove(lobbyId, out _);
-                        lobbyLeaders.TryRemove(lobbyId, out _);
+                        _lobbyLeaders.TryRemove(lobbyId, out _);
                     }
                 }
 
                 RemoveClientFromLobby(lobbyId, userId);
             }
 
-            lobbyUsersDetails.TryRemove(userId, out _);
+            _lobbyUsersDetails.TryRemove(userId, out _);
 
         }
+
+        public async void StartGame(int lobbyId)
+        {
+            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            {
+                // Create a new Game instance
+                int gameId = lobbyId; // Use lobbyId as gameId or generate a new unique ID
+                Game gameInstance = new Game
+                {
+                    GameId = gameId,
+                    Players = new Dictionary<int, PlayerState>(),
+                    Deck = new ConcurrentStack<Card>(),
+                    BabyPiles = new Dictionary<int, Stack<Card>>(),
+                    ActionsRemaining = 2 // Or any initial value as per game rules
+                };
+
+                // Initialize the game
+                InitializeGame(gameInstance, lobby);
+
+                // Add the game instance to active games
+                _activeGames.TryAdd(gameId, gameInstance);
+
+                // Notify each player that the game has started
+                foreach (var kvp in lobby)
+                {
+                    int userId = kvp.Key;
+                    ILobbyManagerCallback lobbyCallback = kvp.Value;
+
+                    try
+                    {
+                        // Notify the player to join the game
+                        lobbyCallback.GameStarted(gameId);
+                    }
+                    catch (Exception)
+                    {
+                        RemoveLobbyClient(lobbyCallback);
+                    }
+                }
+
+                await Task.Delay(5000); // Wait for 5 seconds before starting the game
+                activeLobbiesDict.TryRemove(lobbyId, out _);
+            }
+        }
+
+
+
+
     }
 
     public partial class ServiceImplementation : ILobbyChecker
@@ -626,6 +689,26 @@ namespace BevososService
             return 0 != idFriendRequest;
         }
 
+        public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
+        {
+            if (activeLobbiesDict.ContainsKey(lobbyId))
+            {
+                if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+                {
+                    callback.NotifyGameInvited(inviterName, lobbyId);
+                    return;
+                }
+
+                
+                Account account = new AccountDAO().GetAccountByUserId(userId);
+                if (account != null)
+                {
+                    EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
+                }
+
+            } 
+        }
+
         public void AcceptFriendRequest(int userId, int friendId, int requestId)
         {
             if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
@@ -733,4 +816,205 @@ namespace BevososService
             return false;
         }
     }
+
+    public partial class ServiceImplementation: IGameManager
+    {
+        //GameId-> GameInstance
+        private static ConcurrentDictionary<int , Game> _activeGames = new ConcurrentDictionary<int, Game>();
+        //GameId -> (UserId -> Callback)
+        private static ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>> _gamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
+
+        private void InitializeGame(Game gameInstance, ConcurrentDictionary<int, ILobbyManagerCallback> lobby)
+        {
+            // Initialize the deck
+
+            List<Card> allCards = GlobalDeck.Deck.Values.ToList();
+
+            // Shuffle the deck
+            Shuffle(allCards);
+
+            // Assign the shuffled deck to the game instance
+            gameInstance.Deck = new ConcurrentStack<Card>(allCards);
+
+            // Initialize BabyPiles
+            gameInstance.BabyPiles = new Dictionary<int, Stack<Card>>
+            {
+                { 0, new Stack<Card>() }, // Baby of Land
+                { 1, new Stack<Card>() }, // Baby of Water
+                { 2, new Stack<Card>() }  // Baby of Air
+            };
+
+            // 3. Initialize Players
+            foreach (var kvp in lobby)
+            {
+                int userId = kvp.Key;
+                UserDto userDto = _lobbyUsersDetails[userId];
+
+                PlayerState playerState = new PlayerState
+                {
+                    User = userDto,
+                    Hand = new List<Card>(),
+                    Monsters = new List<Monster>()
+                };
+
+
+                // Draw initial hand (e.g., 5 cards per player)
+                for (int i = 0; i < 5; i++)
+                {
+                    if (gameInstance.Deck.TryPop(out Card card))
+                    {
+                        playerState.Hand.Add(card);
+                    }
+                }
+
+                gameInstance.Players.Add(userId, playerState);
+            }
+
+            // 4. Set the Current Player
+            gameInstance.CurrentPlayerId = gameInstance.Players.Keys.First();
+
+            gameInstance.ActionsRemaining = 2;
+        }
+
+        public void JoinGame(int gameId, UserDto userDto)
+        {
+            IGameManagerCallback callback = OperationContext.Current.GetCallbackChannel<IGameManagerCallback>();
+            ICommunicationObject clientChannel = (ICommunicationObject)callback;
+
+            clientChannel.Closed += GameChannel_Closed;
+            clientChannel.Faulted += GameChannel_Faulted;
+
+            if (_activeGames.TryGetValue(gameId, out Game gameInstance))
+            {
+                // Add the player's callback
+                if (!_gamePlayerCallBack.ContainsKey(gameId))
+                {
+                    _gamePlayerCallBack.TryAdd(gameId, new ConcurrentDictionary<int, IGameManagerCallback>());
+                }
+
+                _gamePlayerCallBack[gameId].TryAdd(userDto.UserId, callback);
+
+                // Get the player's state
+                if (gameInstance.Players.TryGetValue(userDto.UserId, out PlayerState playerState))
+                {
+                    // Create the GameStateDTO to send to the client
+                    GameStateDTO gameStateDto = (GameStateDTO)gameInstance;
+
+                    callback.ReceiveGameState(gameStateDto);
+                }
+                else
+                {
+                    throw new FaultException("Player not found in game.");
+                }
+            }
+            else
+            {
+                throw new FaultException("Game does not exist.");
+            }
+        }
+
+        private void GameChannel_Closed(object sender, EventArgs e)
+        {
+            var callback = (IGameManagerCallback)sender;
+            RemoveGameClient(callback);
+            Console.WriteLine("Client Closed");
+        }
+
+        private void GameChannel_Faulted(object sender, EventArgs e)
+        {
+            var callback = (IGameManagerCallback)sender;
+            RemoveGameClient(callback);
+            Console.WriteLine("Client Faulted");
+        }
+
+        private void RemoveGameClient(IGameManagerCallback callback)
+        {
+            foreach (var gameEntry in _gamePlayerCallBack)
+            {
+                int gameId = gameEntry.Key;
+                var playerCallbacks = gameEntry.Value;
+
+                var playerToRemove = playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
+                if (!playerToRemove.Equals(default(KeyValuePair<int, IGameManagerCallback>)))
+                {
+                    int userId = playerToRemove.Key;
+                    playerCallbacks.TryRemove(userId, out _);
+
+                    Console.WriteLine($"Player {userId} removed from game {gameId}");
+
+                    // Check if the game still has enough players to continue
+                    if (playerCallbacks.Count < 2)
+                    {
+                        Console.WriteLine($"Game {gameId} no longer has enough players to continue. Ending game.");
+                        EndGame(gameId);
+                    }
+
+                    // Remove player from the game instance as well
+                    if (_activeGames.TryGetValue(gameId, out Game gameInstance))
+                    {
+                        gameInstance.Players.Remove(userId);
+                    }
+
+                    return; // Exit after removing the player to avoid unnecessary iterations
+                }
+            }
+
+            Console.WriteLine("Callback not found in any active game.");
+        }
+
+        private void EndGame(int gameId)
+        {
+            if (_activeGames.TryRemove(gameId, out _))
+            {
+                _gamePlayerCallBack.TryRemove(gameId, out _);
+                Console.WriteLine($"Game {gameId} has been ended and removed from active games.");
+            }
+        }
+
+        public void DrawCard(int matchCode, int userId)
+        {
+            _activeGames.TryGetValue(matchCode, out Game gameInstance);
+            gameInstance.Deck.TryPop(out Card card);
+            gameInstance.Players[userId].Hand.Add(card);
+
+
+            for (int i = 0; i < gameInstance.Players.Count; i++)
+            {
+                    Console.WriteLine(card.CardId);
+                    _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+            }
+        }
+    }
+
+    public partial class ServiceImplementation : ICardManager
+    {
+        public void SeeGlobalDeck()
+        {
+            foreach (var card in GlobalDeck.Deck)
+            {
+                Console.WriteLine(card.Value);
+            }
+        }
+
+        private void Shuffle<T>(IList<T> list)
+        {
+            Random rng = new Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
+
+    }
+
+    public partial class  ServiceImplementation: IPlayerManager
+    {
+        
+    }
+
 }

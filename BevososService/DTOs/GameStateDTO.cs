@@ -39,7 +39,8 @@ namespace BevososService.DTOs
             GameStateDTO gameStateDto = new GameStateDTO();
 
             gameStateDto.GameStateId = game.GameId;
-            //gameStateDto.Deck = game.Deck.Select(card => (CardDTO)card).ToList();
+            gameStateDto.BabyDeck = new List<CardDTO>();
+
             for (int i = 0; i < 3; i++)
             {
                 game.BabyPiles.TryGetValue(i, out Stack<GameModels.Card> babyPile);
