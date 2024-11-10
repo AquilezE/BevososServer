@@ -56,7 +56,7 @@
     <Compile Include="GameModels\Game.cs" />
     <Compile Include="GameModels\Monster.cs" />
     <Compile Include="GameModels\PlayerState.cs" />
-    <Compile Include="GlobalDeck.cs" />
+    <Compile Include="Utils\GlobalDeck.cs" />
     <Compile Include="ICardManager.cs" />
     <Compile Include="IGameManager.cs" />
     <Compile Include="ILobbyManager.cs" />

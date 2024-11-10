@@ -342,24 +342,24 @@ namespace BevososService
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
             {
-                // Create a new Game instance
-                int gameId = lobbyId; // Use lobbyId as gameId or generate a new unique ID
+                
+                int gameId = lobbyId; 
                 Game gameInstance = new Game
                 {
                     GameId = gameId,
                     Players = new Dictionary<int, PlayerState>(),
                     Deck = new ConcurrentStack<Card>(),
                     BabyPiles = new Dictionary<int, Stack<Card>>(),
-                    ActionsRemaining = 2 // Or any initial value as per game rules
+                    ActionsRemaining = 2 // This can be changed for each player if we have time
                 };
 
                 // Initialize the game
                 InitializeGame(gameInstance, lobby);
 
-                // Add the game instance to active games
+
                 _activeGames.TryAdd(gameId, gameInstance);
 
-                // Notify each player that the game has started
+                // Notify each player 
                 foreach (var kvp in lobby)
                 {
                     int userId = kvp.Key;
@@ -367,7 +367,7 @@ namespace BevososService
 
                     try
                     {
-                        // Notify the player to join the game
+                        // Notify the player to join
                         lobbyCallback.GameStarted(gameId);
                     }
                     catch (Exception)
@@ -376,7 +376,7 @@ namespace BevososService
                     }
                 }
 
-                await Task.Delay(5000); // Wait for 5 seconds before starting the game
+                await Task.Delay(5000); // Wait for 5 seconds to remove the lobby
                 activeLobbiesDict.TryRemove(lobbyId, out _);
             }
         }
@@ -886,7 +886,6 @@ namespace BevososService
 
             if (_activeGames.TryGetValue(gameId, out Game gameInstance))
             {
-                // Add the player's callback
                 if (!_gamePlayerCallBack.ContainsKey(gameId))
                 {
                     _gamePlayerCallBack.TryAdd(gameId, new ConcurrentDictionary<int, IGameManagerCallback>());
@@ -894,10 +893,8 @@ namespace BevososService
 
                 _gamePlayerCallBack[gameId].TryAdd(userDto.UserId, callback);
 
-                // Get the player's state
                 if (gameInstance.Players.TryGetValue(userDto.UserId, out PlayerState playerState))
                 {
-                    // Create the GameStateDTO to send to the client
                     GameStateDTO gameStateDto = (GameStateDTO)gameInstance;
 
                     callback.ReceiveGameState(gameStateDto);
@@ -942,20 +939,18 @@ namespace BevososService
 
                     Console.WriteLine($"Player {userId} removed from game {gameId}");
 
-                    // Check if the game still has enough players to continue
                     if (playerCallbacks.Count < 2)
                     {
                         Console.WriteLine($"Game {gameId} no longer has enough players to continue. Ending game.");
                         EndGame(gameId);
                     }
 
-                    // Remove player from the game instance as well
                     if (_activeGames.TryGetValue(gameId, out Game gameInstance))
                     {
                         gameInstance.Players.Remove(userId);
                     }
 
-                    return; // Exit after removing the player to avoid unnecessary iterations
+                    return; 
                 }
             }
 

@@ -18,7 +18,7 @@ namespace BevososService
         {
             Deck = new Dictionary<int, Card>();
 
-            int cardId = 1; // Inicialización del CardId
+            int cardId = 1; 
 
             // 1. BODY PARTS
 
@@ -31,7 +31,7 @@ namespace BevososService
                     Type = Card.CardType.BodyPart,
                     Element = Card.CardElement.Any,
                     BodyPartIndex = 0, // Head
-                    Damage = 4 // Asumiendo 0 para BodyParts
+                    Damage = 4 // Asumiendo 4 para BodyParts
                 });
                 cardId++;
             }
@@ -85,7 +85,7 @@ namespace BevososService
                 {
                     CardId = cardId,
                     Type = Card.CardType.BodyPart,
-                    Element = Card.CardElement.Any, // Asumiendo Any para Torso
+                    Element = Card.CardElement.Any, // Any para Torso
                     BodyPartIndex = 1, // Torso
                     Damage = 3
                 });
@@ -142,7 +142,7 @@ namespace BevososService
                 Deck.Add(cardId, new Card
                 {
                     CardId = cardId,
-                    Type = Card.CardType.Tool,
+                    Type = Card.CardType.Hat,
                     Element = Card.CardElement.Any, // Asumiendo Any para Hat
                     BodyPartIndex = 7, // Hat
                     Damage = 0
@@ -280,7 +280,7 @@ namespace BevososService
                 cardId++;
             }
 
-            // 4. WILD PROVOKE
+            // 4. 2 WILD PROVOKE
             for (int i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
@@ -297,7 +297,7 @@ namespace BevososService
             // Verificación final del número de cartas
             if (Deck.Count != 88)
             {
-                throw new Exception($"Inicialización del mazo falló. Se esperaban 86 cartas, pero se encontraron {Deck.Count}.");
+                throw new Exception($"Inicialización del mazo falló. Se esperaban 88 cartas, pero se encontraron {Deck.Count}.");
             }
         }
     }
