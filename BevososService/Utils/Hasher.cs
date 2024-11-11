@@ -9,9 +9,12 @@ namespace BevososService.Utils
     public class Hasher
     {
 
+
         //Aqui podriamos usar BCrypt, pero por simplicidad usaremos SHA256
         public class SimpleHashing
         {
+            protected SimpleHashing() { }
+
             public static string HashPassword(string password)
             {
                 using (SHA256 sha256 = SHA256.Create())

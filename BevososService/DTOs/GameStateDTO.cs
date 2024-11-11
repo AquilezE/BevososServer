@@ -13,7 +13,6 @@ namespace BevososService.DTOs
         [DataMember]
         public int GameStateId { get; set; }
         //[DataMember]
-        //public List<CardDTO> Deck { get; set; }
 
         //0 is the top babie of Land
         //1 is the top babie of Water

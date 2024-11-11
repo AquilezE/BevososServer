@@ -1,6 +1,10 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Exceptions;
+using DataAccess.Models;
+using DataAccess.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core;
+using System.Data.SqlClient;
 using System.Linq;
 
 
@@ -18,9 +22,9 @@ namespace DataAccess.DAO
     {
         public Friendship AddFriendship(int user1Id, int user2Id)
         {
-            using (var context = new BevososContext())
+            try
             {
-                try
+                using (var context = new BevososContext())
                 {
                     var user1 = context.Users.FirstOrDefault(u => u.UserId == user1Id);
                     var user2 = context.Users.FirstOrDefault(u => u.UserId == user2Id);
@@ -39,7 +43,6 @@ namespace DataAccess.DAO
                         return null;
                     }
 
-                    // Check if there is any friend request between these users
                     bool friendRequestExists = context.FriendRequests.Any(fr =>
                         (fr.RequesterId == user1Id && fr.RequesteeId == user2Id) ||
                         (fr.RequesterId == user2Id && fr.RequesteeId == user1Id));
@@ -49,7 +52,6 @@ namespace DataAccess.DAO
                         return null;
                     }
 
-                    // Check if blocked
                     bool blocked = context.BlockedList.Any(b =>
                         (b.BlockerId == user1Id && b.BlockeeId == user2Id) ||
                         (b.BlockerId == user2Id && b.BlockeeId == user1Id));
@@ -68,89 +70,160 @@ namespace DataAccess.DAO
                     context.Friendships.Add(friendship);
                     context.SaveChanges();
 
-                    // At this point, friendship.FriendshipId should be populated
                     return friendship;
                 }
-                catch (Exception)
-                {
-                    return null;
-                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public bool FriendshipExists(int user1Id, int user2Id)
         {
-            using (var context = new BevososContext())
+            try
             {
-                return context.Friendships.Any(f =>
-                    (f.User1Id == user1Id && f.User2Id == user2Id) ||
-                    (f.User1Id == user2Id && f.User2Id == user1Id));
+                using (var context = new BevososContext())
+                {
+                    return context.Friendships.Any(f =>
+                        (f.User1Id == user1Id && f.User2Id == user2Id) ||
+                        (f.User1Id == user2Id && f.User2Id == user1Id));
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
-
         public bool RemoveFriendship(int user1Id, int user2Id)
         {
-            using (var context = new BevososContext())
+            try
             {
-                try
+                using (var context = new BevososContext())
                 {
-                    
                     var friendship = context.Friendships.FirstOrDefault(f =>
                         (f.User1Id == user1Id && f.User2Id == user2Id) ||
                         (f.User1Id == user2Id && f.User2Id == user1Id));
 
                     if (friendship != null)
                     {
-                        
                         context.Friendships.Remove(friendship);
                         context.SaveChanges();
 
-                        return true; 
+                        return true;
                     }
                     else
                     {
-                        return false; 
+                        return false;
                     }
                 }
-                catch (Exception)
-                {
-                    return false; 
-                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
-
         public List<User> GetFriendshipList(int userId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var friends = context.Friendships
-                    .Where(f => f.User1Id == userId || f.User2Id == userId)
-                    .Select(f => f.User1Id == userId ? f.User2 : f.User1)
-                    .ToList();
+                using (var context = new BevososContext())
+                {
+                    var friends = context.Friendships
+                        .Where(f => f.User1Id == userId || f.User2Id == userId)
+                        .Select(f => f.User1Id == userId ? f.User2 : f.User1)
+                        .ToList();
 
-                return friends;
+                    return friends;
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public List<FriendData> GetFriendsForUser(int currentUserId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var friends = context.Friendships
-                    .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
-                    .Select(f => new FriendData
-                    {
-                        FriendshipId = f.Id,
-                        FriendId = f.User1Id == currentUserId ? f.User2.UserId : f.User1.UserId,
-                        FriendName = f.User1Id == currentUserId ? f.User2.Username : f.User1.Username,
-                        ProfilePictureId = f.User1Id == currentUserId ? f.User2.ProfilePictureId : f.User1.ProfilePictureId,
-                        IsConnected = false
-                    })
-                    .ToList();
+                using (var context = new BevososContext())
+                {
+                    var friends = context.Friendships
+                        .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
+                        .Select(f => new FriendData
+                        {
+                            FriendshipId = f.Id,
+                            FriendId = f.User1Id == currentUserId ? f.User2.UserId : f.User1.UserId,
+                            FriendName = f.User1Id == currentUserId ? f.User2.Username : f.User1.Username,
+                            ProfilePictureId = f.User1Id == currentUserId ? f.User2.ProfilePictureId : f.User1.ProfilePictureId,
+                            IsConnected = false
+                        })
+                        .ToList();
 
-                return friends;
+                    return friends;
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
     }

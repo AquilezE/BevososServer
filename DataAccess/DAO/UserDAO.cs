@@ -1,96 +1,181 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
+using System.Data.SqlClient;
 using System.Linq;
+using DataAccess.Exceptions;
 using DataAccess.Models;
+using DataAccess.Utils;
 
 namespace DataAccess.DAO
 {
-        public class UserDAO
+    public class UserDAO
     {
-
         public bool UsernameExists(string username)
         {
-            using (var context = new BevososContext())
+            try
             {
-                return context.Users.Any(u => u.Username == username);
+                using (var context = new BevososContext())
+                {
+                    return context.Users.Any(u => u.Username == username);
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public User GetUserByEmail(string email)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var account = context.Accounts
-                                     .Include("User") // Eager loading the related User
-                                     .FirstOrDefault(a => a.Email == email);
+                using (var context = new BevososContext())
+                {
+                    var account = context.Accounts
+                                         .Include("User") // Eager loading the related User
+                                         .FirstOrDefault(a => a.Email == email);
 
-                return account?.User; // Return the User if the account is found, otherwise null
+                    return account?.User; // Return the User if the account is found, otherwise null
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
-
         public User GetUserById(int userId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                return context.Users.FirstOrDefault(u => u.UserId == userId);
+                using (var context = new BevososContext())
+                {
+                    return context.Users.FirstOrDefault(u => u.UserId == userId);
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public List<User> GetUsersByName(string name, int currentUserId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var blockedUserIds = context.BlockedList
-                    .Where(b => b.BlockerId == currentUserId)
-                    .Select(b => b.BlockeeId)
-                    .ToList();
+                using (var context = new BevososContext())
+                {
+                    var blockedUserIds = context.BlockedList
+                        .Where(b => b.BlockerId == currentUserId)
+                        .Select(b => b.BlockeeId)
+                        .ToList();
 
-                var friendUserIds = context.Friendships
-                    .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
-                    .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
-                    .ToList();
+                    var friendUserIds = context.Friendships
+                        .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
+                        .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
+                        .ToList();
 
-                return context.Users.Include("Account")
-                              .Where(u => u.Username.Contains(name)
-                                          && u.UserId != currentUserId
-                                          && !blockedUserIds.Contains(u.UserId)
-                                          && !friendUserIds.Contains(u.UserId))
-                                            .Take(20)
-                                            .ToList();
+                    return context.Users.Include("Account")
+                                  .Where(u => u.Username.Contains(name)
+                                              && u.UserId != currentUserId
+                                              && !blockedUserIds.Contains(u.UserId)
+                                              && !friendUserIds.Contains(u.UserId))
+                                                .Take(20)
+                                                .ToList();
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
-
-
         public int UpdateUserNames(int userId, string username)
         {
-            using (var context = new BevososContext())
+            try
             {
-                // Find the user by userId
-                var user = context.Users.FirstOrDefault(u => u.UserId == userId);
-
-                // If the user is not found, return 0 (no rows affected)
-                if (user == null)
+                using (var context = new BevososContext())
                 {
-                    return 0;
+                    var user = context.Users.FirstOrDefault(u => u.UserId == userId);
+
+                    if (user == null)
+                    {
+                        return 0;
+                    }
+
+                    var existingUserWithSameUsername = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
+
+                    if (existingUserWithSameUsername != null)
+                    {
+                        throw new InvalidOperationException("Username already exists for another user.");
+                    }
+
+                    user.Username = username;
+
+                    return context.SaveChanges();
                 }
-
-                // Check if the new username already exists for another user
-                var existingUserWithSameUsername = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
-
-                if (existingUserWithSameUsername != null)
-                {
-                    throw new InvalidOperationException("Username already exists for another user.");
-                }
-
-                // Update the username
-                user.Username = username;
-
-                // Save the changes and return the number of rows affected
-                return context.SaveChanges();
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
@@ -105,23 +190,52 @@ namespace DataAccess.DAO
                     return alteredRows == 1;
                 }
             }
-            catch (DbUpdateConcurrencyException e)
+            catch (EntityException ex)
             {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
                 return false;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                ExceptionManager.LogFatalException(ex);
                 return false;
             }
         }
 
         public bool UserExists(int userId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                return context.Users.Any(u => u.UserId == userId);
+                using (var context = new BevososContext())
+                {
+                    return context.Users.Any(u => u.UserId == userId);
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
-
     }
 }

@@ -1,107 +1,209 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Exceptions;
+using DataAccess.Models;
+using DataAccess.Utils;
 using System;
 using System.Data.Entity;
+using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
+using System.Data.SqlClient;
 using System.Linq;
 
 
 
 namespace DataAccess.DAO
 {
-    public class AccountDAO
-    {
-        public Account GetAccountByUserId(int accountId)
+        public class AccountDAO
         {
-            using (var context = new BevososContext())
+            public Account GetAccountByUserId(int accountId)
             {
-                return context.Accounts.Include(a => a.User)
-                                       .FirstOrDefault(a => a.UserId == accountId);
-            }
-        }
-
-        public Account GetAccountByEmail(string email)
-        {
-            using (var context = new BevososContext())
-            {
-                return context.Accounts.Include(a => a.User)
-                                       .FirstOrDefault(a => a.Email == email);
-            }
-        }
-
-        public bool EmailExists(string email)
-        {
-            using (var context = new BevososContext())
-            {
-                return context.Accounts.Any(a => a.Email == email);
-            }
-        }
-
-
-        public bool AddUserWithAccount(User user, Account account)
-        {
-            using (var context = new BevososContext())
-            {
-                context.Accounts.Add(account);
-                context.Users.Add(user);
-                account.User = user;
-                account.UserId = user.UserId;
                 try
                 {
-                    int alteredRows = context.SaveChanges();
-                    return alteredRows == 2;
+                    using (var context = new BevososContext())
+                    {
+                        return context.Accounts.Include(a => a.User)
+                                               .FirstOrDefault(a => a.UserId == accountId);
+                    }
+                }
+                catch (EntityException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+            }
+
+            public Account GetAccountByEmail(string email)
+            {
+                try
+                {
+                    using (var context = new BevososContext())
+                    {
+                        return context.Accounts.Include(a => a.User)
+                                               .FirstOrDefault(a => a.Email == email);
+                    }
+                }
+                catch (EntityException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+            }
+
+            public bool EmailExists(string email)
+            {
+                try
+                {
+                    using (var context = new BevososContext())
+                    {
+                        return context.Accounts.Any(a => a.Email == email);
+                    }
+                }
+                catch (EntityException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+            }
+
+            public bool AddUserWithAccount(User user, Account account)
+            {
+                try
+                {
+                    using (var context = new BevososContext())
+                    {
+                        context.Accounts.Add(account);
+                        context.Users.Add(user);
+                        account.User = user;
+                        account.UserId = user.UserId;
+
+                        int alteredRows = context.SaveChanges();
+                        return alteredRows == 2;
+                    }
                 }
                 catch (DbUpdateException ex)
                 {
-                    //ask revo to set up log4net :/
-                    return false;
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
                 }
-            }
-        }
-
-        public bool UpdatePasswordByEmail(string email, string newHashedPassword)
-        {
-            using (var context = new BevososContext())
-            {
-                var account = context.Accounts.FirstOrDefault(a => a.Email == email);
-
-                if (account == null)
+                catch (EntityException ex)
                 {
-                    return false;
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
                 }
-
-                account.PasswordHash = newHashedPassword;
-                int alteredRows = context.SaveChanges();
-                return alteredRows == 1;
-            }
-        }
-
-        public bool UpdatePasswordByUserId(int userId, string newHashedPassword)
-        {
-            try { 
-            using (var context = new BevososContext())
-            {
-
-                var account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
-
-                if (account == null)
+                catch (SqlException ex)
                 {
-                        return false;
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
                 }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+            }
 
-                account.PasswordHash = newHashedPassword;
-                int alteredRows = context.SaveChanges();
-                return alteredRows == 1;
-            }
-            }
-            catch (DbUpdateConcurrencyException ex)
+            public bool UpdatePasswordByEmail(string email, string newHashedPassword)
             {
-                return false;
+                try
+                {
+                    using (var context = new BevososContext())
+                    {
+                        var account = context.Accounts.FirstOrDefault(a => a.Email == email);
+
+                        if (account == null)
+                        {
+                            return false;
+                        }
+
+                        account.PasswordHash = newHashedPassword;
+                        int alteredRows = context.SaveChanges();
+                        return alteredRows == 1;
+                    }
+                }
+                catch (EntityException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
             }
-            catch (Exception e)
+
+            public bool UpdatePasswordByUserId(int userId, string newHashedPassword)
             {
-                return false;
+                try
+                {
+                    using (var context = new BevososContext())
+                    {
+                        var account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
+
+                        if (account == null)
+                        {
+                            return false;
+                        }
+
+                        account.PasswordHash = newHashedPassword;
+                        int alteredRows = context.SaveChanges();
+                        return alteredRows == 1;
+                    }
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (EntityException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    throw new DataBaseException(ex.Message);
+                }
             }
         }
-
     }
-}

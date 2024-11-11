@@ -1,6 +1,10 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Exceptions;
+using DataAccess.Models;
+using DataAccess.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core;
+using System.Data.SqlClient;
 using System.Linq;
 
 
@@ -13,13 +17,14 @@ namespace DataAccess.DAO
         public string BlockerUsername { get; set; }
         public int ProfilePictureId { get; set; }
     }
+
     public class BlockedDAO
     {
         public bool AddBlock(int blockerId, int blockeeId)
         {
-            using (var context = new BevososContext()) 
+            try
             {
-                try
+                using (var context = new BevososContext())
                 {
                     var blocker = context.Users.FirstOrDefault(u => u.UserId == blockerId);
                     var blockee = context.Users.FirstOrDefault(u => u.UserId == blockeeId);
@@ -42,19 +47,29 @@ namespace DataAccess.DAO
                         return false;
                     }
                 }
-                catch (Exception ex)
-                {
-
-                    return false;
-                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public bool DeleteBlock(int blockerId, int blockeeId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                try
+                using (var context = new BevososContext())
                 {
                     var block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
 
@@ -70,42 +85,89 @@ namespace DataAccess.DAO
                         return false;
                     }
                 }
-                catch (Exception ex)
-                {
-                    return false;
-                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
-       
+
         public List<User> GetBlockList(int blockerId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var blockedUsers = context.BlockedList
-                                          .Where(b => b.BlockerId == blockerId)
-                                          .Select(b => b.Blockee) 
-                                          .ToList();
+                using (var context = new BevososContext())
+                {
+                    var blockedUsers = context.BlockedList
+                                              .Where(b => b.BlockerId == blockerId)
+                                              .Select(b => b.Blockee)
+                                              .ToList();
 
-                return blockedUsers;
+                    return blockedUsers;
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
 
         public List<BlockedData> GetBlockedListForUser(int currentUserId)
         {
-            using (var context = new BevososContext())
+            try
             {
-                var blockedUsers = context.BlockedList
-                    .Where(b => b.BlockerId == currentUserId)
-                    .Select(b => new BlockedData
+                using (var context = new BevososContext())
+                {
+                    var blockedUsers = context.BlockedList
+                        .Where(b => b.BlockerId == currentUserId)
+                        .Select(b => new BlockedData
                         {
                             BlockId = b.Id,
                             BlockedId = b.Blockee.UserId,
                             BlockerUsername = b.Blockee.Username,
                             ProfilePictureId = b.Blockee.ProfilePictureId
                         })
-                    .ToList();
+                        .ToList();
 
-                return blockedUsers;
+                    return blockedUsers;
+                }
+            }
+            catch (EntityException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                throw new DataBaseException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                throw new DataBaseException(ex.Message);
             }
         }
     }
