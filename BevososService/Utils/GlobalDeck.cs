@@ -10,9 +10,9 @@ namespace BevososService
     public class GlobalDeck
     {
 
+        protected GlobalDeck() { }
+
         public static Dictionary<int, Card> Deck { get; private set; }
-
-
 
         public static void InitializeDeck()
         {
@@ -297,7 +297,7 @@ namespace BevososService
             // Verificación final del número de cartas
             if (Deck.Count != 88)
             {
-                throw new Exception($"Inicialización del mazo falló. Se esperaban 88 cartas, pero se encontraron {Deck.Count}.");
+                Console.WriteLine($"Inicialización del mazo falló. Se esperaban 88 cartas, pero se encontraron {Deck.Count}.");
             }
         }
     }

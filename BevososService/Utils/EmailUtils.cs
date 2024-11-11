@@ -7,8 +7,12 @@ using System.Net.Mail;
 
 namespace BevososService.Utils
 {
-    internal class EmailUtils
+    public class EmailUtils
     {
+        protected EmailUtils()
+        {
+
+        }
         public static int GenerateToken()
         {
             Random random = new Random();

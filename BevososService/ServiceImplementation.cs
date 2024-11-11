@@ -22,11 +22,10 @@ namespace BevososService
         {
             GlobalDeck.InitializeDeck();
 
-            foreach (var item in GlobalDeck.Deck)
+            foreach (var item in GlobalDeck.Deck.Select(item => item.Value))
             {
-                Console.WriteLine("Card "+item.Value.CardId+" Element "+item.Value.Element+ " Type: " + item.Value.Type + " Damage: " + item.Value.Damage);
+                Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage);
             }
-
         }
 
 
@@ -69,13 +68,10 @@ namespace BevososService
 
         public bool VerifyToken(string email, string token)
         {
-            if (new TokenDAO().HasToken(email))
+            if (new TokenDAO().HasToken(email) && new TokenDAO().TokenIsValid(token, email))
             {
-                if(new TokenDAO().TokenIsValid(token, email))
-                {
-                    new TokenDAO().DeleteToken(token, email);
-                    return true;
-                }
+                new TokenDAO().DeleteToken(token, email);
+                return true;
             }
             return false;
         }
@@ -138,7 +134,7 @@ namespace BevososService
         private static ConcurrentDictionary<int, int> _lobbyLeaders = new ConcurrentDictionary<int, int>();
 
 
-        private int GenerateUniqueLobbyId()
+        private static int GenerateUniqueLobbyId()
         {
             return Interlocked.Increment(ref _currentLobbyId);
         }
@@ -216,13 +212,15 @@ namespace BevososService
 
         public void SendMessage(int lobbyId, int userId, string message)
         {
-            foreach (var user in activeLobbiesDict[lobbyId])
+            foreach (var user in activeLobbiesDict[lobbyId].Select(user => user.Value))
             {
-                try { 
-                    user.Value.OnSendMessage(userId, message);
-                }catch(Exception)
+                try
                 {
-                    RemoveLobbyClient(user.Value);
+                    user.OnSendMessage(userId, message);
+                }
+                catch (Exception)
+                {
+                    RemoveLobbyClient(user);
                 }
             }
         }
@@ -309,7 +307,7 @@ namespace BevososService
                     var remainingUsers = lobby.Keys.Where(k => k != userId).ToList();
                     if (remainingUsers.Any())
                     {
-                        int newLeaderId = remainingUsers.First();
+                        int newLeaderId = remainingUsers[0];
                         _lobbyLeaders.TryUpdate(lobbyId, newLeaderId, userId);
 
                         foreach (var user in lobby.Values)
@@ -342,8 +340,7 @@ namespace BevososService
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
             {
-                
-                int gameId = lobbyId; 
+                int gameId = lobbyId;
                 Game gameInstance = new Game
                 {
                     GameId = gameId,
@@ -356,15 +353,12 @@ namespace BevososService
                 // Initialize the game
                 InitializeGame(gameInstance, lobby);
 
-
                 _activeGames.TryAdd(gameId, gameInstance);
 
                 // Notify each player 
-                foreach (var kvp in lobby)
+                foreach (var kvp in lobby.Select(x => x.Value))
                 {
-                    int userId = kvp.Key;
-                    ILobbyManagerCallback lobbyCallback = kvp.Value;
-
+                    ILobbyManagerCallback lobbyCallback = kvp;
                     try
                     {
                         // Notify the player to join
@@ -490,44 +484,38 @@ namespace BevososService
         
         private readonly object _lock = new object();
 
-        public void Connect(int userid)
+        public void Connect(int userId)
         {
             var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
             ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
-            Console.WriteLine("Client connected: " + userid);
+            Console.WriteLine("Client connected: " + userId);
 
             clientChannel.Closed += ClientChannel_Closed;
-            clientChannel.Faulted += ClientChannel_Faulted;
+            clientChannel.Faulted += ClientChannel_Closed;
 
             lock (_lock)
             {
-                connectedClients.TryAdd(userid, callback);
+                connectedClients.TryAdd(userId, callback);
             }
         
-            NotifyFriendsUserOnline(userid);
+            NotifyFriendsUserOnline(userId);
         }
 
-        public void Disconnect(int userid)
+        public void Disconnect(int userId)
         {
             lock (_lock)
             {
-                connectedClients.TryRemove(userid, out _);
+                connectedClients.TryRemove(userId, out _);
             }
 
-            NotifyFriendsUserOffline(userid);
+            NotifyFriendsUserOffline(userId);
         }
 
         private void ClientChannel_Closed(object sender, EventArgs e)
         {
             var callback = (ISocialManagerCallback)sender;
             RemoveClient(callback);
-        }
-
-        private void ClientChannel_Faulted(object sender, EventArgs e)
-        {
-            var callback = (ISocialManagerCallback)sender;
-           RemoveClient(callback);
         }
 
         private void RemoveClient(ISocialManagerCallback callback)
@@ -845,9 +833,8 @@ namespace BevososService
             };
 
             // 3. Initialize Players
-            foreach (var kvp in lobby)
+            foreach (var userId in lobby.Select(x => x.Key))
             {
-                int userId = kvp.Key;
                 UserDto userDto = _lobbyUsersDetails[userId];
 
                 PlayerState playerState = new PlayerState
@@ -882,7 +869,7 @@ namespace BevososService
             ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
             clientChannel.Closed += GameChannel_Closed;
-            clientChannel.Faulted += GameChannel_Faulted;
+            clientChannel.Faulted += GameChannel_Closed;
 
             if (_activeGames.TryGetValue(gameId, out Game gameInstance))
             {
@@ -910,21 +897,13 @@ namespace BevososService
             }
         }
 
-        private void GameChannel_Closed(object sender, EventArgs e)
+        private static void GameChannel_Closed(object sender, EventArgs e)
         {
             var callback = (IGameManagerCallback)sender;
             RemoveGameClient(callback);
-            Console.WriteLine("Client Closed");
         }
 
-        private void GameChannel_Faulted(object sender, EventArgs e)
-        {
-            var callback = (IGameManagerCallback)sender;
-            RemoveGameClient(callback);
-            Console.WriteLine("Client Faulted");
-        }
-
-        private void RemoveGameClient(IGameManagerCallback callback)
+        private static void RemoveGameClient(IGameManagerCallback callback)
         {
             foreach (var gameEntry in _gamePlayerCallBack)
             {
@@ -957,7 +936,7 @@ namespace BevososService
             Console.WriteLine("Callback not found in any active game.");
         }
 
-        private void EndGame(int gameId)
+        private static void EndGame(int gameId)
         {
             if (_activeGames.TryRemove(gameId, out _))
             {
@@ -983,7 +962,7 @@ namespace BevososService
 
     public partial class ServiceImplementation : ICardManager
     {
-        public void SeeGlobalDeck()
+        public static void SeeGlobalDeck()
         {
             foreach (var card in GlobalDeck.Deck)
             {
@@ -991,7 +970,7 @@ namespace BevososService
             }
         }
 
-        private void Shuffle<T>(IList<T> list)
+        private static void Shuffle<T>(IList<T> list)
         {
             Random rng = new Random();
             int n = list.Count;
