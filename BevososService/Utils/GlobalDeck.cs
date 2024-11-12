@@ -28,7 +28,7 @@ namespace BevososService
                 Deck.Add(cardId, new Card
                 {
                     CardId = cardId,
-                    Type = Card.CardType.BodyPart,
+                    Type = Card.CardType.Head,
                     Element = Card.CardElement.Any,
                     BodyPartIndex = 0, // Head
                     Damage = 4 // Asumiendo 4 para BodyParts
@@ -42,7 +42,7 @@ namespace BevososService
                 Deck.Add(cardId, new Card
                 {
                     CardId = cardId,
-                    Type = Card.CardType.BodyPart,
+                    Type = Card.CardType.Head,
                     Element = Card.CardElement.Water,
                     BodyPartIndex = 0, // Head
                     Damage = 3
@@ -56,7 +56,7 @@ namespace BevososService
                 Deck.Add(cardId, new Card
                 {
                     CardId = cardId,
-                    Type = Card.CardType.BodyPart,
+                    Type = Card.CardType.Head,
                     Element = Card.CardElement.Land,
                     BodyPartIndex = 0, // Head
                     Damage = 3
@@ -70,7 +70,7 @@ namespace BevososService
                 Deck.Add(cardId, new Card
                 {
                     CardId = cardId,
-                    Type = Card.CardType.BodyPart,
+                    Type = Card.CardType.Head,
                     Element = Card.CardElement.Air,
                     BodyPartIndex = 0, // Head
                     Damage = 3

@@ -21,7 +21,7 @@ namespace BevososService.DTOs
         public List<CardDTO> BabyDeck { get; set; }
 
         [DataMember]
-        public List<KeyValuePair<int, PlayerStateDTO>> playerState { get; set;}
+        public Dictionary<int, PlayerStateDTO> playerState { get; set;} = new Dictionary<int, PlayerStateDTO>();
 
         [DataMember]
         public int CurrentPlayerId { get; set; }
@@ -47,12 +47,20 @@ namespace BevososService.DTOs
                 {
                     gameStateDto.BabyDeck.Add((CardDTO)babyPile.Peek());
                 }
+                else
+                { 
                 gameStateDto.BabyDeck.Add(new CardDTO { CardId = 0 });
+                }
             }
 
-            gameStateDto.playerState = game.Players.Select(player => new KeyValuePair<int, PlayerStateDTO>(player.Key, (PlayerStateDTO)player.Value)).ToList();
             gameStateDto.CurrentPlayerId = game.CurrentPlayerId;
             gameStateDto.ActionsRemaining = game.ActionsRemaining;
+
+            foreach (var player in game.Players)
+            {
+                gameStateDto.playerState.Add(player.Key, (PlayerStateDTO)player.Value);
+            }
+
 
 
             return gameStateDto;

@@ -34,7 +34,7 @@ namespace BevososService
     {
         public bool IsEmailTaken(string email)
         {
-             return new AccountDAO().EmailExists(email);
+            return new AccountDAO().EmailExists(email);
         }
 
         public bool IsUsernameTaken(string username)
@@ -56,10 +56,11 @@ namespace BevososService
 
         public bool SendToken(string email)
         {
-            if(new TokenDAO().HasToken(email))
+            if (new TokenDAO().HasToken(email))
             {
                 return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
-            }else
+            }
+            else
             {
                 new TokenDAO().AsignToken(email);
                 return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
@@ -88,20 +89,20 @@ namespace BevososService
                 return null;
             }
 
-                if (SimpleHashing.VerifyPassword(password, account.PasswordHash))
+            if (SimpleHashing.VerifyPassword(password, account.PasswordHash))
+            {
+                User user = userDAO.GetUserById(account.UserId);
+
+                UserDto userDto = new UserDto
                 {
-                    User user = userDAO.GetUserById(account.UserId);
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    Email = account.Email,
+                    ProfilePictureId = user.ProfilePictureId
+                };
 
-                    UserDto userDto = new UserDto
-                    {
-                        UserId = user.UserId,
-                        Username = user.Username,
-                        Email = account.Email,
-                        ProfilePictureId = user.ProfilePictureId
-                    };
-
-                    return userDto;
-                }
+                return userDto;
+            }
             return null;
         }
 
@@ -116,7 +117,7 @@ namespace BevososService
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 
-    public partial class ServiceImplementation: ILobbyManager
+    public partial class ServiceImplementation : ILobbyManager
     {
 
         private static int _currentLobbyId = 4;
@@ -203,7 +204,7 @@ namespace BevososService
                     }
                 }
             }
-        
+
         }
         public void LeaveLobby(int lobbyId, int userId)
         {
@@ -444,10 +445,11 @@ namespace BevososService
 
                     if (result)
                     {
-                        callback.OnProfileUpdate( "Not changed", profilePictureId, "Username exists");
+                        callback.OnProfileUpdate("Not changed", profilePictureId, "Username exists");
                     }
                 }
-                else if(username == "Not changed"){
+                else if (username == "Not changed")
+                {
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
 
@@ -456,8 +458,9 @@ namespace BevososService
                         callback.OnProfileUpdate(username, profilePictureId, "");
                     }
                 }
-                else {
-                    
+                else
+                {
+
                     user.Username = username;
                     user.ProfilePictureId = profilePictureId;
 
@@ -481,7 +484,7 @@ namespace BevososService
     {
 
         private static readonly ConcurrentDictionary<int, ISocialManagerCallback> connectedClients = new ConcurrentDictionary<int, ISocialManagerCallback>();
-        
+
         private readonly object _lock = new object();
 
         public void Connect(int userId)
@@ -498,7 +501,7 @@ namespace BevososService
             {
                 connectedClients.TryAdd(userId, callback);
             }
-        
+
             NotifyFriendsUserOnline(userId);
         }
 
@@ -539,7 +542,7 @@ namespace BevososService
                 {
                     try
                     {
-                        
+
                         friendCallback.OnFriendOnline(userId);
                         Console.WriteLine("Notified friend: " + friendId);
                     }
@@ -578,9 +581,9 @@ namespace BevososService
 
         public bool DeleteFriend(int userId, int friendId)
         {
-            if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
             {
-                if(connectedClients.TryGetValue(friendId, out var friendCallback))
+                if (connectedClients.TryGetValue(friendId, out var friendCallback))
                 {
                     friendCallback.OnFriendshipDeleted(userId);
                 }
@@ -597,7 +600,7 @@ namespace BevososService
                 bool result = new FriendshipDAO().RemoveFriendship(userId, friendId);
                 if (result)
                 {
-                    if(connectedClients.TryGetValue(friendId, out var friendCallback))
+                    if (connectedClients.TryGetValue(friendId, out var friendCallback))
                     {
                         friendCallback.OnFriendshipDeleted(userId);
                     }
@@ -610,7 +613,7 @@ namespace BevososService
 
         public List<BlockedDTO> GetBlockedUsers(int userId)
         {
-            if(new UserDAO().UserExists(userId))
+            if (new UserDAO().UserExists(userId))
             {
                 List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
                 List<BlockedDTO> blockedUsers = new List<BlockedDTO>();
@@ -642,7 +645,7 @@ namespace BevososService
         {
             if (new UserDAO().UserExists(userId))
             {
-                List<FriendData> friendshipList =new FriendshipDAO().GetFriendsForUser(userId);
+                List<FriendData> friendshipList = new FriendshipDAO().GetFriendsForUser(userId);
                 List<FriendDTO> friends = new List<FriendDTO>();
                 foreach (FriendData friend in friendshipList)
                 {
@@ -651,7 +654,7 @@ namespace BevososService
                         friend.IsConnected = true;
                     }
 
-                    friends.Add((FriendDTO) friend);
+                    friends.Add((FriendDTO)friend);
                 }
                 return friends;
             }
@@ -687,14 +690,14 @@ namespace BevososService
                     return;
                 }
 
-                
+
                 Account account = new AccountDAO().GetAccountByUserId(userId);
                 if (account != null)
                 {
                     EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
                 }
 
-            } 
+            }
         }
 
         public void AcceptFriendRequest(int userId, int friendId, int requestId)
@@ -763,14 +766,14 @@ namespace BevososService
         }
         public bool UnblockUser(int userId, int blockedId)
         {
-            if(new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockedId))
+            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockedId))
             {
                 return new BlockedDAO().DeleteBlock(userId, blockedId);
             }
             return false;
         }
 
-        public List<UserDto> GetUsersFoundByName(int userId,string name)
+        public List<UserDto> GetUsersFoundByName(int userId, string name)
         {
             var users = new List<UserDto>();
             var usersData = new UserDAO().GetUsersByName(name, userId);
@@ -785,8 +788,8 @@ namespace BevososService
         {
             if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
             {
-                if(new BlockedDAO().AddBlock(userId, blockeeId))
-                { 
+                if (new BlockedDAO().AddBlock(userId, blockeeId))
+                {
                     return true;
                 }
                 return false;
@@ -796,8 +799,8 @@ namespace BevososService
 
         public bool IsConnected(string email)
         {
-            User user= new UserDAO().GetUserByEmail(email);
-            if (user != null) 
+            User user = new UserDAO().GetUserByEmail(email);
+            if (user != null)
             {
                 return connectedClients.ContainsKey(user.UserId);
             }
@@ -805,10 +808,10 @@ namespace BevososService
         }
     }
 
-    public partial class ServiceImplementation: IGameManager
+    public partial class ServiceImplementation : IGameManager
     {
         //GameId-> GameInstance
-        private static ConcurrentDictionary<int , Game> _activeGames = new ConcurrentDictionary<int, Game>();
+        private static ConcurrentDictionary<int, Game> _activeGames = new ConcurrentDictionary<int, Game>();
         //GameId -> (UserId -> Callback)
         private static ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>> _gamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
 
@@ -929,7 +932,7 @@ namespace BevososService
                         gameInstance.Players.Remove(userId);
                     }
 
-                    return; 
+                    return;
                 }
             }
 
@@ -954,41 +957,76 @@ namespace BevososService
 
             for (int i = 0; i < gameInstance.Players.Count; i++)
             {
+                Console.WriteLine(card.CardId);
+                _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+            }
+        }
+
+        public void PlayCard(int userId, int matchCode, int cardId)
+        {
+            Card card = GlobalDeck.Deck[cardId];
+
+            if (card.Type == Card.CardType.Baby)
+            {
+                switch (card.Element)
+                {
+                    case Card.CardElement.Land:
+                        _activeGames[matchCode].BabyPiles[0].Push(card);
+                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                        break;
+                    case Card.CardElement.Water:
+                        _activeGames[matchCode].BabyPiles[1].Push(card);
+                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                        break;
+                    case Card.CardElement.Air:
+                        _activeGames[matchCode].BabyPiles[2].Push(card);
+                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                        break;
+                }
+
+                _activeGames.TryGetValue(matchCode, out Game gameInstance);
+
+                for (int i = 0; i < gameInstance.Players.Count; i++)
+                {
                     Console.WriteLine(card.CardId);
                     _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                }
+
             }
-        }
+
+        } 
     }
 
-    public partial class ServiceImplementation : ICardManager
-    {
-        public static void SeeGlobalDeck()
+        public partial class ServiceImplementation : ICardManager
         {
-            foreach (var card in GlobalDeck.Deck)
+            public static void SeeGlobalDeck()
             {
-                Console.WriteLine(card.Value);
+                foreach (var card in GlobalDeck.Deck)
+                {
+                    Console.WriteLine(card.Value);
+                }
             }
+
+            private static void Shuffle<T>(IList<T> list)
+            {
+                Random rng = new Random();
+                int n = list.Count;
+                while (n > 1)
+                {
+                    n--;
+                    int k = rng.Next(n + 1);
+                    T value = list[k];
+                    list[k] = list[n];
+                    list[n] = value;
+                }
+            }
+
         }
 
-        private static void Shuffle<T>(IList<T> list)
+        public partial class ServiceImplementation : IPlayerManager
         {
-            Random rng = new Random();
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
+
         }
 
     }
 
-    public partial class  ServiceImplementation: IPlayerManager
-    {
-        
-    }
-
-}

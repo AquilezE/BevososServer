@@ -15,6 +15,7 @@ namespace BevososService.GameModels
         {
             Baby,
             BodyPart,
+            Head,
             WildProvoke,
             Hat,
             Tool

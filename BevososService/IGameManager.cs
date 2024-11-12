@@ -30,6 +30,18 @@ namespace BevososService
         [OperationContract(IsOneWay = true)]
         void DrawCard(int matchCode, int userId);
 
+
+        /// <summary>
+        /// Handles the logic for a player playing a card during their turn. Updates the game state
+        /// and sends the updated game state to all players in the match.
+        /// </summary>
+        /// <param name="userId">The unique id of the player that played the card.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="cardId">The unique identifier of the card being played.</param>
+
+        [OperationContract(IsOneWay = true)]
+        void PlayCard(int userId, int matchCode, int cardId);
+
     }
 
     [ServiceContract]
