@@ -156,6 +156,8 @@ namespace BevososService
             _lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
 
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+
+            userDto.IsReady = true;
             _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
@@ -176,6 +178,7 @@ namespace BevososService
             activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
             clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
+            userDto.IsReady = true;
             _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
             var existingUsers = activeLobbiesDict[lobbyId]
@@ -210,7 +213,6 @@ namespace BevososService
         {
             HandleUserLeavingLobby(lobbyId, userId);
         }
-
         public void SendMessage(int lobbyId, int userId, string message)
         {
             foreach (var user in activeLobbiesDict[lobbyId].Select(user => user.Value))
@@ -225,7 +227,6 @@ namespace BevososService
                 }
             }
         }
-
         public void KickUser(int lobbyId, int kickerId, int targetUserId, string reason)
         {
             if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == kickerId)
@@ -249,14 +250,12 @@ namespace BevososService
                 }
             }
         }
-
         private void LobbyChannel_Closed(object sender, EventArgs e)
         {
             var callback = (ILobbyManagerCallback)sender;
             RemoveLobbyClient(callback);
             Console.WriteLine("Client Closed");
         }
-
         private void LobbyChannel_Faulted(object sender, EventArgs e)
         {
             var callback = (ILobbyManagerCallback)sender;
@@ -274,7 +273,6 @@ namespace BevososService
             }
 
         }
-
         private void RemoveClientFromLobby(int lobbyId, int userId)
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
@@ -298,7 +296,6 @@ namespace BevososService
                 clientCallbackMapping.TryRemove(callback, out _);
             }
         }
-
         private void HandleUserLeavingLobby(int lobbyId, int userId)
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
@@ -336,7 +333,6 @@ namespace BevososService
             _lobbyUsersDetails.TryRemove(userId, out _);
 
         }
-
         public async void StartGame(int lobbyId)
         {
             if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
@@ -376,9 +372,28 @@ namespace BevososService
             }
         }
 
+        public void ChangeReadyStatus(int lobbyId,int userId)
+        {
+            if (_lobbyUsersDetails.TryGetValue(userId, out UserDto userDto))
+            {
+                userDto.IsReady = !userDto.IsReady;
 
-
-
+                if(activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+                {
+                    foreach (var user in lobby.Values)
+                    {
+                        try
+                        {
+                            user.OnReadyStatusChanged(userId, userDto.IsReady);
+                        }
+                        catch (Exception)
+                        {
+                            RemoveLobbyClient(user);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public partial class ServiceImplementation : ILobbyChecker
@@ -396,6 +411,7 @@ namespace BevososService
             }
             return false;
         }
+
     }
 
     public partial class ServiceImplementation : IProfileManager
@@ -968,65 +984,152 @@ namespace BevososService
 
             if (card.Type == Card.CardType.Baby)
             {
-                switch (card.Element)
-                {
-                    case Card.CardElement.Land:
-                        _activeGames[matchCode].BabyPiles[0].Push(card);
-                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
-                        break;
-                    case Card.CardElement.Water:
-                        _activeGames[matchCode].BabyPiles[1].Push(card);
-                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
-                        break;
-                    case Card.CardElement.Air:
-                        _activeGames[matchCode].BabyPiles[2].Push(card);
-                        _activeGames[matchCode].Players[userId].Hand.Remove(card);
-                        break;
-                }
+                PlayBaby(userId, matchCode, card);
+            }
+            if (card.Type == Card.CardType.Head)
+            {
+                /*
+                 * This will use a callback to notify the player that that 
+                 * the card was played successfully
+                 * or if his monsters are already full
+                 */
+                PlayHead(userId, matchCode, card);
+            }
+            if (card.Type == Card.CardType.WildProvoke)
+            {
+                /*
+                 * This will use a callback to ask the player to select a deck to provoke
+                 * Enforcing this in the client side will be tuff
+                 * 
+                 */
+                //PlayProvoke(userId, matchCode, card);
+            }
+            if (card.Type == Card.CardType.BodyPart)
+            {
+                /*
+                 * This will call a callback to ask the player to select a monster to attach the body part to
+                 * 
+                 */
+                //PlayBodyPart(userId, matchCode, card);
+            }
+            if (card.Type == Card.CardType.Tool)
+            {
+                /*
+                 * 
+                 * This will call a callback to ask the player to select a monster to attach the tool to
+                 * 
+                 */
+                //PlayTool(userId, matchCode, card);
+            }
+            if (card.Type == Card.CardType.Hat)
+            {
+                /*
+                 * This will call a callback to ask the player to select a monster to attach the hat to
+                 * 
+                 */
+                //PlayHat(userId, matchCode, card);
+            }
 
-                _activeGames.TryGetValue(matchCode, out Game gameInstance);
+        }
 
-                for (int i = 0; i < gameInstance.Players.Count; i++)
+        private void PlayBaby(int userId, int matchCode, Card card)
+        {
+            switch (card.Element)
+            {
+                case Card.CardElement.Land:
+                    _activeGames[matchCode].BabyPiles[0].Push(card);
+                    _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                    break;
+                case Card.CardElement.Water:
+                    _activeGames[matchCode].BabyPiles[1].Push(card);
+                    _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                    break;
+                case Card.CardElement.Air:
+                    _activeGames[matchCode].BabyPiles[2].Push(card);
+                    _activeGames[matchCode].Players[userId].Hand.Remove(card);
+                    break;
+            }
+
+            _activeGames.TryGetValue(matchCode, out Game gameInstance);
+
+            for (int i = 0; i < gameInstance.Players.Count; i++)
+            {
+                Console.WriteLine(card.CardId);
+                _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+            }
+        }
+
+
+        private void PlayHead(int userId, int matchCode, Card card)
+        {
+            if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                if (gameInstance.Players[userId].Monsters.Count < 3)
                 {
-                    Console.WriteLine(card.CardId);
-                    _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                    Monster monster = new Monster
+                    {
+                        Head = card,
+                        Torso = null,
+                        LeftHand = null,
+                        LeftHandTool = null,
+                        RightHand = null,
+                        RightHandTool = null,
+                        Legs = null,
+                        Hat = null
+                    };
+                    gameInstance.Players[userId].Monsters.Add(monster);
+                    gameInstance.Players[userId].Hand.Remove(card);
+
+                    for (int i = 0; i < gameInstance.Players.Count; i++)
+                    {
+                        Console.WriteLine(card.CardId);
+                        _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                    }
                 }
+            }
+
+        }
+
+        private void PlayBodyPart(int userId, int matchCode, int MonsterChosenIndex, Card card)
+        {
+            if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
 
             }
 
-        } 
+        }
     }
 
-        public partial class ServiceImplementation : ICardManager
+    public partial class ServiceImplementation : ICardManager
+    {
+        public static void SeeGlobalDeck()
         {
-            public static void SeeGlobalDeck()
+            foreach (var card in GlobalDeck.Deck)
             {
-                foreach (var card in GlobalDeck.Deck)
-                {
-                    Console.WriteLine(card.Value);
-                }
+                Console.WriteLine(card.Value);
             }
-
-            private static void Shuffle<T>(IList<T> list)
-            {
-                Random rng = new Random();
-                int n = list.Count;
-                while (n > 1)
-                {
-                    n--;
-                    int k = rng.Next(n + 1);
-                    T value = list[k];
-                    list[k] = list[n];
-                    list[n] = value;
-                }
-            }
-
         }
 
-        public partial class ServiceImplementation : IPlayerManager
+        private static void Shuffle<T>(IList<T> list)
         {
-
+            Random rng = new Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
+
+    }
+
+    public partial class ServiceImplementation : IPlayerManager
+    {
+
+    }
 
     }
 

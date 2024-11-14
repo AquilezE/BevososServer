@@ -63,7 +63,13 @@ namespace BevososService
         void StartGame(int lobbyId);
 
 
-
+        /// <summary>
+        /// Changes the ready status of a user in the specified lobby. Notifies all lobby members when a user's ready status has changed.
+        /// </summary>
+        /// <param name="lobbyId">The unique identifier of the lobby.</param>
+        /// <param name="userId">The unique identifier of the user whose ready status has changed.</param>
+        [OperationContract(IsOneWay = true)]
+        void ChangeReadyStatus(int lobbyId, int userId);
     }
 
     [ServiceContract]
@@ -127,6 +133,16 @@ namespace BevososService
         /// <param name="message">The content of the message.</param>
         [OperationContract(IsOneWay = true)]
         void OnSendMessage(int userId, string message);
+
+
+        
+        ///<summary>
+        /// Notifies all lobby members when a user's ready status has changed.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user whose ready status has changed.</param>
+        /// <param name="isReady">The new ready status of the user.</param>
+        [OperationContract(IsOneWay = true)]
+        void OnReadyStatusChanged(int userId, bool isReady);
 
 
         /// <summary>

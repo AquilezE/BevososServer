@@ -15,7 +15,7 @@ namespace BevososService.GameModels
         public Card RightHand { get; set; }
         public Card RightHandTool { get; set; }
         public Card Legs { get; set; }
-
+        public Card Hat { get; set; }
         
 
     }

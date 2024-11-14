@@ -18,6 +18,9 @@ namespace BevososService.DTOs
         [DataMember]
         public int ProfilePictureId { get; set; }
 
+        [DataMember]
+        public bool IsReady { get; set; } = false;
+
         public static explicit operator UserDto(DataAccess.Models.User user)
         {
             return new UserDto
@@ -26,6 +29,7 @@ namespace BevososService.DTOs
                 Username = user.Username,
                 Email = user.Account.Email,
                 ProfilePictureId = user.ProfilePictureId
+
             };
         }
     }
