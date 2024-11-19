@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BevososService
 {
-    [ServiceContract (CallbackContract = typeof(IGameManagerCallback))]
+    [ServiceContract(CallbackContract = typeof(IGameManagerCallback))]
     public interface IGameManager
     {
         /// <summary>
@@ -19,7 +19,7 @@ namespace BevososService
         /// <param name="userDto">The data transfer object containing information about the user joining the game.</param>
         /// <exception cref="FaultException">Thrown when the game does not exist or the player is not found in the game.</exception>
         [OperationContract(IsOneWay = true)]
-        void JoinGame(int gameId,UserDto userDto);
+        void JoinGame(int gameId, UserDto userDto);
 
         /// <summary>
         /// Handles the logic for a player drawing a card during their turn. Updates the player's hand
@@ -42,6 +42,29 @@ namespace BevososService
         [OperationContract(IsOneWay = true)]
         void PlayCard(int userId, int matchCode, int cardId);
 
+        /// <summary>
+        /// Executes the placement of a body part for customization.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="cardId">The unique identifier of the card being played.</param>
+        /// <param name="monsterSelectedIndex">The index of the monster selected for customization.</param>
+
+        [OperationContract(IsOneWay = true)]
+        void PlayProvoke(int userId, int matchCode);
+
+        [OperationContract(IsOneWay = true)]
+        void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
+
+        [OperationContract(IsOneWay = true)]
+        void ExecuteToolPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
+
+        [OperationContract(IsOneWay = true)]
+        void ExecuteHatPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
+
+        [OperationContract(IsOneWay = true)]
+        void ExecuteProvoke(int userId, int matchCode, int monsterSelectedIndex);
+
     }
 
     [ServiceContract]
@@ -55,6 +78,42 @@ namespace BevososService
         [OperationContract(IsOneWay = true)]
         void ReceiveGameState(GameStateDTO gameStateDto);
 
+        /// <summary>
+        /// Requests the selection of a body part for customization.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="card">The card that was played that triggered the request.</param>
+        [OperationContract(IsOneWay = true)]
+        void RequestBodyPartSelection(int userId, int matchCode, CardDTO card);
+
+        /// <summary>
+        /// Requests the selection of a tool for customization.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="card">The card that was played that triggered the request.</param>
+        [OperationContract(IsOneWay = true)]
+        void RequestToolSelection(int userId, int matchCode, CardDTO card);
+
+        /// <summary>
+        /// Requests the selection of a hat for customization.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="card">The card that was played that triggered the request.</param>
+        [OperationContract(IsOneWay = true)]
+        void RequestHatSelection(int userId, int matchCode, CardDTO card);
+
+
+
+        /// <summary>
+        /// Requests the selection of a baby pile action during the game.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        [OperationContract(IsOneWay = true)]
+        void RequestProvokeSelection(int userId, int matchCode);
     }
 
 }

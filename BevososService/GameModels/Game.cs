@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BevososService.GameModels
@@ -18,7 +19,13 @@ namespace BevososService.GameModels
         public Dictionary<int, Stack<Card>> BabyPiles { get; set; } // Keyed by BabyType enum or similar identifier
         public Dictionary<int, PlayerState> Players { get; set; } = new Dictionary<int, PlayerState>();
         public int CurrentPlayerId { get; set; }
-        public int ActionsRemaining { get; set; }
+        public int ActionsPerTurn { get; set; } = 2;
+        public ConcurrentDictionary<int, int> PlayerActionsRemaining { get; set; } = new ConcurrentDictionary<int, int>();
+        
+        public Timer TurnTimer { get; set; }
+
+        public DateTime TurnStartTime { get; set; }
+
 
     }
 }

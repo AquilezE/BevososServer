@@ -11,6 +11,7 @@ using DataAccess.Models;
 using static BevososService.Utils.Hasher;
 using BevososService.GameModels;
 using System.Threading.Tasks;
+using DataAccess.Utils;
 
 
 namespace BevososService
@@ -344,13 +345,15 @@ namespace BevososService
                     Players = new Dictionary<int, PlayerState>(),
                     Deck = new ConcurrentStack<Card>(),
                     BabyPiles = new Dictionary<int, Stack<Card>>(),
-                    ActionsRemaining = 2 // This can be changed for each player if we have time
+                    ActionsPerTurn = 2 // This can be changed for each player if we have time
                 };
 
                 // Initialize the game
-                InitializeGame(gameInstance, lobby);
+               
 
                 _activeGames.TryAdd(gameId, gameInstance);
+
+                InitializeGame(gameInstance, lobby);
 
                 // Notify each player 
                 foreach (var kvp in lobby.Select(x => x.Value))
@@ -371,7 +374,6 @@ namespace BevososService
                 activeLobbiesDict.TryRemove(lobbyId, out _);
             }
         }
-
         public void ChangeReadyStatus(int lobbyId,int userId)
         {
             if (_lobbyUsersDetails.TryGetValue(userId, out UserDto userDto))
@@ -826,10 +828,84 @@ namespace BevososService
 
     public partial class ServiceImplementation : IGameManager
     {
+        private static int GetTurnTimeRemainingInSeconds(Game gameInstance)
+        {
+            if (gameInstance.TurnTimer == null)
+            {
+                return 0;
+            }
+
+            TimeSpan elapsedTime = DateTime.UtcNow - gameInstance.TurnStartTime;
+            int turnDurationInSeconds = 60; 
+            int timeRemaining = turnDurationInSeconds - (int)elapsedTime.TotalSeconds;
+            return timeRemaining > 0 ? timeRemaining : 0;
+
+        }
+        private static void BroadcastGameState(int matchCode)
+        {
+            if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                var gameStateDto = (GameStateDTO)gameInstance;
+
+                gameStateDto.TurnTimeRemainingInSeconds = GetTurnTimeRemainingInSeconds(gameInstance);
+
+                foreach (var playerCallback in _gamePlayerCallBack[matchCode].Values)
+                {
+                    try
+                    {
+                        playerCallback.ReceiveGameState(gameStateDto);
+                    }
+                    catch (Exception ex)
+                    {
+                        RemoveGameClient(playerCallback);
+                    }
+                }
+            }
+        }
+        private static void GameChannel_Closed(object sender, EventArgs e)
+        {
+            var callback = (IGameManagerCallback)sender;
+            RemoveGameClient(callback);
+        }
+        private static void RemoveGameClient(IGameManagerCallback callback)
+        {
+            foreach (var gameEntry in _gamePlayerCallBack)
+            {
+                int gameId = gameEntry.Key;
+                var playerCallbacks = gameEntry.Value;
+
+                var playerToRemove = playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
+                if (!playerToRemove.Equals(default(KeyValuePair<int, IGameManagerCallback>)))
+                {
+                    int userId = playerToRemove.Key;
+                    playerCallbacks.TryRemove(userId, out _);
+
+                    Console.WriteLine($"Player {userId} removed from game {gameId}");
+
+                    if (playerCallbacks.Count < 2)
+                    {
+                        Console.WriteLine($"Game {gameId} no longer has enough players to continue. Ending game.");
+                        EndGame(gameId);
+                    }
+
+                    if (_activeGames.TryGetValue(gameId, out Game gameInstance))
+                    {
+                        gameInstance.Players.Remove(userId);
+                    }
+
+                    return;
+                }
+            }
+
+            Console.WriteLine("Callback not found in any active game.");
+        }
+
         //GameId-> GameInstance
         private static ConcurrentDictionary<int, Game> _activeGames = new ConcurrentDictionary<int, Game>();
         //GameId -> (UserId -> Callback)
         private static ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>> _gamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
+        //GameId ->(UserId -> Stats)
+        private static ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>> _playerStatistics = new ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>>();
 
         private void InitializeGame(Game gameInstance, ConcurrentDictionary<int, ILobbyManagerCallback> lobby)
         {
@@ -873,13 +949,20 @@ namespace BevososService
                     }
                 }
 
+
                 gameInstance.Players.Add(userId, playerState);
+                gameInstance.PlayerActionsRemaining[userId] = gameInstance.ActionsPerTurn;
+
+                _playerStatistics.TryAdd(gameInstance.GameId, new ConcurrentDictionary<int, Stats>());
+                _playerStatistics[gameInstance.GameId].TryAdd(userId, new Stats());
+                
             }
 
             // 4. Set the Current Player
             gameInstance.CurrentPlayerId = gameInstance.Players.Keys.First();
+            gameInstance.TurnStartTime = DateTime.UtcNow;
+            StartTurnTimer(gameInstance.GameId, gameInstance.CurrentPlayerId);
 
-            gameInstance.ActionsRemaining = 2;
         }
 
         public void JoinGame(int gameId, UserDto userDto)
@@ -899,140 +982,148 @@ namespace BevososService
 
                 _gamePlayerCallBack[gameId].TryAdd(userDto.UserId, callback);
 
-                if (gameInstance.Players.TryGetValue(userDto.UserId, out PlayerState playerState))
-                {
-                    GameStateDTO gameStateDto = (GameStateDTO)gameInstance;
-
-                    callback.ReceiveGameState(gameStateDto);
-                }
-                else
-                {
-                    throw new FaultException("Player not found in game.");
-                }
+                BroadcastGameState(gameId);
             }
             else
             {
                 throw new FaultException("Game does not exist.");
             }
         }
-
-        private static void GameChannel_Closed(object sender, EventArgs e)
-        {
-            var callback = (IGameManagerCallback)sender;
-            RemoveGameClient(callback);
-        }
-
-        private static void RemoveGameClient(IGameManagerCallback callback)
-        {
-            foreach (var gameEntry in _gamePlayerCallBack)
-            {
-                int gameId = gameEntry.Key;
-                var playerCallbacks = gameEntry.Value;
-
-                var playerToRemove = playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
-                if (!playerToRemove.Equals(default(KeyValuePair<int, IGameManagerCallback>)))
-                {
-                    int userId = playerToRemove.Key;
-                    playerCallbacks.TryRemove(userId, out _);
-
-                    Console.WriteLine($"Player {userId} removed from game {gameId}");
-
-                    if (playerCallbacks.Count < 2)
-                    {
-                        Console.WriteLine($"Game {gameId} no longer has enough players to continue. Ending game.");
-                        EndGame(gameId);
-                    }
-
-                    if (_activeGames.TryGetValue(gameId, out Game gameInstance))
-                    {
-                        gameInstance.Players.Remove(userId);
-                    }
-
-                    return;
-                }
-            }
-
-            Console.WriteLine("Callback not found in any active game.");
-        }
-
         private static void EndGame(int gameId)
         {
-            if (_activeGames.TryRemove(gameId, out _))
+            if (_activeGames.TryRemove(gameId, out Game gameInstance))
             {
+                gameInstance.TurnTimer?.Dispose();
+
                 _gamePlayerCallBack.TryRemove(gameId, out _);
                 Console.WriteLine($"Game {gameId} has been ended and removed from active games.");
             }
         }
-
         public void DrawCard(int matchCode, int userId)
         {
-            _activeGames.TryGetValue(matchCode, out Game gameInstance);
-            gameInstance.Deck.TryPop(out Card card);
-            gameInstance.Players[userId].Hand.Add(card);
-
-
-            for (int i = 0; i < gameInstance.Players.Count; i++)
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
-                Console.WriteLine(card.CardId);
-                _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                return;
             }
-        }
 
-        public void PlayCard(int userId, int matchCode, int cardId)
+            if (gameInstance.CurrentPlayerId != userId)
+            {
+             
+                return;
+            }
+
+            if (gameInstance.PlayerActionsRemaining[userId] <= 0)
+            {
+
+                return;
+            }
+
+            if (gameInstance.Deck.TryPop(out Card card))
+            {
+
+                gameInstance.Players[userId].Hand.Add(card);
+                gameInstance.PlayerActionsRemaining[userId]--;
+
+                BroadcastGameState(matchCode);
+
+                if (gameInstance.PlayerActionsRemaining[userId] == 0)
+                {
+                    AdvanceTurn(matchCode);
+                }
+            }
+
+        }
+        public async void PlayCard(int userId, int matchCode, int cardId)
         {
-            Card card = GlobalDeck.Deck[cardId];
-
-            if (card.Type == Card.CardType.Baby)
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
-                PlayBaby(userId, matchCode, card);
-            }
-            if (card.Type == Card.CardType.Head)
-            {
-                /*
-                 * This will use a callback to notify the player that that 
-                 * the card was played successfully
-                 * or if his monsters are already full
-                 */
-                PlayHead(userId, matchCode, card);
-            }
-            if (card.Type == Card.CardType.WildProvoke)
-            {
-                /*
-                 * This will use a callback to ask the player to select a deck to provoke
-                 * Enforcing this in the client side will be tuff
-                 * 
-                 */
-                //PlayProvoke(userId, matchCode, card);
-            }
-            if (card.Type == Card.CardType.BodyPart)
-            {
-                /*
-                 * This will call a callback to ask the player to select a monster to attach the body part to
-                 * 
-                 */
-                //PlayBodyPart(userId, matchCode, card);
-            }
-            if (card.Type == Card.CardType.Tool)
-            {
-                /*
-                 * 
-                 * This will call a callback to ask the player to select a monster to attach the tool to
-                 * 
-                 */
-                //PlayTool(userId, matchCode, card);
-            }
-            if (card.Type == Card.CardType.Hat)
-            {
-                /*
-                 * This will call a callback to ask the player to select a monster to attach the hat to
-                 * 
-                 */
-                //PlayHat(userId, matchCode, card);
+                return;
             }
 
+            if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
+            {
+                return;
+            }
+
+            if(gameInstance.CurrentPlayerId != userId)
+            {
+                return;
+            }
+
+            if (gameInstance.PlayerActionsRemaining[userId] <= 0)
+            {
+
+                return;
+            }
+
+            switch (card.Type)
+            {
+                case Card.CardType.Baby:
+                    PlayBaby(userId, matchCode, card);
+
+                    break;
+                case Card.CardType.Head:
+                    if (gameInstance.Players[userId].Monsters.Count < 3)
+                    {
+                        PlayHead(userId, matchCode, card);
+
+                    }
+                    else
+                    {
+                        //Send message to the player that he has too many monsters
+                    }
+                    break;
+                case Card.CardType.WildProvoke:
+
+                    //PlayProvoke(userId, matchCode, card);
+                    break;
+
+                case Card.CardType.BodyPart:
+                    if (gameInstance.Players[userId].Monsters.Count == 0)
+                    {
+                        //Send message to the player that he has to play a head first
+                    }
+                    else
+                    {
+                        await Task.Run(() =>
+                        {
+                            _gamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                            callback?.RequestBodyPartSelection(userId, matchCode, (CardDTO)card);
+                        });
+                    }
+                    break;
+                case Card.CardType.Tool:
+                    if (gameInstance.Players[userId].Monsters.Count == 0)
+                    {
+                        //Send message to the player that he has to play a head first
+                    }
+                    else
+                    {
+                        await Task.Run(() =>
+                        {
+                            _gamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                            callback?.RequestToolSelection(userId, matchCode, (CardDTO)card);
+                        });
+
+                    }
+                    break;
+                case Card.CardType.Hat:
+                    if (gameInstance.Players[userId].Monsters.Count == 0)
+                    {
+                        //Send message to the player that he has to play a head first
+                    }
+                    else
+                    {
+                        await Task.Run(() =>
+                        {
+                            _gamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                            callback?.RequestHatSelection(userId, matchCode, (CardDTO)card);
+                        });
+                    }
+                    break;
+            }
         }
-
-        private void PlayBaby(int userId, int matchCode, Card card)
+        private static void PlayBaby(int userId, int matchCode, Card card)
         {
             switch (card.Element)
             {
@@ -1051,53 +1142,299 @@ namespace BevososService
             }
 
             _activeGames.TryGetValue(matchCode, out Game gameInstance);
+            gameInstance.PlayerActionsRemaining[userId]--;
 
-            for (int i = 0; i < gameInstance.Players.Count; i++)
+
+
+
+            if(gameInstance.PlayerActionsRemaining[userId] == 0)
             {
-                Console.WriteLine(card.CardId);
-                _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                AdvanceTurn(matchCode);
+                return;
             }
+            BroadcastGameState(matchCode);
+
         }
-
-
-        private void PlayHead(int userId, int matchCode, Card card)
+        private static void PlayHead(int userId, int matchCode, Card card)
         {
             if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
-                if (gameInstance.Players[userId].Monsters.Count < 3)
+
+                Monster monster = new Monster
                 {
-                    Monster monster = new Monster
-                    {
-                        Head = card,
-                        Torso = null,
-                        LeftHand = null,
-                        LeftHandTool = null,
-                        RightHand = null,
-                        RightHandTool = null,
-                        Legs = null,
-                        Hat = null
-                    };
-                    gameInstance.Players[userId].Monsters.Add(monster);
+                    Head = card,
+                    Torso = null,
+                    LeftArm = null,
+                    LeftHandTool = null,
+                    RightArm = null,
+                    RightHandTool = null,
+                    Legs = null,
+                    Hat = null
+                };
+                gameInstance.Players[userId].Monsters.Add(monster);
+                gameInstance.Players[userId].Hand.Remove(card);
+
+                gameInstance.PlayerActionsRemaining[userId]--;
+
+
+                if (gameInstance.PlayerActionsRemaining[userId] == 0)
+                {
+                    AdvanceTurn(matchCode);
+                    return;
+                }
+                BroadcastGameState(matchCode);
+
+
+
+            }
+
+        }
+        public async void PlayProvoke(int userId, int matchCode)
+        {
+            if (!_activeGames.TryGetValue(userId, out Game gameInstance))
+            {
+                return;
+            }
+
+            if (gameInstance.Players[userId].ActionsPerTurn > gameInstance.PlayerActionsRemaining[userId])
+            {
+                // Not enough actions remaining
+                return;
+            }
+
+            else
+            {
+                await Task.Run(() =>
+                {
+                    _gamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                    callback?.RequestProvokeSelection(userId, matchCode);
+                });
+            }
+        }
+        public void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
+        {
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                return;
+            }
+
+            if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
+            {
+                return;
+            }
+
+            if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
+            {
+
+
+                if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
+                {
                     gameInstance.Players[userId].Hand.Remove(card);
 
-                    for (int i = 0; i < gameInstance.Players.Count; i++)
+                    gameInstance.PlayerActionsRemaining[userId]--;
+
+                    if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
-                        Console.WriteLine(card.CardId);
-                        _gamePlayerCallBack[matchCode][gameInstance.Players.ElementAt(i).Key].ReceiveGameState((GameStateDTO)gameInstance);
+                        AdvanceTurn(matchCode);
+                        return;
+                    }
+                    BroadcastGameState(matchCode);
+
+                }
+                else
+                {
+                    //this monster already has a part in that slot
+                }
+            }
+            else
+            {
+                //this monster does not exist
+            }
+
+
+        }
+        public void ExecuteToolPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
+        {
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                return;
+            }
+
+            if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
+            {
+                return;
+            }
+
+            if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
+            {
+
+                if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
+                {
+
+                    gameInstance.Players[gameInstance.CurrentPlayerId].ActionsPerTurn++;
+                    gameInstance.PlayerActionsRemaining[userId]--;
+                    gameInstance.Players[userId].Hand.Remove(card);
+
+                    BroadcastGameState(matchCode);
+
+                    if (gameInstance.PlayerActionsRemaining[userId] == 0)
+                    {
+                        AdvanceTurn(matchCode);
                     }
                 }
             }
 
         }
+        public void ExecuteHatPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
+        {
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                return;
+            }
 
-        private void PlayBodyPart(int userId, int matchCode, int MonsterChosenIndex, Card card)
+            if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
+            {
+                return;
+            }
+
+            if (gameInstance.Players[userId].Monsters.Count <= monsterSelectedIndex)
+            {
+
+                if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
+                {
+                    gameInstance.Players[userId].Hand.Remove(card);
+
+                    gameInstance.PlayerActionsRemaining[userId]--;
+
+
+                    BroadcastGameState(matchCode);
+
+                    if (gameInstance.PlayerActionsRemaining[userId] == 0)
+                    {
+                        AdvanceTurn(matchCode);
+                    }
+                }
+            }
+        }
+        public void ExecuteProvoke(int userId, int matchCode, int babyPile)
+        {
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                return;
+            }
+
+            if (gameInstance.BabyPiles[babyPile].Count == 0)
+            {
+                // Baby pile is empty
+                return;
+            }
+
+            Card.CardElement element = gameInstance.BabyPiles[babyPile].Peek().Element;
+
+            int monsterArmyMaxStrenght = 0;
+            int playerWithMaxStrenght = 0;
+
+            int pileStrenght = 0;
+            int numberBabies = gameInstance.BabyPiles[babyPile].Count;
+
+            foreach (Card baby in gameInstance.BabyPiles[babyPile])
+            {
+                pileStrenght += baby.Damage;
+            }
+            
+            foreach (var player in gameInstance.Players.Values)
+            {
+                int monsterArmyStrenght = 0;
+                List<Monster> monstersToRemove = new List<Monster>();
+
+                foreach (var monster in player.Monsters)
+                {
+                       if(monster.Head.Element == element || monster.Head.Element == Card.CardElement.Any)
+                       {
+                            monsterArmyStrenght += monster.GetDamage();
+                            monstersToRemove.Add(monster);
+                       }
+                }
+
+                foreach (var monster in monstersToRemove)
+                {
+                    if (monster.Hat != null)
+                    {
+                        gameInstance.Players[player.User.UserId].ActionsPerTurn--;
+
+                        if (gameInstance.PlayerActionsRemaining[player.User.UserId] > gameInstance.Players[player.User.UserId].ActionsPerTurn)
+                        {
+                            gameInstance.PlayerActionsRemaining[player.User.UserId] = gameInstance.Players[player.User.UserId].ActionsPerTurn;
+                        }
+                    }
+                    player.Monsters.Remove(monster);
+                }
+
+                if (monsterArmyStrenght > monsterArmyMaxStrenght)
+                {
+                    monsterArmyMaxStrenght = monsterArmyStrenght;
+                    playerWithMaxStrenght = player.User.UserId;
+                }
+            }
+
+            if (pileStrenght > monsterArmyMaxStrenght)
+            {
+                gameInstance.BabyPiles[babyPile].Clear();
+            }
+            else if(pileStrenght <= monsterArmyMaxStrenght)
+            {
+                _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].BabiesKilledThisGame += numberBabies;
+                _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].PointsThisGame += pileStrenght;
+                gameInstance.BabyPiles[babyPile].Clear();
+            }
+
+            BroadcastGameState(matchCode);
+            AdvanceTurn(matchCode);
+
+        }
+        private static void AdvanceTurn(int matchCode)
         {
             if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
+                var playerIds = gameInstance.Players.Keys.ToList();
+                int currentIndex = playerIds.IndexOf(gameInstance.CurrentPlayerId);
+                int nextIndex = (currentIndex + 1) % playerIds.Count;
+                gameInstance.CurrentPlayerId = playerIds[nextIndex];
 
+                int actionsPerTurn = gameInstance.Players[gameInstance.CurrentPlayerId].ActionsPerTurn;
+                gameInstance.PlayerActionsRemaining[gameInstance.CurrentPlayerId] = actionsPerTurn;
+
+                gameInstance.TurnStartTime = DateTime.UtcNow;
+
+
+                StartTurnTimer(matchCode, gameInstance.CurrentPlayerId);
+
+                BroadcastGameState(matchCode);
+            }
+        }
+        private static void StartTurnTimer(int matchCode, int userId)
+        {
+            int turnDurationInSeconds = 60;
+            var gameInstance = _activeGames[matchCode];
+
+            if (gameInstance.TurnTimer != null)
+            {
+                gameInstance.TurnTimer.Dispose();
             }
 
+            gameInstance.TurnTimer = new Timer(
+                callback: state =>
+                {
+                    //advance turn
+                    Console.WriteLine($"Player {userId}'s turn has timed out.");
+                    AdvanceTurn(matchCode);
+                },
+                state: null,
+                dueTime: turnDurationInSeconds * 1000, 
+                period: Timeout.Infinite 
+            );
         }
+
     }
 
     public partial class ServiceImplementation : ICardManager

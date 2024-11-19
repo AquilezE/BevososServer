@@ -12,7 +12,7 @@ namespace BevososService.DTOs
     {
         [DataMember]
         public int GameStateId { get; set; }
-        //[DataMember]
+
 
         //0 is the top babie of Land
         //1 is the top babie of Water
@@ -27,7 +27,10 @@ namespace BevososService.DTOs
         public int CurrentPlayerId { get; set; }
 
         [DataMember]
-        public int ActionsRemaining { get; set; }
+        public Dictionary<int, int> PlayerActionsRemaining { get; set; }
+
+        [DataMember]
+        public int TurnTimeRemainingInSeconds { get; set; }
 
         public GameStateDTO() { }
 
@@ -54,7 +57,7 @@ namespace BevososService.DTOs
             }
 
             gameStateDto.CurrentPlayerId = game.CurrentPlayerId;
-            gameStateDto.ActionsRemaining = game.ActionsRemaining;
+            gameStateDto.PlayerActionsRemaining = game.PlayerActionsRemaining.ToDictionary(kv => kv.Key, kv => kv.Value);
 
             foreach (var player in game.Players)
             {

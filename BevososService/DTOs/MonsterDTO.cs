@@ -33,9 +33,9 @@ namespace BevososService.DTOs
             //nasty
             monsterDTO.bodyParts.Add(monster.Head != null ? (CardDTO)monster.Head : new CardDTO { CardId = 0 });
             monsterDTO.bodyParts.Add(monster.Torso != null ? (CardDTO)monster.Torso : new CardDTO { CardId = 0 });
-            monsterDTO.bodyParts.Add(monster.LeftHand != null ? (CardDTO)monster.LeftHand : new CardDTO { CardId = 0 });
+            monsterDTO.bodyParts.Add(monster.LeftArm != null ? (CardDTO)monster.LeftArm : new CardDTO { CardId = 0 });
             monsterDTO.bodyParts.Add(monster.LeftHandTool != null ? (CardDTO)monster.LeftHandTool : new CardDTO { CardId = 0 });
-            monsterDTO.bodyParts.Add(monster.RightHand != null ? (CardDTO)monster.RightHand : new CardDTO { CardId = 0 });
+            monsterDTO.bodyParts.Add(monster.RightArm != null ? (CardDTO)monster.RightArm : new CardDTO { CardId = 0 });
             monsterDTO.bodyParts.Add(monster.RightHandTool != null ? (CardDTO)monster.RightHandTool : new CardDTO { CardId = 0 });
             monsterDTO.bodyParts.Add(monster.Legs != null ? (CardDTO)monster.Legs : new CardDTO { CardId = 0 });
 
