@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ServiceModel;
 using BevososService;
+using BevososService.Implementations;
+
 
 namespace Host
 {
