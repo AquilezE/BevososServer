@@ -30,6 +30,9 @@ namespace BevososService.DTOs
         public Dictionary<int, int> PlayerActionsRemaining { get; set; }
 
         [DataMember]
+        public int CardsRemainingInDeck { get; set; }
+
+        [DataMember]
         public int TurnTimeRemainingInSeconds { get; set; }
 
         public GameStateDTO() { }
@@ -64,6 +67,8 @@ namespace BevososService.DTOs
                 gameStateDto.playerState.Add(player.Key, (PlayerStateDTO)player.Value);
             }
 
+
+            gameStateDto.CardsRemainingInDeck = game.Deck.Count;
 
 
             return gameStateDto;

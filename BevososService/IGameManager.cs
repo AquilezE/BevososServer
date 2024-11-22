@@ -114,6 +114,17 @@ namespace BevososService
         /// <param name="matchCode">The unique code representing the match.</param>
         [OperationContract(IsOneWay = true)]
         void RequestProvokeSelection(int userId, int matchCode);
+
+
+
+        /// <summary>
+        /// Notifies the player that an action they attempted to perform is invalid.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="messageKey">The key representing the message describing the invalid action.</param>
+        [OperationContract(IsOneWay = true)]
+        void NotifyActionInvalid(string messageKey);
+    
     }
 
 }

@@ -1008,13 +1008,13 @@ namespace BevososService
 
             if (gameInstance.CurrentPlayerId != userId)
             {
-             
+                NotifyPlayer(matchCode, userId, "NotYourTurn");
                 return;
             }
 
             if (gameInstance.PlayerActionsRemaining[userId] <= 0)
             {
-
+                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
                 return;
             }
 
@@ -1031,6 +1031,10 @@ namespace BevososService
                     AdvanceTurn(matchCode);
                 }
             }
+            else
+            {
+                NotifyPlayer(matchCode, userId, "DeckEmpty");
+            }
 
         }
         public async void PlayCard(int userId, int matchCode, int cardId)
@@ -1042,17 +1046,19 @@ namespace BevososService
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
+                NotifyPlayer(matchCode, userId, "InvalidCard");
                 return;
             }
 
             if(gameInstance.CurrentPlayerId != userId)
             {
+                NotifyPlayer(matchCode, userId, "NotYourTurn");
                 return;
             }
 
             if (gameInstance.PlayerActionsRemaining[userId] <= 0)
             {
-
+                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
                 return;
             }
 
@@ -1070,7 +1076,7 @@ namespace BevososService
                     }
                     else
                     {
-                        //Send message to the player that he has too many monsters
+                        NotifyPlayer(matchCode, userId, "TooManyMonsters");
                     }
                     break;
                 case Card.CardType.WildProvoke:
@@ -1081,7 +1087,7 @@ namespace BevososService
                 case Card.CardType.BodyPart:
                     if (gameInstance.Players[userId].Monsters.Count == 0)
                     {
-                        //Send message to the player that he has to play a head first
+                        NotifyPlayer(matchCode, userId, "NoMonsters");
                     }
                     else
                     {
@@ -1095,7 +1101,7 @@ namespace BevososService
                 case Card.CardType.Tool:
                     if (gameInstance.Players[userId].Monsters.Count == 0)
                     {
-                        //Send message to the player that he has to play a head first
+                        NotifyPlayer(matchCode, userId, "NoMonsters");
                     }
                     else
                     {
@@ -1110,7 +1116,7 @@ namespace BevososService
                 case Card.CardType.Hat:
                     if (gameInstance.Players[userId].Monsters.Count == 0)
                     {
-                        //Send message to the player that he has to play a head first
+                        NotifyPlayer(matchCode, userId, "NoMonsters");
                     }
                     else
                     {
@@ -1121,6 +1127,9 @@ namespace BevososService
                         });
                     }
                     break;
+                default:
+                    NotifyPlayer(matchCode, userId, "UnknownCardType");
+                        break;
             }
         }
         private static void PlayBaby(int userId, int matchCode, Card card)
@@ -1196,9 +1205,15 @@ namespace BevososService
                 return;
             }
 
+            if(gameInstance.CurrentPlayerId != userId)
+            {
+                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                return;
+            }   
+
             if (gameInstance.Players[userId].ActionsPerTurn > gameInstance.PlayerActionsRemaining[userId])
             {
-                // Not enough actions remaining
+                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
                 return;
             }
 
@@ -1220,6 +1235,7 @@ namespace BevososService
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
+                NotifyPlayer(matchCode, userId, "InvalidCard");
                 return;
             }
 
@@ -1243,12 +1259,12 @@ namespace BevososService
                 }
                 else
                 {
-                    //this monster already has a part in that slot
+                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
                 }
             }
             else
             {
-                //this monster does not exist
+                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
             }
 
 
@@ -1262,6 +1278,8 @@ namespace BevososService
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
+                NotifyPlayer(matchCode, userId, "InvalidCard");
+
                 return;
             }
 
@@ -1281,7 +1299,15 @@ namespace BevososService
                     {
                         AdvanceTurn(matchCode);
                     }
+                }else
+                {
+                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
                 }
+
+            }
+            else
+            {
+                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
             }
 
         }
@@ -1294,6 +1320,7 @@ namespace BevososService
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
+                NotifyPlayer(matchCode, userId, "InvalidCard");
                 return;
             }
 
@@ -1314,6 +1341,14 @@ namespace BevososService
                         AdvanceTurn(matchCode);
                     }
                 }
+                else
+                {
+                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
+                }
+
+            }else
+            {
+                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
             }
         }
         public void ExecuteProvoke(int userId, int matchCode, int babyPile)
@@ -1325,7 +1360,7 @@ namespace BevososService
 
             if (gameInstance.BabyPiles[babyPile].Count == 0)
             {
-                // Baby pile is empty
+                NotifyPlayer(matchCode, userId, "EmptyBabyPile");
                 return;
             }
 
@@ -1435,6 +1470,16 @@ namespace BevososService
             );
         }
 
+        private static void NotifyPlayer(int matchCode, int userId, string messageKey)
+        {
+            if (_gamePlayerCallBack.TryGetValue(matchCode, out var playerCallbacks))
+            {
+                if (playerCallbacks.TryGetValue(userId, out var callback))
+                {
+                    callback.NotifyActionInvalid(messageKey);
+                }
+            }
+        }
     }
 
     public partial class ServiceImplementation : ICardManager
