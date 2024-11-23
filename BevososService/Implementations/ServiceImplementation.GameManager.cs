@@ -512,7 +512,7 @@ namespace BevososService.Implementations
                 return;
             }
 
-            if (gameInstance.Players[userId].Monsters.Count <= monsterSelectedIndex)
+            if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
             {
 
                 if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
@@ -531,7 +531,7 @@ namespace BevososService.Implementations
                 }
                 else
                 {
-                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
+                    NotifyPlayer(matchCode, userId, "You have no head");
                 }
 
             }

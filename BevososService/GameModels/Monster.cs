@@ -16,7 +16,7 @@ namespace BevososService.GameModels
         public Card RightHandTool { get; set; }
         public Card Legs { get; set; }
         public Card Hat { get; set; }
-        
+
         public bool AddPart(Card card)
         {
             switch (card.BodyPartIndex)
@@ -31,50 +31,50 @@ namespace BevososService.GameModels
                 case 1:
                     if (Torso == null)
                     {
-                    Torso = card;
-                    return true;
+                        Torso = card;
+                        return true;
                     }
                     break;
                 case 2:
-                    if (LeftArm == null)
+                    if (LeftArm == null && Torso != null)
                     {
-                    LeftArm = card;
-                    return true;
+                        LeftArm = card;
+                        return true;
                     }
                     break;
                 case 3:
-                    if (LeftHandTool == null)
+                    if (LeftHandTool == null && LeftArm != null)
                     {
-                    LeftHandTool = card;
-                    return true;
+                        LeftHandTool = card;
+                        return true;
                     }
                     break;
                 case 4:
-                    if (RightArm == null)
+                    if (RightArm == null && Torso != null)
                     {
-                    RightArm = card;
-                    return true;
+                        RightArm = card;
+                        return true;
                     }
                     break;
                 case 5:
-                    if (RightHandTool == null)
+                    if (RightHandTool == null && RightArm != null)
                     {
-                    RightHandTool = card;
-                    return true;
+                        RightHandTool = card;
+                        return true;
                     }
                     break;
                 case 6:
-                    if (Legs == null)
+                    if (Legs == null && Torso != null)
                     {
-                    Legs = card;
-                    return true;
+                        Legs = card;
+                        return true;
                     }
                     break;
                 case 7:
                     if (Hat == null)
                     {
-                    Hat = card;
-                    return true;
+                        Hat = card;
+                        return true;
                     }
                     break;
 
