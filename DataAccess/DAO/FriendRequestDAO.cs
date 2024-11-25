@@ -22,25 +22,21 @@ namespace DataAccess.DAO
     {
         public int SendFriendRequest(int requesterId, int requesteeId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     var requester = context.Users.FirstOrDefault(u => u.UserId == requesterId);
-                    if (requester == null)
-                    {
-                        return 0;
-                    }
-
                     var requestee = context.Users.FirstOrDefault(u => u.UserId == requesteeId);
-                    if (requestee == null)
+
+                    if (requester == null || requestee == null)
                     {
                         return 0;
                     }
 
                     bool requestExists = context.FriendRequests.Any(fr =>
-                        (fr.RequesterId == requesterId && fr.RequesteeId == requestee.UserId) ||
-                        (fr.RequesterId == requestee.UserId && fr.RequesteeId == requesterId));
+                        (fr.RequesterId == requesterId && fr.RequesteeId == requesteeId) ||
+                        (fr.RequesterId == requesteeId && fr.RequesteeId == requesterId));
 
                     if (requestExists)
                     {
@@ -50,7 +46,7 @@ namespace DataAccess.DAO
                     var friendRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
-                        RequesteeId = requestee.UserId
+                        RequesteeId = requesteeId
                     };
 
                     context.FriendRequests.Add(friendRequest);
@@ -58,27 +54,12 @@ namespace DataAccess.DAO
 
                     return friendRequest.Id;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool AcceptFriendRequest(int requestId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -93,27 +74,12 @@ namespace DataAccess.DAO
 
                     return true;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool DeclineFriendRequest(int requestId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -128,27 +94,12 @@ namespace DataAccess.DAO
 
                     return true;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<FriendRequest> GetPendingFriendRequests(int userId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -159,27 +110,12 @@ namespace DataAccess.DAO
 
                     return pendingRequests;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<FriendRequestData> GetFriendRequestForUser(int currentUserId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -196,48 +132,18 @@ namespace DataAccess.DAO
 
                     return friendRequests;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool FriendRequestExists(int requestId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     return context.FriendRequests.Any(fr => fr.Id == requestId);
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
     }
 }

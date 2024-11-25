@@ -87,6 +87,7 @@
     <Compile Include="DAO\TokenDAO.cs" />
     <Compile Include="DAO\UserDAO.cs" />
     <Compile Include="Exceptions\DataBaseException.cs" />
+    <Compile Include="Exceptions\ExceptionHelper.cs" />
     <Compile Include="Migrations\202410132228082_InitialCreate.cs" />
     <Compile Include="Migrations\202410132228082_InitialCreate.Designer.cs">
       <DependentUpon>202410132228082_InitialCreate.cs</DependentUpon>

@@ -28,7 +28,7 @@ namespace BevososService.Implementations
                 Message = innerException.Message,
                 StackTrace = innerException.StackTrace
             };
-                
+
             ExceptionManager.LogErrorException(innerException);
 
             return new FaultException<BevososServerExceptions>(serverException, new FaultReason(serverException.Message));

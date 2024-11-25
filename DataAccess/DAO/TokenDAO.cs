@@ -12,7 +12,7 @@ namespace DataAccess.DAO
     {
         public int AsignToken(string email)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -24,127 +24,62 @@ namespace DataAccess.DAO
                     }
                     else
                     {
-                        var token = new Models.Token();
-                        token.Email = email;
-                        token.TokenValue = new TokenGenerator().GenerateToken();
-                        token.ExpiryDate = DateTime.Now.AddMinutes(15);
+                        var token = new Models.Token
+                        {
+                            Email = email,
+                            TokenValue = new TokenGenerator().GenerateToken(),
+                            ExpiryDate = DateTime.Now.AddMinutes(15)
+                        };
                         context.Tokens.Add(token);
                     }
 
                     int affectedRows = context.SaveChanges();
                     return affectedRows;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool HasToken(string email)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     return context.Tokens.Any(t => t.Email == email && t.ExpiryDate > DateTime.Now);
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public string GetToken(string email)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     var token = context.Tokens.FirstOrDefault(t => t.Email == email);
-
-                    if (token == null)
-                    {
-                        return "-1";
-                    }
-
-                    return token.TokenValue;
+                    return token?.TokenValue ?? "-1";
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool TokenIsValid(string token, string email)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool DeleteToken(string token, string email)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
                     var tokenToDelete = context.Tokens.FirstOrDefault(t => t.TokenValue == token && t.Email == email);
-
                     if (tokenToDelete != null)
                     {
                         context.Tokens.Remove(tokenToDelete);
@@ -153,22 +88,7 @@ namespace DataAccess.DAO
                     }
                     return false;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BevososService.DTOs;
+using BevososService.Exceptions;
 using System.Collections.Generic;
 using System.ServiceModel;
 
@@ -31,6 +32,8 @@ namespace BevososService
         /// <param name="email">The email of the user.</param>
         /// <returns>True if the user is connected, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+
         bool IsConnected(string email);
 
 
@@ -41,6 +44,7 @@ namespace BevososService
         /// <param name="requesteeId">The unique identifier of the recipient.</param>
         /// <returns>True if the request was successfully sent, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool SendFriendRequest(int userId, int requesteeId);
 
 
@@ -50,8 +54,9 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the recipient of the friend request.</param>
         /// <param name="friendId">The unique identifier of the sender of the friend request.</param>
         /// <param name="requestId">The unique identifier of the friend request.</param>
-        [OperationContract(IsOneWay = true)]
-        void AcceptFriendRequest(int userId, int friendId, int requestId);
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+        bool AcceptFriendRequest(int userId, int friendId, int requestId);
 
         /// <summary>
         /// Declines a pending friend request.
@@ -59,7 +64,29 @@ namespace BevososService
         /// <param name="requestId">The unique identifier of the friend request to be declined.</param>
         /// <returns>True if the request was successfully declined, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool DeclineFriendRequest(int requestId);
+
+
+        /// <summary>
+        /// Deletes a friend from the user's friend list. Notifies the removed friend if they are connected.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user performing the deletion.</param>
+        /// <param name="friendId">The unique identifier of the friend being deleted.</param>
+        /// <returns>True if the friend was successfully deleted, false otherwise.</returns>
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+
+        bool DeleteFriend(int userId, int friendId);
+
+        /// <summary>
+        /// Retrieves a list of friends for the specified user, indicating whether each friend is currently connected.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <returns>A list of friends as `FriendDTO` objects, or null if the user does not exist.</returns>
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+        List<FriendDTO> GetFriends(int userId);
 
         /// <summary>
         /// Blocks a friend and removes them from the user's friend list. Notifies the blocked friend if they are connected.
@@ -68,6 +95,7 @@ namespace BevososService
         /// <param name="friendId">The unique identifier of the friend being blocked.</param>
         /// <returns>True if the friend was successfully blocked, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool BlockFriend(int userId, int friendId);
 
         /// <summary>
@@ -77,6 +105,7 @@ namespace BevososService
         /// <param name="blockedId">The unique identifier of the blocked user.</param>
         /// <returns>True if the user was successfully unblocked, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool UnblockUser(int userId, int blockedId);
 
 
@@ -87,25 +116,21 @@ namespace BevososService
         /// <param name="blockeeId">The unique identifier of the user being blocked.</param>
         /// <returns>True if the user was successfully blocked, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+
         bool BlockUser(int userId, int blockeeId);
-
-
+       
         /// <summary>
-        /// Deletes a friend from the user's friend list. Notifies the removed friend if they are connected.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user performing the deletion.</param>
-        /// <param name="friendId">The unique identifier of the friend being deleted.</param>
-        /// <returns>True if the friend was successfully deleted, false otherwise.</returns>
-        [OperationContract]
-        bool DeleteFriend(int userId, int friendId);
-
-        /// <summary>
-        /// Retrieves a list of friends for the specified user, indicating whether each friend is currently connected.
+        /// Retrieves a list of blocked users for the specified user.
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
-        /// <returns>A list of friends as `FriendDTO` objects, or null if the user does not exist.</returns>
+        /// <returns>A list of blocked users as `BlockedDTO` objects, or null if the user does not exist.</returns>
         [OperationContract]
-        List<FriendDTO> GetFriends(int userId);
+        [FaultContract(typeof(BevososServerExceptions))]
+
+        List<BlockedDTO> GetBlockedUsers(int userId);
+
+
 
 
         /// <summary>
@@ -114,17 +139,8 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the user.</param>
         /// <returns>A list of friend requests as `FriendRequestDTO` objects, or null if the user does not exist.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         List<FriendRequestDTO> GetFriendRequests(int userId);
-
-
-        /// <summary>
-        /// Retrieves a list of blocked users for the specified user.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
-        /// <returns>A list of blocked users as `BlockedDTO` objects, or null if the user does not exist.</returns>
-        [OperationContract]
-        List<BlockedDTO> GetBlockedUsers(int userId);
-
 
         /// <summary>
         /// Searches for users by name and returns a list of matching users.
@@ -133,6 +149,7 @@ namespace BevososService
         /// <param name="name">The name to search for.</param>
         /// <returns>A list of matching `UserDto` objects.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         List<UserDto> GetUsersFoundByName(int userId, string name);
 
 

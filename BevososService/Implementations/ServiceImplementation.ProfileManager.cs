@@ -41,31 +41,36 @@ namespace BevososService.Implementations
 
         public void ChangePassword(int userId, string oldPassword, string newPassword)
         {
+            if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
+            {
+                InvokeCallback(cb => cb.OnPasswordChange("Password cannot be empty."), userId);
+                return;
+            }
 
-            AccountDAO accountDAO = new AccountDAO();
             try
             {
-                Account account = accountDAO.GetAccountByUserId(userId);
+                var accountDAO = new AccountDAO();
+                var account = accountDAO.GetAccountByUserId(userId);
 
-                if (SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
+                if (account == null)
                 {
-                    string newHashedPassword = SimpleHashing.HashPassword(newPassword);
-                    bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
-
-
-                    if (result)
-                    {
-                        InvokeCallback(cb => cb.OnPasswordChange(null), userId);
-                    }
-                    else
-                    {
-                        InvokeCallback(cb => cb.OnPasswordChange("Failed to update password."), userId);
-                    }
+                    InvokeCallback(cb => cb.OnPasswordChange("Account not found."), userId);
+                    return;
                 }
-                else
+
+                if (!SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
                 {
                     InvokeCallback(cb => cb.OnPasswordChange("Incorrect password."), userId);
+                    return;
                 }
+
+                string newHashedPassword = SimpleHashing.HashPassword(newPassword);
+                bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
+
+                InvokeCallback(
+                    cb => cb.OnPasswordChange(result ? null : "Failed to update password."),
+                    userId
+                );
             }
             catch (DataBaseException ex)
             {
@@ -74,16 +79,26 @@ namespace BevososService.Implementations
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                InvokeCallback(cb => cb.OnPasswordChange("An unexpected error occurred."), userId);
             }
         }
 
         public void UpdateProfile(int userId, string username, int profilePictureId)
         {
-            UserDAO userDAO = new UserDAO();
-            User user = userDAO.GetUserById(userId);
+
 
             try
             {
+                UserDAO userDAO = new UserDAO();
+                User user = userDAO.GetUserById(userId);
+
+                if (user == null)
+                {
+                    InvokeCallback(cb => cb.OnProfileUpdate("",profilePictureId,"User not found."), userId);
+                    return;
+                }
+
+
                 if (userDAO.UsernameExists(username))
                 {
                     user.ProfilePictureId = profilePictureId;
@@ -101,12 +116,11 @@ namespace BevososService.Implementations
 
                     if (result)
                     {
-                        InvokeCallback(cb => cb.OnProfileUpdate("Failed to update profile.", profilePictureId, "Username exists"), userId);
+                        InvokeCallback(cb => cb.OnProfileUpdate(username, profilePictureId, ""), userId);
                     }
                 }
                 else
                 {
-
                     user.Username = username;
                     user.ProfilePictureId = profilePictureId;
 
@@ -117,7 +131,6 @@ namespace BevososService.Implementations
                         InvokeCallback(cb => cb.OnProfileUpdate(username, profilePictureId, ""), userId);
                     }
                 }
-
             }
             catch (DataBaseException ex)
             {
@@ -127,8 +140,6 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogFatalException(ex);
             }
-
         }
     }
-
 }

@@ -22,7 +22,7 @@ namespace DataAccess.DAO
     {
         public bool AddBlock(int blockerId, int blockeeId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -47,27 +47,12 @@ namespace DataAccess.DAO
                         return false;
                     }
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool DeleteBlock(int blockerId, int blockeeId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -85,27 +70,12 @@ namespace DataAccess.DAO
                         return false;
                     }
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<User> GetBlockList(int blockerId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -116,27 +86,12 @@ namespace DataAccess.DAO
 
                     return blockedUsers;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<BlockedData> GetBlockedListForUser(int currentUserId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -153,22 +108,7 @@ namespace DataAccess.DAO
 
                     return blockedUsers;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
     }
 }

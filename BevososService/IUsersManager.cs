@@ -1,5 +1,6 @@
 ﻿using System.ServiceModel;
 using BevososService.DTOs;
+using BevososService.Exceptions;
 
 namespace BevososService
 {
@@ -13,6 +14,7 @@ namespace BevososService
         /// <param name="username">The username to be checked.</param>
         /// <returns>True if the username is already taken, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool IsUsernameTaken(string username);
 
 
@@ -22,6 +24,7 @@ namespace BevososService
         /// <param name="email">The email address to be checked.</param>
         /// <returns>True if the email is already taken, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool IsEmailTaken(string email);
 
 
@@ -31,6 +34,7 @@ namespace BevososService
         /// <param name="email">The email address to send the token to.</param>
         /// <returns>True if the token was successfully sent, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool SendToken(string email);
 
 
@@ -41,6 +45,7 @@ namespace BevososService
         /// <param name="token">The token to be verified.</param>
         /// <returns>True if the token is valid, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool VerifyToken(string email, string token);
 
 
@@ -53,6 +58,7 @@ namespace BevososService
         /// <param name="password">The password for the new user, which will be hashed before storage.</param>
         /// <returns>True if the registration was successful, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool RegisterUser(string email, string username, string password);
 
 
@@ -63,6 +69,7 @@ namespace BevososService
         /// <param name="password">The password provided by the user.</param>
         /// <returns>A `UserDto` containing user details if authentication is successful, otherwise null.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         UserDto LogIn(string email, string password);
 
 
@@ -73,9 +80,8 @@ namespace BevososService
         /// <param name="password">The new password to be set, which will be hashed before storage.</param>
         /// <returns>True if the password was successfully updated, false otherwise.</returns>
         [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         bool RecoverPassword(string email, string password);
-
-
 
     }
 

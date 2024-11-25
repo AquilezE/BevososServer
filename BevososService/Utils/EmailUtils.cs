@@ -9,85 +9,73 @@ namespace BevososService.Utils
 {
     public class EmailUtils
     {
+
+        private const string SenderEmail = "bevososthegame@gmail.com";
+        private const string SenderPassword = "lkzz bghz bwol leiz";
+        private const string SmtpServer = "smtp.gmail.com";
+        private const int SmtpPort = 587;
+
         protected EmailUtils()
         {
 
         }
-        public static int GenerateToken()
-        {
-            Random random = new Random();
-            int token = random.Next(100000, 999999);
-            return token;
-        }
 
         public static bool SendInvitationByEmail(string recipientEmail, int lobbyId)
         {
-            bool emailSent = true;
+            string subject = "Bevosos Invite";
+            string body = $"You've been invited to play! Join this lobby before it's too late: {lobbyId}";
 
-            string senderEmail = "bevososthegame@gmail.com";
-            string senderPassword = "lkzz bghz bwol leiz";
-            string smtpServer = "smtp.gmail.com";
-            int smtpPort = 587;
-
-            MailMessage mail = new MailMessage();
-            SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort);
-
-            mail.From = new MailAddress(senderEmail);
-            mail.To.Add(recipientEmail);
-            mail.Subject = "Bevosos Invite";
-            mail.Body = $"you've been invited to play, join this lobby before it's too late: {lobbyId}";
-
-            smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
-            smtpClient.EnableSsl = true;
-
-            try
-            {
-                smtpClient.Send(mail);
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-                emailSent = false;
-            }
-
-            return emailSent;
+            return SendEmail(recipientEmail, subject, body);
         }
 
         public static bool SendTokenByEmail(string recipientEmail, string token)
         {
+            string subject = "Bevosos";
+            string body = $"Your verification token is: {token}";
 
-            bool emailSent = true;
+            return SendEmail(recipientEmail, subject, body);
+        }
 
-            string senderEmail = "bevososthegame@gmail.com";
-            string senderPassword = "lkzz bghz bwol leiz";
-            string smtpServer = "smtp.gmail.com";
-            int smtpPort = 587;
-
-            MailMessage mail = new MailMessage();
-            SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort);
-
-            mail.From = new MailAddress(senderEmail);
-            mail.To.Add(recipientEmail);
-            mail.Subject = "Bevosos";
-            mail.Body = $"{token}";
-
-            smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
-            smtpClient.EnableSsl = true;
-
-
+        private static bool SendEmail(string recipientEmail, string subject, string body)
+        {
             try
             {
-                smtpClient.Send(mail);
+                using (var mail = new MailMessage())
+                using (var smtpClient = new SmtpClient(SmtpServer, SmtpPort))
+                {
+                    mail.From = new MailAddress(SenderEmail);
+                    mail.To.Add(recipientEmail);
+                    mail.Subject = subject;
+                    mail.Body = body;
 
+                    smtpClient.Credentials = new NetworkCredential(SenderEmail, SenderPassword);
+                    smtpClient.EnableSsl = true;
+
+                    smtpClient.Send(mail);
+                }
+
+                return true;
+            }
+            catch (SmtpFailedRecipientsException ex)
+            {
+                Console.WriteLine($"Failed to deliver email to one or more recipients: {ex.Message}");
+                return false;
+            }
+            catch (SmtpException ex)
+            {
+                Console.WriteLine($"SMTP error occurred: {ex.Message}");
+                return false;
+            }
+            catch (FormatException ex)
+            {
+                Console.WriteLine($"Invalid email format: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-                emailSent = false;
+                Console.WriteLine($"An unexpected error occurred while sending email: {ex.Message}");
+                return false;
             }
-
-            return emailSent;
         }
     }
 

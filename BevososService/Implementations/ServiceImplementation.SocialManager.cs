@@ -25,6 +25,7 @@ namespace BevososService.Implementations
 
         private readonly object _lock = new object();
 
+
         public void Connect(int userId)
         {
             try
@@ -36,8 +37,8 @@ namespace BevososService.Implementations
 
                 Console.WriteLine("Client connected: " + userId);
 
-                clientChannel.Closed += ClientChannel_Closed;
-                clientChannel.Faulted += ClientChannel_Closed;
+                clientChannel.Closed += ClientSocialChannelRuined;
+                clientChannel.Faulted += ClientSocialChannelRuined;
 
                 lock (_lock)
                 {
@@ -55,10 +56,12 @@ namespace BevososService.Implementations
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
             }
         }
 
@@ -66,129 +69,160 @@ namespace BevososService.Implementations
         {
             lock (_lock)
             {
-                connectedClients.TryRemove(userId, out _);
+                connectedClients.TryRemove(userId, out _); Console.WriteLine("Disconnected: "+ userId);
             }
 
             NotifyFriendsUserOffline(userId);
         }
 
-        private void ClientChannel_Closed(object sender, EventArgs e)
-        {
-            var callback = (ISocialManagerCallback)sender;
-            RemoveClient(callback);
-        }
-
-        private void RemoveClient(ISocialManagerCallback callback)
-        {
-            var user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
-            if (user.Key != 0)
-            {
-                Disconnect(user.Key);
-            }
-        }
-
-        private void NotifyFriendsUserOnline(int userId)
-        {
-            Console.WriteLine("User online: " + userId);
-            var friends = GetFriendIds(userId);
-            foreach (var friendId in friends)
-            {
-                Console.WriteLine("Notifying friend: " + friendId);
-
-                if (connectedClients.TryGetValue(friendId, out var friendCallback))
-                {
-                    try
-                    {
-
-                        friendCallback.OnFriendOnline(userId);
-                        Console.WriteLine("Notified friend: " + friendId);
-                    }
-                    catch (Exception)
-                    {
-                        // Handle exceptions and possibly remove the faulty client
-                    }
-                }
-            }
-        }
-
-        private void NotifyFriendsUserOffline(int userId)
-        {
-            var friends = GetFriendIds(userId);
-            foreach (var friendId in friends)
-            {
-                if (connectedClients.TryGetValue(friendId, out var friendCallback))
-                {
-                    try
-                    {
-                        friendCallback.OnFriendOffline(userId);
-                    }
-                    catch (Exception)
-                    {
-                        // Handle exceptions and possibly remove the faulty client
-                    }
-                }
-            }
-        }
-
-        private List<int> GetFriendIds(int userId)
-        {
-            var friends = GetFriends(userId);
-            return friends.Select(f => f.FriendId).ToList();
-        }
-
-        public bool DeleteFriend(int userId, int friendId)
-        {
-            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
-            {
-                if (connectedClients.TryGetValue(friendId, out var friendCallback))
-                {
-                    friendCallback.OnFriendshipDeleted(userId);
-                }
-                return new FriendshipDAO().RemoveFriendship(userId, friendId);
-            }
-            return false;
-        }
-
-
-        public bool BlockFriend(int userId, int friendId)
-        {
-            if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
-            {
-                bool result = new FriendshipDAO().RemoveFriendship(userId, friendId);
-                if (result)
-                {
-                    if (connectedClients.TryGetValue(friendId, out var friendCallback))
-                    {
-                        friendCallback.OnFriendshipDeleted(userId);
-                    }
-                    return new BlockedDAO().AddBlock(userId, friendId);
-
-                }
-            }
-            return false;
-        }
-
-        public List<BlockedDTO> GetBlockedUsers(int userId)
+        public bool IsConnected(string email)
         {
             try
             {
-                if (new UserDAO().UserExists(userId))
+
+                User user = new UserDAO().GetUserByEmail(email);
+                if (user != null)
                 {
-                    List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
-                    List<BlockedDTO> blockedUsers = new List<BlockedDTO>();
-                    foreach (BlockedData blockedUser in blockedUsersList)
-                    {
-                        blockedUsers.Add((BlockedDTO)blockedUser);
-                    }
-                    return blockedUsers;
+                    return connectedClients.ContainsKey(user.UserId);
                 }
-                return null;
+                return false;
             }
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
+        }
 
+
+        public bool SendFriendRequest(int userId, int requesteeId)
+        {
+            int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
+
+            if (connectedClients.ContainsKey(requesteeId))
+            {
+                try
+                {
+                    FriendRequestDTO friendRequest = new FriendRequestDTO();
+                    User sender = new UserDAO().GetUserById(userId);
+                    friendRequest.SenderId = userId;
+                    friendRequest.SenderName = sender.Username;
+                    friendRequest.ProfilePictureId = sender.ProfilePictureId;
+                    friendRequest.FriendRequestId = idFriendRequest;
+
+                    InvokeCallback(requesteeId, cb => cb.OnNewFriendRequest(friendRequest));
+                    return true;
+                }
+                catch (DataBaseException ex)
+                {
+                    throw CreateAndLogFaultException(ex);
+                }
+            }
+            return 0 != idFriendRequest;
+        }
+
+        public bool AcceptFriendRequest(int userId, int friendId, int requestId)
+        {
+            try
+            {
+                if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+                {
+                    bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
+                    if (result)
+                    {
+                        Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
+                        if (friendship != null)
+                        {
+                            int friendshipId = friendship.Id;
+
+                            var userDao = new UserDAO();
+                            var currentUser = userDao.GetUserById(userId);
+                            var friendUser = userDao.GetUserById(friendId);
+
+                            var friendDto = new FriendDTO
+                            {
+                                FriendshipId = friendshipId,
+                                FriendId = friendId,
+                                FriendName = friendUser.Username,
+                                ProfilePictureId = friendUser.ProfilePictureId,
+                                IsConnected = connectedClients.ContainsKey(friendId)
+                            };
+
+                            var friendDtoForFriend = new FriendDTO
+                            {
+                                FriendshipId = friendshipId,
+                                FriendId = userId,
+                                FriendName = currentUser.Username,
+                                ProfilePictureId = currentUser.ProfilePictureId,
+                                IsConnected = connectedClients.ContainsKey(userId)
+                            };
+
+
+                            InvokeCallback(userId, (callback, dto) => callback.OnNewFriend(dto), friendDto);
+
+                            // Invoke callback for the friend
+                            try
+                            {
+
+                                if (connectedClients.TryGetValue(friendId, out var callback))
+                                {
+                                    try
+                                    {
+                                        callback.OnNewFriend(friendDtoForFriend);
+                                    }
+                                    catch (CommunicationException ex){
+                                    
+
+                                        ExceptionManager.LogErrorException(ex);
+                                        Disconnect(userId);
+                                    }
+                                    catch (TimeoutException ex)
+                                    {
+                                        ExceptionManager.LogErrorException(ex);
+                                        Disconnect(userId);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ExceptionManager.LogFatalException(ex);
+                                        Disconnect(userId);
+                                    }
+                                }
+                            }
+                            catch (CommunicationException ex)
+                            {
+                                Console.WriteLine("ComErr");
+                            }
+                            catch(TimeoutException ex)
+                            {
+                                Console.WriteLine("TErr");
+                            } catch (Exception ex) {
+                                Console.WriteLine("ErrG");
+                            }
+
+                            
+                            //InvokeCallback(friendId, (callback, dto) => callback.OnNewFriend(dto), friendDtoForFriend);
+
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+        }
+
+        public bool DeclineFriendRequest(int requestId)
+        {
+            try
+            {
+                return new FriendRequestDAO().DeclineFriendRequest(requestId);
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
         }
 
         public List<FriendRequestDTO> GetFriendRequests(int userId)
@@ -211,6 +245,30 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+        }
+
+        public bool DeleteFriend(int userId, int friendId)
+        {
+            try
+            {
+                UserDAO userDao = new UserDAO();
+                FriendshipDAO friendshipDao = new FriendshipDAO();
+
+                if (userDao.UserExists(userId) && userDao.UserExists(friendId))
+                {
+                    bool result = friendshipDao.RemoveFriendship(userId, friendId);
+                    if (result)
+                    {
+                        InvokeCallback(friendId, (callback, id) => callback.OnFriendshipDeleted(id), userId);
+                        return true;
+                    }
+                }
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            return false;
         }
 
         public List<FriendDTO> GetFriends(int userId)
@@ -241,147 +299,32 @@ namespace BevososService.Implementations
 
         }
 
-        public bool SendFriendRequest(int userId, int requesteeId)
-        {
-            int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
 
-            if (connectedClients.ContainsKey(requesteeId))
-            {
-                FriendRequestDTO friendRequest = new FriendRequestDTO();
-                User sender = new UserDAO().GetUserById(userId);
-                friendRequest.SenderId = userId;
-                friendRequest.SenderName = sender.Username;
-                friendRequest.ProfilePictureId = sender.ProfilePictureId;
-                friendRequest.FriendRequestId = idFriendRequest;
-
-                connectedClients[requesteeId].OnNewFriendRequest(friendRequest);
-                return true;
-            }
-            return 0 != idFriendRequest;
-        }
-
-        public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
-        {
-            if (activeLobbiesDict.ContainsKey(lobbyId))
-            {
-                if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
-                {
-                    callback.NotifyGameInvited(inviterName, lobbyId);
-                    return;
-                }
-
-
-                Account account = new AccountDAO().GetAccountByUserId(userId);
-                if (account != null)
-                {
-                    EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
-                }
-
-            }
-        }
-
-        public void AcceptFriendRequest(int userId, int friendId, int requestId)
+        public bool BlockFriend(int userId, int friendId)
         {
             try
             {
                 if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
                 {
-                    bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
-                    if (result)
+                    bool resultFriendDeleted = new FriendshipDAO().RemoveFriendship(userId, friendId);
+                    if (resultFriendDeleted)
                     {
-                        Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
-                        if (friendship != null)
+                        bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId);
+                        if (resultBlockCreated)
                         {
-                            int friendshipId = friendship.Id;
-
-                            var userDao = new UserDAO();
-                            var currentUser = userDao.GetUserById(userId);
-                            var friendUser = userDao.GetUserById(friendId);
-
-                            var friendDto = new FriendDTO
-                            {
-                                FriendshipId = friendshipId,
-                                FriendId = friendId,
-                                FriendName = friendUser.Username,
-                                ProfilePictureId = friendUser.ProfilePictureId,
-                                IsConnected = connectedClients.ContainsKey(friendId)
-                            };
-
-                            if (connectedClients.TryGetValue(userId, out var userCallback))
-                            {
-                                try
-                                {
-                                    userCallback.OnNewFriend(friendDto);
-                                }
-                                catch (CommunicationException ex)
-                                {
-                                    ExceptionManager.LogErrorException(ex);
-                                    connectedClients.TryRemove(userId, out _);
-                                }
-                                catch (TimeoutException ex)
-                                {
-                                    ExceptionManager.LogErrorException(ex);
-                                }
-                                catch (Exception ex)
-                                {
-                                    ExceptionManager.LogFatalException(ex);
-                                }
-                            }
-
-                            var friendDtoForFriend = new FriendDTO
-                            {
-                                FriendshipId = friendshipId,
-                                FriendId = userId,
-                                FriendName = currentUser.Username,
-                                ProfilePictureId = currentUser.ProfilePictureId,
-                                IsConnected = connectedClients.ContainsKey(userId)
-                            };
-
-
-                            if (connectedClients.TryGetValue(friendId, out var friendCallback))
-                            {
-                                try
-                                {
-                                    friendCallback.OnNewFriend(friendDtoForFriend);
-                                }
-                                catch (CommunicationException ex)
-                                {
-                                    ExceptionManager.LogErrorException(ex);
-                                    connectedClients.TryRemove(userId, out _);
-
-                                }
-                                catch (TimeoutException ex)
-                                {
-                                    ExceptionManager.LogErrorException(ex);
-                                }
-                                catch (Exception ex)
-                                {
-                                    ExceptionManager.LogFatalException(ex);
-
-                                }
-
-                                return;
-                            }
+                            InvokeCallback(friendId, (callback, id) => callback.OnFriendshipDeleted(id), userId);
+                            return true;
                         }
                     }
                 }
+                return false;
             }
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
         }
-        public bool DeclineFriendRequest(int requestId)
-        {
-            try
-            {
-                return new FriendRequestDAO().DeclineFriendRequest(requestId);
-            }
-            catch (DataBaseException ex)
-            {
-                throw CreateAndLogFaultException(ex);
-            }
-        }
+
         public bool UnblockUser(int userId, int blockedId)
         {
             try
@@ -396,17 +339,6 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
-        }
-
-        public List<UserDto> GetUsersFoundByName(int userId, string name)
-        {
-            var users = new List<UserDto>();
-            var usersData = new UserDAO().GetUsersByName(name, userId);
-            foreach (var user in usersData)
-            {
-                users.Add((UserDto)user);
-            }
-            return users;
         }
 
         public bool BlockUser(int userId, int blockeeId)
@@ -429,21 +361,163 @@ namespace BevososService.Implementations
             }
         }
 
-        public bool IsConnected(string email)
+        public List<BlockedDTO> GetBlockedUsers(int userId)
         {
             try
             {
-                User user = new UserDAO().GetUserByEmail(email);
-                if (user != null)
+                if (new UserDAO().UserExists(userId))
                 {
-                    return connectedClients.ContainsKey(user.UserId);
+                    List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
+                    List<BlockedDTO> blockedUsers = new List<BlockedDTO>();
+                    foreach (BlockedData blockedUser in blockedUsersList)
+                    {
+                        blockedUsers.Add((BlockedDTO)blockedUser);
+                    }
+                    return blockedUsers;
                 }
-                return false;
+                return null;
             }
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
+
         }
+
+
+
+
+        private void InvokeCallback<T>(int userId, Action<ISocialManagerCallback, T> callbackAction, T parameter)
+        {
+            if (connectedClients.TryGetValue(userId, out var callback))
+            {
+                try
+                {
+                    callbackAction(callback, parameter);
+                }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                }
+            }
+        }
+
+        private void InvokeCallback(int userId, Action<ISocialManagerCallback> callbackAction)
+        {
+            if (connectedClients.TryGetValue(userId, out var callback))
+            {
+                try
+                {
+                    callbackAction(callback);
+                }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    Disconnect(userId);
+                }
+            }
+        }
+
+
+        private void NotifyFriendsUserOnline(int userId)
+        {
+            var friends = GetFriendIds(userId);
+            foreach (var friendId in friends)
+            {
+                InvokeCallback(friendId, (callback, id) => callback.OnFriendOnline(id), userId);
+            }
+        }
+
+        private void NotifyFriendsUserOffline(int userId)
+        {
+            var friends = GetFriendIds(userId);
+            foreach (var friendId in friends)
+            {
+
+
+
+                InvokeCallback(friendId, (callback, id) => callback.OnFriendOffline(id), userId);
+            }
+        }
+
+
+        public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
+        {
+            if (activeLobbiesDict.ContainsKey(lobbyId))
+            {
+                try
+                {
+                    if (!connectedClients.ContainsKey(userId))
+                    {
+                        Account account = new AccountDAO().GetAccountByUserId(userId);
+                        if (account != null)
+                        {
+                            EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
+                        }
+                    }
+                    else
+                    {
+                        InvokeCallback(userId, cb => cb.NotifyGameInvited(inviterName, lobbyId));
+                    }
+                }
+                catch (DataBaseException ex)
+                {
+                    throw CreateAndLogFaultException(ex);
+                }
+            }
+        }
+
+
+        private void ClientSocialChannelRuined(object sender, EventArgs e)
+        {
+            var callback = (ISocialManagerCallback)sender;
+            RemoveClient(callback);
+        }
+
+        private void RemoveClient(ISocialManagerCallback callback)
+        {
+            var user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
+            if (user.Key != 0)
+            {
+                Disconnect(user.Key);
+            }
+        }
+
+        public List<UserDto> GetUsersFoundByName(int userId, string name)
+        {
+            var users = new List<UserDto>();
+            var usersData = new UserDAO().GetUsersByName(name, userId);
+            foreach (var user in usersData)
+            {
+                users.Add((UserDto)user);
+            }
+            return users;
+        }
+
+        private List<int> GetFriendIds(int userId)
+        {
+            var friends = GetFriends(userId);
+            return friends.Select(f => f.FriendId).ToList();
+        }
+
     }
 }

@@ -41,7 +41,7 @@ namespace DataAccess.Utils
         private static void ConfigureLogger(string logFilePath)
         {
             _logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose() // Set the minimum log level
+                .MinimumLevel.Verbose() 
                 .Enrich.FromLogContext() // Enrich logs with contextual information
                 .WriteTo.File(
                     path: logFilePath,
@@ -62,7 +62,7 @@ namespace DataAccess.Utils
             const string ID_FILE_NAME = "Log";
             const string CHARACTER_SEPARATOR = "_";
             const string FILE_EXTENSION = ".txt";
-            const string RELATIVE_LOG_FILE_PATH = "Logs"; 
+            const string RELATIVE_LOG_FILE_PATH = @"C:\MyCustomLogsDirectory";
 
             DateTime currentDate = DateTime.Now;
             string date = currentDate.ToString(DATE_FORMAT);
@@ -70,7 +70,6 @@ namespace DataAccess.Utils
             string logFileName = $"{ID_FILE_NAME}{CHARACTER_SEPARATOR}{date}{FILE_EXTENSION}";
             string absoluteLogDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RELATIVE_LOG_FILE_PATH);
 
-            // Ensure the log directory exists
             if (!Directory.Exists(absoluteLogDirectory))
             {
                 Directory.CreateDirectory(absoluteLogDirectory);

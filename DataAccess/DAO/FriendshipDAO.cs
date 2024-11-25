@@ -20,9 +20,10 @@ namespace DataAccess.DAO
     }
     public class FriendshipDAO
     {
+
         public Friendship AddFriendship(int user1Id, int user2Id)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -72,27 +73,12 @@ namespace DataAccess.DAO
 
                     return friendship;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool FriendshipExists(int user1Id, int user2Id)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -100,27 +86,12 @@ namespace DataAccess.DAO
                         (f.User1Id == user1Id && f.User2Id == user2Id) ||
                         (f.User1Id == user2Id && f.User2Id == user1Id));
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public bool RemoveFriendship(int user1Id, int user2Id)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -140,27 +111,12 @@ namespace DataAccess.DAO
                         return false;
                     }
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<User> GetFriendshipList(int userId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -171,27 +127,12 @@ namespace DataAccess.DAO
 
                     return friends;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
 
         public List<FriendData> GetFriendsForUser(int currentUserId)
         {
-            try
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -209,22 +150,8 @@ namespace DataAccess.DAO
 
                     return friends;
                 }
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
+            });
         }
+
     }
 }

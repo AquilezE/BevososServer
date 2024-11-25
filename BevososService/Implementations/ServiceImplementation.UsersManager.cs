@@ -61,30 +61,31 @@ namespace BevososService.Implementations
         {
             try
             {
-                if (new TokenDAO().HasToken(email))
+                TokenDAO tokenDao = new TokenDAO();
+                if (tokenDao.HasToken(email))
                 {
-                    return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
+                    return EmailUtils.SendTokenByEmail(email, tokenDao.GetToken(email));
                 }
                 else
                 {
-                    new TokenDAO().AsignToken(email);
-                    return EmailUtils.SendTokenByEmail(email, new TokenDAO().GetToken(email));
+                    tokenDao.AsignToken(email);
+                    return EmailUtils.SendTokenByEmail(email, tokenDao.GetToken(email));
                 }
             }
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
-
         }
 
         public bool VerifyToken(string email, string token)
         {
             try
             {
-                if (new TokenDAO().HasToken(email) && new TokenDAO().TokenIsValid(token, email))
+                TokenDAO tokenDao = new TokenDAO();
+                if (tokenDao.HasToken(email) && tokenDao.TokenIsValid(token, email))
                 {
-                    new TokenDAO().DeleteToken(token, email);
+                    tokenDao.DeleteToken(token, email);
                     return true;
                 }
                 return false;
@@ -135,14 +136,14 @@ namespace BevososService.Implementations
         {
             try
             {
-                if (!new AccountDAO().EmailExists(email))
+                AccountDAO accountDAO = new AccountDAO();
+                if (!accountDAO.EmailExists(email))
                 {
                     return false;
                 }
                 else
                 {
                     string hashedPassword = SimpleHashing.HashPassword(password);
-                    AccountDAO accountDAO = new AccountDAO();
                     return accountDAO.UpdatePasswordByEmail(email, hashedPassword);
                 }
             }
