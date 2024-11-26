@@ -51,7 +51,7 @@ namespace BevososService
         /// <param name="monsterSelectedIndex">The index of the monster selected for customization.</param>
 
         [OperationContract(IsOneWay = true)]
-        void PlayProvoke(int userId, int matchCode);
+        void PlayProvoke(int userId, int matchCode, int babyPileProvoked);
 
         [OperationContract(IsOneWay = true)]
         void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
@@ -63,7 +63,7 @@ namespace BevososService
         void ExecuteHatPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
 
         [OperationContract(IsOneWay = true)]
-        void ExecuteProvoke(int userId, int matchCode, int monsterSelectedIndex);
+        void ExecuteProvoke(int userId, int matchCode, int babyPileProvoked);
 
     }
 
@@ -124,7 +124,13 @@ namespace BevososService
         /// <param name="messageKey">The key representing the message describing the invalid action.</param>
         [OperationContract(IsOneWay = true)]
         void NotifyActionInvalid(string messageKey);
-    
+
+
+
+        [OperationContract(IsOneWay = true)]
+        void OnProvoke(int matchCode, int babyPileIndex);   
+
+
     }
 
 }

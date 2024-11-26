@@ -35,6 +35,7 @@ namespace BevososService.Implementations
                 var gameStateDto = (GameStateDTO)gameInstance;
 
                 gameStateDto.TurnTimeRemainingInSeconds = GetTurnTimeRemainingInSeconds(gameInstance);
+                gameStateDto.PlayerStadistics = _playerStatistics[matchCode].ToDictionary(kvp => kvp.Key, kvp => (GameStatsDTO)kvp.Value);
 
                 foreach (var playerCallback in _gamePlayerCallBack[matchCode].Values)
                 {
@@ -385,9 +386,11 @@ namespace BevososService.Implementations
             }
 
         }
-        public async void PlayProvoke(int userId, int matchCode)
+        public void PlayProvoke(int userId, int matchCode, int babyPileIndex)
         {
-            if (!_activeGames.TryGetValue(userId, out Game gameInstance))
+            Console.WriteLine($"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
+
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
                 return;
             }
@@ -404,14 +407,8 @@ namespace BevososService.Implementations
                 return;
             }
 
-            else
-            {
-                await Task.Run(() =>
-                {
-                    _gamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
-                    callback?.RequestProvokeSelection(userId, matchCode);
-                });
-            }
+            ExecuteProvoke(userId, matchCode, babyPileIndex);
+
         }
         public void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
         {
@@ -540,28 +537,36 @@ namespace BevososService.Implementations
                 NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
             }
         }
-        public void ExecuteProvoke(int userId, int matchCode, int babyPile)
+        public void ExecuteProvoke(int userId, int matchCode, int babyPileIndex)
         {
+
+            Console.WriteLine($"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
+
+
             if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
                 return;
             }
 
-            if (gameInstance.BabyPiles[babyPile].Count == 0)
+            if (gameInstance.BabyPiles[babyPileIndex].Count == 0)
             {
                 NotifyPlayer(matchCode, userId, "EmptyBabyPile");
                 return;
             }
 
-            Card.CardElement element = gameInstance.BabyPiles[babyPile].Peek().Element;
+            CallOnProvokeForAllPlayers(matchCode, babyPileIndex);
+
+            
+
+            Card.CardElement element = gameInstance.BabyPiles[babyPileIndex].Peek().Element;
 
             int monsterArmyMaxStrenght = 0;
             int playerWithMaxStrenght = 0;
 
             int pileStrenght = 0;
-            int numberBabies = gameInstance.BabyPiles[babyPile].Count;
+            int numberBabies = gameInstance.BabyPiles[babyPileIndex].Count;
 
-            foreach (Card baby in gameInstance.BabyPiles[babyPile])
+            foreach (Card baby in gameInstance.BabyPiles[babyPileIndex])
             {
                 pileStrenght += baby.Damage;
             }
@@ -603,16 +608,16 @@ namespace BevososService.Implementations
 
             if (pileStrenght > monsterArmyMaxStrenght)
             {
-                gameInstance.BabyPiles[babyPile].Clear();
+                gameInstance.BabyPiles[babyPileIndex].Clear();
             }
             else if (pileStrenght <= monsterArmyMaxStrenght)
             {
                 _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].BabiesKilledThisGame += numberBabies;
                 _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].PointsThisGame += pileStrenght;
-                gameInstance.BabyPiles[babyPile].Clear();
+                gameInstance.BabyPiles[babyPileIndex].Clear();
             }
 
-            BroadcastGameState(matchCode);
+
             AdvanceTurn(matchCode);
 
         }
@@ -666,6 +671,13 @@ namespace BevososService.Implementations
                 {
                     callback.NotifyActionInvalid(messageKey);
                 }
+            }
+        }
+        private static void CallOnProvokeForAllPlayers(int matchCode, int babyPileIndex)
+        {
+            foreach (var player in _gamePlayerCallBack[matchCode].Keys)
+            {
+                _gamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
             }
         }
     }

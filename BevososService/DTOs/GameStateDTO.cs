@@ -35,6 +35,10 @@ namespace BevososService.DTOs
         [DataMember]
         public int TurnTimeRemainingInSeconds { get; set; }
 
+        [DataMember]
+        public Dictionary<int, GameStatsDTO> PlayerStadistics { get; set; } = new Dictionary<int, GameStatsDTO>();
+
+
         public GameStateDTO() { }
 
 
