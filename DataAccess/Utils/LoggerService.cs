@@ -14,6 +14,12 @@ namespace DataAccess.Utils
     /// </summary>
     public sealed class LoggerService
     {
+        const string DATE_FORMAT = "dd-MM-yyyy";
+        const string ID_FILE_NAME = "Log";
+        const string CHARACTER_SEPARATOR = "_";
+        const string FILE_EXTENSION = ".txt";
+        const string RELATIVE_LOG_FILE_PATH = @"C:\MyCustomLogsDirectory";
+
         private static readonly Lazy<LoggerService> _instance = new Lazy<LoggerService>(() => new LoggerService());
 
         private static ILogger _logger;
@@ -58,11 +64,7 @@ namespace DataAccess.Utils
         /// <returns>The full path to the log file.</returns>
         private static string BuildLogFilePath()
         {
-            const string DATE_FORMAT = "dd-MM-yyyy";
-            const string ID_FILE_NAME = "Log";
-            const string CHARACTER_SEPARATOR = "_";
-            const string FILE_EXTENSION = ".txt";
-            const string RELATIVE_LOG_FILE_PATH = @"C:\MyCustomLogsDirectory";
+
 
             DateTime currentDate = DateTime.Now;
             string date = currentDate.ToString(DATE_FORMAT);

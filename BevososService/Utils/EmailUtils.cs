@@ -40,8 +40,8 @@ namespace BevososService.Utils
         {
             try
             {
-                using (var mail = new MailMessage())
-                using (var smtpClient = new SmtpClient(SmtpServer, SmtpPort))
+                using (MailMessage mail = new MailMessage())
+                using (SmtpClient smtpClient = new SmtpClient(SmtpServer, SmtpPort))
                 {
                     mail.From = new MailAddress(SenderEmail);
                     mail.To.Add(recipientEmail);

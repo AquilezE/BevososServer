@@ -6,6 +6,7 @@ using System.Linq;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
+using BevososService.GameModels;
 
 namespace BevososService.Implementations
 {
@@ -15,13 +16,13 @@ namespace BevososService.Implementations
         {
             GlobalDeck.InitializeDeck();
 
-            foreach (var item in GlobalDeck.Deck.Select(item => item.Value))
+            foreach (Card item in GlobalDeck.Deck.Select(item => item.Value))
             {
                 Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage);
             }
         }
 
-        private FaultException<BevososServerExceptions> CreateAndLogFaultException(Exception innerException)
+        private static FaultException<BevososServerExceptions> CreateAndLogFaultException(Exception innerException)
         {
             BevososServerExceptions serverException = new BevososServerExceptions
             {

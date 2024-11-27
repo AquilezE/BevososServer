@@ -3,11 +3,7 @@ using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Exceptions;
 using DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
@@ -40,12 +36,16 @@ namespace BevososService.Implementations
 
         public bool RegisterUser(string email, string username, string password)
         {
-            User user = new User();
-            user.Username = username;
+            User user = new User
+            {
+                Username = username
+            };
 
-            Account account = new Account();
-            account.Email = email;
-            account.PasswordHash = SimpleHashing.HashPassword(password);
+            Account account = new Account
+            {
+                Email = email,
+                PasswordHash = SimpleHashing.HashPassword(password)
+            };
 
             try
             {

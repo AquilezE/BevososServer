@@ -24,10 +24,10 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requester = context.Users.FirstOrDefault(u => u.UserId == requesterId);
-                    var requestee = context.Users.FirstOrDefault(u => u.UserId == requesteeId);
+                    User requester = context.Users.FirstOrDefault(u => u.UserId == requesterId);
+                    User requestee = context.Users.FirstOrDefault(u => u.UserId == requesteeId);
 
                     if (requester == null || requestee == null)
                     {
@@ -43,7 +43,7 @@ namespace DataAccess.DAO
                         return 0;
                     }
 
-                    var friendRequest = new FriendRequest
+                    FriendRequest friendRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
                         RequesteeId = requesteeId
@@ -61,9 +61,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
+                    FriendRequest friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
                     if (friendRequest == null)
                     {
                         return false;
@@ -81,9 +81,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
+                    FriendRequest friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
                     if (friendRequest == null)
                     {
                         return false;
@@ -101,9 +101,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var pendingRequests = context.FriendRequests
+                    List<FriendRequest> pendingRequests = context.FriendRequests
                         .Where(fr => fr.RequesteeId == userId)
                         .Include(fr => fr.Requester)
                         .ToList();
@@ -117,9 +117,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendRequests = context.FriendRequests
+                    List<FriendRequestData> friendRequests = context.FriendRequests
                         .Where(fr => fr.RequesteeId == currentUserId)
                         .Select(fr => new FriendRequestData
                         {
@@ -139,7 +139,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     return context.FriendRequests.Any(fr => fr.Id == requestId);
                 }

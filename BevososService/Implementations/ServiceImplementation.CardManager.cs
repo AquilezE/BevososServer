@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BevososService.GameModels;
 
 namespace BevososService.Implementations
 {
@@ -11,13 +12,13 @@ namespace BevososService.Implementations
     {
         public static void SeeGlobalDeck()
         {
-            foreach (var card in GlobalDeck.Deck)
+            foreach (KeyValuePair<int, Card> card in GlobalDeck.Deck)
             {
                 Console.WriteLine(card.Value);
             }
         }
 
-        public static void Shuffle<T>(IList<T> list)
+        private static void Shuffle<T>(IList<T> list)
         {
             Random rng = new Random();
             int n = list.Count;

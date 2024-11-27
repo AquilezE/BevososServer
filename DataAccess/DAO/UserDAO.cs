@@ -18,7 +18,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     return context.Users.Any(u => u.Username == username);
                 }
@@ -29,9 +29,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var account = context.Accounts
+                    Account account = context.Accounts
                                          .Include("User")
                                          .FirstOrDefault(a => a.Email == email);
                     return account?.User;
@@ -43,7 +43,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     return context.Users.FirstOrDefault(u => u.UserId == userId);
                 }
@@ -54,14 +54,14 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var blockedUserIds = context.BlockedList
+                    List<int> blockedUserIds = context.BlockedList
                         .Where(b => b.BlockerId == currentUserId)
                         .Select(b => b.BlockeeId)
                         .ToList();
 
-                    var friendUserIds = context.Friendships
+                    List<int> friendUserIds = context.Friendships
                         .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
                         .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
                         .ToList();
@@ -80,15 +80,15 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user = context.Users.FirstOrDefault(u => u.UserId == userId);
+                    User user = context.Users.FirstOrDefault(u => u.UserId == userId);
                     if (user == null)
                     {
                         return 0;
                     }
 
-                    var existingUser = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
+                    User existingUser = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
                     if (existingUser != null)
                     {
                         throw new InvalidOperationException("Username already exists for another user.");
@@ -105,9 +105,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var existingUser = context.Users.FirstOrDefault(u => u.UserId == user.UserId);
+                    User existingUser = context.Users.FirstOrDefault(u => u.UserId == user.UserId);
 
                     if (existingUser == null)
                     {
@@ -127,7 +127,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     return context.Users.Any(u => u.UserId == userId);
                 }

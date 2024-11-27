@@ -25,10 +25,10 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user1 = context.Users.FirstOrDefault(u => u.UserId == user1Id);
-                    var user2 = context.Users.FirstOrDefault(u => u.UserId == user2Id);
+                    User user1 = context.Users.FirstOrDefault(u => u.UserId == user1Id);
+                    User user2 = context.Users.FirstOrDefault(u => u.UserId == user2Id);
 
                     if (user1 == null || user2 == null)
                     {
@@ -62,7 +62,7 @@ namespace DataAccess.DAO
                         return null;
                     }
 
-                    var friendship = new Friendship
+                    Friendship friendship = new Friendship
                     {
                         User1Id = user1Id,
                         User2Id = user2Id
@@ -80,7 +80,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     return context.Friendships.Any(f =>
                         (f.User1Id == user1Id && f.User2Id == user2Id) ||
@@ -93,9 +93,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendship = context.Friendships.FirstOrDefault(f =>
+                    Friendship friendship = context.Friendships.FirstOrDefault(f =>
                         (f.User1Id == user1Id && f.User2Id == user2Id) ||
                         (f.User1Id == user2Id && f.User2Id == user1Id));
 
@@ -118,9 +118,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friends = context.Friendships
+                    List<User> friends = context.Friendships
                         .Where(f => f.User1Id == userId || f.User2Id == userId)
                         .Select(f => f.User1Id == userId ? f.User2 : f.User1)
                         .ToList();
@@ -134,9 +134,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friends = context.Friendships
+                    List<FriendData> friends = context.Friendships
                         .Where(f => f.User1Id == currentUserId || f.User2Id == currentUserId)
                         .Select(f => new FriendData
                         {

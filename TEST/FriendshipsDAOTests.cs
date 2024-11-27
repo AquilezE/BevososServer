@@ -1,4 +1,5 @@
-﻿using DataAccess.Models;
+﻿using System.Collections.Generic;
+using DataAccess.Models;
 using DataAccess.DAO;
 using DataAccess;
 using System.Linq;
@@ -12,14 +13,14 @@ namespace TEST
         [Fact]
         public void AddFriendship_ShouldReturnNull_WhenUsersDoNotExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int nonExistentUserId1 = -1;
                 int nonExistentUserId2 = -2;
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var result = friendshipDAO.AddFriendship(nonExistentUserId1, nonExistentUserId2);
+                Friendship result = friendshipDAO.AddFriendship(nonExistentUserId1, nonExistentUserId2);
 
                 Assert.Null(result);
 
@@ -29,13 +30,13 @@ namespace TEST
         [Fact]
         public void AddFriendship_ShouldReturnNull_WhenFriendshipAlreadyExists()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int user1Id, user2Id;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user1 = new User
+                    User user1 = new User
                     {
                         Username = "User1",
                         ProfilePictureId = 1,
@@ -46,7 +47,7 @@ namespace TEST
                         }
                     };
 
-                    var user2 = new User
+                    User user2 = new User
                     {
                         Username = "User2",
                         ProfilePictureId = 1,
@@ -64,7 +65,7 @@ namespace TEST
                     user1Id = user1.UserId;
                     user2Id = user2.UserId;
 
-                    var friendship = new Friendship
+                    Friendship friendship = new Friendship
                     {
                         User1Id = user1Id,
                         User2Id = user2Id
@@ -73,9 +74,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var result = friendshipDAO.AddFriendship(user1Id, user2Id);
+                Friendship result = friendshipDAO.AddFriendship(user1Id, user2Id);
 
                 Assert.Null(result); 
 
@@ -85,13 +86,13 @@ namespace TEST
         [Fact]
         public void AddFriendship_ShouldReturnFriendshipIfWorks()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int user1Id, user2Id;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user1 = new User
+                    User user1 = new User
                     {
                         Username = "User1",
                         ProfilePictureId = 1,
@@ -102,7 +103,7 @@ namespace TEST
                         }
                     };
 
-                    var user2 = new User
+                    User user2 = new User
                     {
                         Username = "User2",
                         ProfilePictureId = 1,
@@ -123,7 +124,7 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
                 Friendship result = friendshipDAO.AddFriendship(user1Id, user2Id);
 
@@ -142,13 +143,13 @@ namespace TEST
         [Fact]
         public void GetFriendshipList_ShouldReturnFriends_WhenFriendshipsExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int userId, friendId1, friendId2;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user = new User
+                    User user = new User
                     {
                         Username = "User",
                         ProfilePictureId = 1,
@@ -159,7 +160,7 @@ namespace TEST
                         }
                     };
 
-                    var friend1 = new User
+                    User friend1 = new User
                     {
                         Username = "Friend1",
                         ProfilePictureId = 1,
@@ -170,7 +171,7 @@ namespace TEST
                         }
                     };
 
-                    var friend2 = new User
+                    User friend2 = new User
                     {
                         Username = "Friend2",
                         ProfilePictureId = 1,
@@ -195,9 +196,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var friends = friendshipDAO.GetFriendshipList(userId);
+                List<User> friends = friendshipDAO.GetFriendshipList(userId);
 
                 Assert.Equal(2, friends.Count);
                 Assert.Contains(friends, f => f.UserId == friendId1);
@@ -209,13 +210,13 @@ namespace TEST
         [Fact]
         public void RemoveFriendship_ShouldReturnFalse_WhenFriendshipDoesNotExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int user1Id, user2Id;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user1 = new User
+                    User user1 = new User
                     {
                         Username = "User1",
                         ProfilePictureId = 1,
@@ -226,7 +227,7 @@ namespace TEST
                         }
                     };
 
-                    var user2 = new User
+                    User user2 = new User
                     {
                         Username = "User2",
                         ProfilePictureId = 1,
@@ -245,9 +246,9 @@ namespace TEST
                     user2Id = user2.UserId;
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var result = friendshipDAO.RemoveFriendship(user1Id, user2Id);
+                bool result = friendshipDAO.RemoveFriendship(user1Id, user2Id);
 
                 Assert.False(result); 
             }
@@ -256,14 +257,14 @@ namespace TEST
         [Fact]
         public void GetFriendshipList_ShouldReturnEmptyList_WhenUserHasNoFriends()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int userId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                 
-                    var user = new User
+                    User user = new User
                     {
                         Username = "LonelyUser",
                         ProfilePictureId = 1,
@@ -280,10 +281,10 @@ namespace TEST
                     userId = user.UserId;
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
                
-                var friends = friendshipDAO.GetFriendshipList(userId);
+                List<User> friends = friendshipDAO.GetFriendshipList(userId);
 
               
                 Assert.Empty(friends); 
@@ -293,14 +294,14 @@ namespace TEST
         [Fact]
         public void AddFriendship_ShouldWork_WhenAddingFriendshipInReverseOrder()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int user1Id, user2Id;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     
-                    var user1 = new User
+                    User user1 = new User
                     {
                         Username = "User1",
                         ProfilePictureId = 1,
@@ -311,7 +312,7 @@ namespace TEST
                         }
                     };
 
-                    var user2 = new User
+                    User user2 = new User
                     {
                         Username = "User2",
                         ProfilePictureId = 1,
@@ -330,10 +331,10 @@ namespace TEST
                     user2Id = user2.UserId;
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
                 
-                var result = friendshipDAO.AddFriendship(user2Id, user1Id); // Reverse order
+                Friendship result = friendshipDAO.AddFriendship(user2Id, user1Id); // Reverse order
 
                 Friendship expected = new Friendship
                 {
@@ -341,9 +342,9 @@ namespace TEST
                     User2Id = user2Id
                 };
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
+                    bool friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
 
                     Assert.True(friendshipExists);
                 }
@@ -354,13 +355,13 @@ namespace TEST
         [Fact]
         public void GetFriendshipList_ShouldReturnCorrectFriends_WhenUserIsSecondInFriendship()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int userId, friendId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user = new User
+                    User user = new User
                     {
                         Username = "User",
                         ProfilePictureId = 1,
@@ -371,7 +372,7 @@ namespace TEST
                         }
                     };
 
-                    var friend = new User
+                    User friend = new User
                     {
                         Username = "Friend",
                         ProfilePictureId = 1,
@@ -389,7 +390,7 @@ namespace TEST
                     userId = user.UserId;
                     friendId = friend.UserId;
 
-                    var friendship = new Friendship
+                    Friendship friendship = new Friendship
                     {
                         User1Id = friendId,
                         User2Id = userId
@@ -398,9 +399,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var friends = friendshipDAO.GetFriendshipList(userId);
+                List<User> friends = friendshipDAO.GetFriendshipList(userId);
 
                 Assert.Single(friends);
                 Assert.Equal(friendId, friends.First().UserId);
@@ -411,13 +412,13 @@ namespace TEST
         [Fact]
         public void RemoveFriendship_ShouldWork_WhenFriendshipExistsInReverseOrder()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int user1Id, user2Id;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var user1 = new User
+                    User user1 = new User
                     {
                         Username = "User1",
                         ProfilePictureId = 1,
@@ -428,7 +429,7 @@ namespace TEST
                         }
                     };
 
-                    var user2 = new User
+                    User user2 = new User
                     {
                         Username = "User2",
                         ProfilePictureId = 1,
@@ -446,7 +447,7 @@ namespace TEST
                     user1Id = user1.UserId;
                     user2Id = user2.UserId;
 
-                    var friendship = new Friendship
+                    Friendship friendship = new Friendship
                     {
                         User1Id = user2Id,
                         User2Id = user1Id
@@ -455,15 +456,15 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendshipDAO = new FriendshipDAO();
+                FriendshipDAO friendshipDAO = new FriendshipDAO();
 
-                var result = friendshipDAO.RemoveFriendship(user1Id, user2Id);
+                bool result = friendshipDAO.RemoveFriendship(user1Id, user2Id);
 
                 Assert.True(result);
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var friendshipExists = context.Friendships.Any(f =>
+                    bool friendshipExists = context.Friendships.Any(f =>
                         (f.User1Id == user1Id && f.User2Id == user2Id) ||
                         (f.User1Id == user2Id && f.User2Id == user1Id));
 

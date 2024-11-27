@@ -32,7 +32,7 @@ namespace BevososService.Implementations
             {
 
 
-                var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                ISocialManagerCallback callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
                 ICommunicationObject clientChannel = (ICommunicationObject)callback;
 
                 Console.WriteLine("Client connected: " + userId);
@@ -120,6 +120,7 @@ namespace BevososService.Implementations
             return 0 != idFriendRequest;
         }
 
+        //TODO: FIX THIS UGLY AHH CODE ASAP 
         public bool AcceptFriendRequest(int userId, int friendId, int requestId)
         {
             try
@@ -134,11 +135,11 @@ namespace BevososService.Implementations
                         {
                             int friendshipId = friendship.Id;
 
-                            var userDao = new UserDAO();
-                            var currentUser = userDao.GetUserById(userId);
-                            var friendUser = userDao.GetUserById(friendId);
+                            UserDAO userDao = new UserDAO();
+                            User currentUser = userDao.GetUserById(userId);
+                            User friendUser = userDao.GetUserById(friendId);
 
-                            var friendDto = new FriendDTO
+                            FriendDTO friendDto = new FriendDTO
                             {
                                 FriendshipId = friendshipId,
                                 FriendId = friendId,
@@ -147,7 +148,7 @@ namespace BevososService.Implementations
                                 IsConnected = connectedClients.ContainsKey(friendId)
                             };
 
-                            var friendDtoForFriend = new FriendDTO
+                            FriendDTO friendDtoForFriend = new FriendDTO
                             {
                                 FriendshipId = friendshipId,
                                 FriendId = userId,
@@ -163,7 +164,7 @@ namespace BevososService.Implementations
                             try
                             {
 
-                                if (connectedClients.TryGetValue(friendId, out var callback))
+                                if (connectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
                                 {
                                     try
                                     {
@@ -389,7 +390,7 @@ namespace BevososService.Implementations
 
         private void InvokeCallback<T>(int userId, Action<ISocialManagerCallback, T> callbackAction, T parameter)
         {
-            if (connectedClients.TryGetValue(userId, out var callback))
+            if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
             {
                 try
                 {
@@ -413,7 +414,7 @@ namespace BevososService.Implementations
 
         private void InvokeCallback(int userId, Action<ISocialManagerCallback> callbackAction)
         {
-            if (connectedClients.TryGetValue(userId, out var callback))
+            if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
             {
                 try
                 {
@@ -440,8 +441,8 @@ namespace BevososService.Implementations
 
         private void NotifyFriendsUserOnline(int userId)
         {
-            var friends = GetFriendIds(userId);
-            foreach (var friendId in friends)
+            List<int> friends = GetFriendIds(userId);
+            foreach (int friendId in friends)
             {
                 InvokeCallback(friendId, (callback, id) => callback.OnFriendOnline(id), userId);
             }
@@ -449,8 +450,8 @@ namespace BevososService.Implementations
 
         private void NotifyFriendsUserOffline(int userId)
         {
-            var friends = GetFriendIds(userId);
-            foreach (var friendId in friends)
+            List<int> friends = GetFriendIds(userId);
+            foreach (int friendId in friends)
             {
 
 
@@ -462,7 +463,7 @@ namespace BevososService.Implementations
 
         public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
         {
-            if (activeLobbiesDict.ContainsKey(lobbyId))
+            if (_activeLobbiesDict.ContainsKey(lobbyId))
             {
                 try
                 {
@@ -489,13 +490,13 @@ namespace BevososService.Implementations
 
         private void ClientSocialChannelRuined(object sender, EventArgs e)
         {
-            var callback = (ISocialManagerCallback)sender;
+            ISocialManagerCallback callback = (ISocialManagerCallback)sender;
             RemoveClient(callback);
         }
 
         private void RemoveClient(ISocialManagerCallback callback)
         {
-            var user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
+            KeyValuePair<int, ISocialManagerCallback> user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
             if (user.Key != 0)
             {
                 Disconnect(user.Key);
@@ -504,9 +505,9 @@ namespace BevososService.Implementations
 
         public List<UserDto> GetUsersFoundByName(int userId, string name)
         {
-            var users = new List<UserDto>();
-            var usersData = new UserDAO().GetUsersByName(name, userId);
-            foreach (var user in usersData)
+            List<UserDto> users = new List<UserDto>();
+            List<User> usersData = new UserDAO().GetUsersByName(name, userId);
+            foreach (User user in usersData)
             {
                 users.Add((UserDto)user);
             }
@@ -515,7 +516,7 @@ namespace BevososService.Implementations
 
         private List<int> GetFriendIds(int userId)
         {
-            var friends = GetFriends(userId);
+            List<FriendDTO> friends = GetFriends(userId);
             return friends.Select(f => f.FriendId).ToList();
         }
 

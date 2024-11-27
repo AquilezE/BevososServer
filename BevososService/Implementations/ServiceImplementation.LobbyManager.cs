@@ -22,16 +22,16 @@ namespace BevososService.Implementations
         private static int _currentLobbyId = 4;
 
         // Lobby ID -> (User ID -> Callback)
-        static ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>> activeLobbiesDict = new ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>();
+        static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>> _activeLobbiesDict = new ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>();
 
         // Callback -> (Lobby ID, User ID)
-        static ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)> clientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
+        static readonly ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)> _clientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
 
         // User ID -> UserDto
-        private static ConcurrentDictionary<int, UserDto> _lobbyUsersDetails = new ConcurrentDictionary<int, UserDto>();
+        private static readonly ConcurrentDictionary<int, UserDto> _lobbyUsersDetails = new ConcurrentDictionary<int, UserDto>();
 
         //  ID -> Lobby ID
-        private static ConcurrentDictionary<int, int> _lobbyLeaders = new ConcurrentDictionary<int, int>();
+        private static readonly ConcurrentDictionary<int, int> _lobbyLeaders = new ConcurrentDictionary<int, int>();
 
 
         private static int GenerateUniqueLobbyId()
@@ -49,12 +49,12 @@ namespace BevososService.Implementations
             clientChannel.Closed += LobbyChannel_Closed;
             clientChannel.Faulted += LobbyChannel_Faulted;
 
-            activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
-            activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
+            _activeLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+            _activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
 
             _lobbyLeaders.TryAdd(lobbyId, userDto.UserId);
 
-            clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+            _clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
             userDto.IsReady = true;
             _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
@@ -69,18 +69,18 @@ namespace BevososService.Implementations
             clientChannel.Closed += LobbyChannel_Closed;
             clientChannel.Faulted += LobbyChannel_Faulted;
 
-            if (!activeLobbiesDict.ContainsKey(lobbyId))
+            if (!_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> value))
             {
                 return;
             }
 
-            activeLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
-            clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+            value.TryAdd(userDto.UserId, callback);
+            _clientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
             userDto.IsReady = true;
             _lobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
-            var existingUsers = activeLobbiesDict[lobbyId]
+            List<UserDto> existingUsers = _activeLobbiesDict[lobbyId]
                 .Where(u => u.Key != userDto.UserId)
                 .Select(u => _lobbyUsersDetails[u.Key])
                 .ToList();
@@ -92,7 +92,7 @@ namespace BevososService.Implementations
                 callback.OnLeaderChanged(lobbyId, leaderId);
             }
 
-            foreach (var user in activeLobbiesDict[lobbyId])
+            foreach (KeyValuePair<int, ILobbyManagerCallback> user in _activeLobbiesDict[lobbyId])
             {
                 if (user.Key != userDto.UserId)
                 {
@@ -114,7 +114,7 @@ namespace BevososService.Implementations
         }
         public void SendMessage(int lobbyId, int userId, string message)
         {
-            foreach (var user in activeLobbiesDict[lobbyId].Select(user => user.Value))
+            foreach (ILobbyManagerCallback user in _activeLobbiesDict[lobbyId].Select(user => user.Value))
             {
                 try
                 {
@@ -130,9 +130,9 @@ namespace BevososService.Implementations
         {
             if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == kickerId)
             {
-                if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+                if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
                 {
-                    if (lobby.TryGetValue(targetUserId, out var targetCallback))
+                    if (lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback))
                     {
                         try
                         {
@@ -151,19 +151,19 @@ namespace BevososService.Implementations
         }
         private void LobbyChannel_Closed(object sender, EventArgs e)
         {
-            var callback = (ILobbyManagerCallback)sender;
+            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
             RemoveLobbyClient(callback);
             Console.WriteLine("Client Closed");
         }
         private void LobbyChannel_Faulted(object sender, EventArgs e)
         {
-            var callback = (ILobbyManagerCallback)sender;
+            ILobbyManagerCallback callback = (ILobbyManagerCallback)sender;
             RemoveLobbyClient(callback);
             Console.WriteLine("Client Faulted");
         }
         private void RemoveLobbyClient(ILobbyManagerCallback callback)
         {
-            if (clientCallbackMapping.TryRemove(callback, out var clientInfo))
+            if (_clientCallbackMapping.TryRemove(callback, out (int LobbyId, int UserId) clientInfo))
             {
                 int lobbyId = clientInfo.LobbyId;
                 int userId = clientInfo.UserId;
@@ -174,13 +174,13 @@ namespace BevososService.Implementations
         }
         private void RemoveClientFromLobby(int lobbyId, int userId)
         {
-            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
             {
-                if (lobby.TryRemove(userId, out var callback))
+                if (lobby.TryRemove(userId, out ILobbyManagerCallback callback))
                 {
                     Console.WriteLine($"{userId} removed from lobby: {lobbyId}");
 
-                    foreach (var user in lobby.Values)
+                    foreach (ILobbyManagerCallback user in lobby.Values)
                     {
                         try
                         {
@@ -192,22 +192,22 @@ namespace BevososService.Implementations
                         }
                     }
                 }
-                clientCallbackMapping.TryRemove(callback, out _);
+                _clientCallbackMapping.TryRemove(callback, out _);
             }
         }
         private void HandleUserLeavingLobby(int lobbyId, int userId)
         {
-            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
             {
                 if (_lobbyLeaders.TryGetValue(lobbyId, out int leaderId) && leaderId == userId)
                 {
-                    var remainingUsers = lobby.Keys.Where(k => k != userId).ToList();
+                    List<int> remainingUsers = lobby.Keys.Where(k => k != userId).ToList();
                     if (remainingUsers.Any())
                     {
                         int newLeaderId = remainingUsers[0];
                         _lobbyLeaders.TryUpdate(lobbyId, newLeaderId, userId);
 
-                        foreach (var user in lobby.Values)
+                        foreach (ILobbyManagerCallback user in lobby.Values)
                         {
                             try
                             {
@@ -221,7 +221,7 @@ namespace BevososService.Implementations
                     }
                     else
                     {
-                        activeLobbiesDict.TryRemove(lobbyId, out _);
+                        _activeLobbiesDict.TryRemove(lobbyId, out _);
                         _lobbyLeaders.TryRemove(lobbyId, out _);
                     }
                 }
@@ -234,7 +234,7 @@ namespace BevososService.Implementations
         }
         public async void StartGame(int lobbyId)
         {
-            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
             {
                 int gameId = lobbyId;
                 Game gameInstance = new Game
@@ -254,7 +254,7 @@ namespace BevososService.Implementations
                 InitializeGame(gameInstance, lobby);
 
                 // Notify each player 
-                foreach (var kvp in lobby.Select(x => x.Value))
+                foreach (ILobbyManagerCallback kvp in lobby.Select(x => x.Value))
                 {
                     ILobbyManagerCallback lobbyCallback = kvp;
                     try
@@ -269,7 +269,7 @@ namespace BevososService.Implementations
                 }
 
                 await Task.Delay(5000); // Wait for 5 seconds to remove the lobby
-                activeLobbiesDict.TryRemove(lobbyId, out _);
+                _activeLobbiesDict.TryRemove(lobbyId, out _);
             }
         }
         public void ChangeReadyStatus(int lobbyId, int userId)
@@ -278,9 +278,9 @@ namespace BevososService.Implementations
             {
                 userDto.IsReady = !userDto.IsReady;
 
-                if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+                if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
                 {
-                    foreach (var user in lobby.Values)
+                    foreach (ILobbyManagerCallback user in lobby.Values)
                     {
                         try
                         {
@@ -300,12 +300,12 @@ namespace BevososService.Implementations
     {
         public bool IsLobbyOpen(int lobbyId)
         {
-            return activeLobbiesDict.ContainsKey(lobbyId);
+            return _activeLobbiesDict.ContainsKey(lobbyId);
         }
 
         public bool IsLobbyFull(int lobbyId)
         {
-            if (activeLobbiesDict.TryGetValue(lobbyId, out var lobby))
+            if (_activeLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
             {
                 return lobby.Count >= 4;
             }

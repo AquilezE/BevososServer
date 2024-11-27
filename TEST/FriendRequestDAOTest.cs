@@ -1,4 +1,5 @@
-﻿using DataAccess.Models;
+﻿using System.Collections.Generic;
+using DataAccess.Models;
 using DataAccess.DAO;
 using DataAccess;
 using System.Linq;
@@ -12,13 +13,13 @@ namespace TEST
         [Fact]
         public void SendFriendRequest_ShouldSendRequest_WhenUsersExistAndNoExistingRequest()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requesterId, requesteeId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requester = new User
+                    User requester = new User
                     {
                         Username = "RequesterUser",
                         ProfilePictureId = 1,
@@ -29,7 +30,7 @@ namespace TEST
                         }
                     };
 
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -48,17 +49,17 @@ namespace TEST
                     requesteeId = requestee.UserId;
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
 
-                var result = friendService.SendFriendRequest(requesterId, requesteeId);
+                int result = friendService.SendFriendRequest(requesterId, requesteeId);
 
     
                 Assert.True(result != 0);
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requestExists = context.FriendRequests.Any(fr =>
+                    bool requestExists = context.FriendRequests.Any(fr =>
                         fr.RequesterId == requesterId && fr.RequesteeId == requesteeId);
 
                     Assert.True(requestExists);
@@ -70,13 +71,13 @@ namespace TEST
         [Fact]
         public void SendFriendRequest_ShouldReturnFalse_WhenRequestAlreadyExists()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requesterId, requesteeId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requester = new User
+                    User requester = new User
                     {
                         Username = "RequesterUser",
                         ProfilePictureId = 1,
@@ -87,7 +88,7 @@ namespace TEST
                         }
                     };
 
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -105,7 +106,7 @@ namespace TEST
                     requesterId = requester.UserId;
                     requesteeId = requestee.UserId;
 
-                    var existingRequest = new FriendRequest
+                    FriendRequest existingRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
                         RequesteeId = requesteeId
@@ -114,9 +115,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var result = friendService.SendFriendRequest(requesterId, requesteeId);
+                int result = friendService.SendFriendRequest(requesterId, requesteeId);
 
                 Assert.False(result != 0);
 
@@ -126,15 +127,14 @@ namespace TEST
         [Fact]
         public void AcceptFriendRequest_ShouldAcceptRequest_WhenRequestExists()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requestId;
-                int requesterId, requesteeId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                   
-                    var requester = new User
+                    User requester = new User
                     {
                         Username = "RequesterUser",
                         ProfilePictureId = 1,
@@ -145,7 +145,7 @@ namespace TEST
                         }
                     };
 
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -160,11 +160,11 @@ namespace TEST
                     context.Users.Add(requestee);
                     context.SaveChanges();
 
-                    requesterId = requester.UserId;
-                    requesteeId = requestee.UserId;
+                    int requesterId = requester.UserId;
+                    int requesteeId = requestee.UserId;
 
                    
-                    var friendRequest = new FriendRequest
+                    FriendRequest friendRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
                         RequesteeId = requesteeId
@@ -175,17 +175,17 @@ namespace TEST
                     requestId = friendRequest.Id;
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
               
-                var result = friendService.AcceptFriendRequest(requestId);
+                bool result = friendService.AcceptFriendRequest(requestId);
 
                 Assert.True(result);
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
                     
-                    var requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
+                    bool requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
                     Assert.False(requestExists);
 
                     /*
@@ -200,11 +200,11 @@ namespace TEST
         [Fact]
         public void AcceptFriendRequest_ShouldReturnFalse_WhenRequestDoesNotExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var result = friendService.AcceptFriendRequest(-1);
+                bool result = friendService.AcceptFriendRequest(-1);
 
                 Assert.False(result);
             }
@@ -213,14 +213,13 @@ namespace TEST
         [Fact]
         public void DeclineFriendRequest_ShouldDeclineRequest_WhenRequestExists()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requestId;
-                int requesterId, requesteeId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requester = new User
+                    User requester = new User
                     {
                         Username = "RequesterUser",
                         ProfilePictureId = 1,
@@ -231,7 +230,7 @@ namespace TEST
                         }
                     };
 
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -246,10 +245,10 @@ namespace TEST
                     context.Users.Add(requestee);
                     context.SaveChanges();
 
-                    requesterId = requester.UserId;
-                    requesteeId = requestee.UserId;
+                    int requesterId = requester.UserId;
+                    int requesteeId = requestee.UserId;
 
-                    var friendRequest = new FriendRequest
+                    FriendRequest friendRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
                         RequesteeId = requesteeId
@@ -260,15 +259,15 @@ namespace TEST
                     requestId = friendRequest.Id;
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var result = friendService.DeclineFriendRequest(requestId);
+                bool result = friendService.DeclineFriendRequest(requestId);
 
                 Assert.True(result);
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
+                    bool requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
                     Assert.False(requestExists);
                 }
 
@@ -278,11 +277,11 @@ namespace TEST
         [Fact]
         public void DeclineFriendRequest_ShouldReturnFalse_WhenRequestDoesNotExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var result = friendService.DeclineFriendRequest(-1); 
+                bool result = friendService.DeclineFriendRequest(-1); 
 
                 
                 Assert.False(result);
@@ -293,14 +292,13 @@ namespace TEST
         [Fact]
         public void GetPendingFriendRequests_ShouldReturnRequests_WhenRequestsExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requesteeId;
-                int requesterId1, requesterId2;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -311,7 +309,7 @@ namespace TEST
                         }
                     };
 
-                    var requester1 = new User
+                    User requester1 = new User
                     {
                         Username = "RequesterUser1",
                         ProfilePictureId = 1,
@@ -322,7 +320,7 @@ namespace TEST
                         }
                     };
 
-                    var requester2 = new User
+                    User requester2 = new User
                     {
                         Username = "RequesterUser2",
                         ProfilePictureId = 1,
@@ -339,15 +337,15 @@ namespace TEST
                     context.SaveChanges();
 
                     requesteeId = requestee.UserId;
-                    requesterId1 = requester1.UserId;
-                    requesterId2 = requester2.UserId;
+                    int requesterId1 = requester1.UserId;
+                    int requesterId2 = requester2.UserId;
 
-                    var friendRequest1 = new FriendRequest
+                    FriendRequest friendRequest1 = new FriendRequest
                     {
                         RequesterId = requesterId1,
                         RequesteeId = requesteeId
                     };
-                    var friendRequest2 = new FriendRequest
+                    FriendRequest friendRequest2 = new FriendRequest
                     {
                         RequesterId = requesterId2,
                         RequesteeId = requesteeId
@@ -357,9 +355,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
+                List<FriendRequest> pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
 
                 
                 Assert.Equal(2, pendingRequests.Count);
@@ -373,13 +371,13 @@ namespace TEST
         [Fact]
         public void GetPendingFriendRequests_ShouldReturnEmptyList_WhenNoRequestsExist()
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 int requesteeId;
 
-                using (var context = new BevososContext())
+                using (BevososContext context = new BevososContext())
                 {
-                    var requestee = new User
+                    User requestee = new User
                     {
                         Username = "RequesteeUser",
                         ProfilePictureId = 1,
@@ -396,9 +394,9 @@ namespace TEST
                     requesteeId = requestee.UserId;
                 }
 
-                var friendService = new FriendRequestDAO();
+                FriendRequestDAO friendService = new FriendRequestDAO();
 
-                var pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
+                List<FriendRequest> pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
 
                 Assert.Empty(pendingRequests);
 

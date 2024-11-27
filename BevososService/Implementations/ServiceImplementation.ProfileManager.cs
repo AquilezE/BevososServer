@@ -3,11 +3,7 @@ using DataAccess.Exceptions;
 using DataAccess.Models;
 using DataAccess.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
@@ -49,8 +45,8 @@ namespace BevososService.Implementations
 
             try
             {
-                var accountDAO = new AccountDAO();
-                var account = accountDAO.GetAccountByUserId(userId);
+                AccountDAO accountDAO = new AccountDAO();
+                Account account = accountDAO.GetAccountByUserId(userId);
 
                 if (account == null)
                 {
