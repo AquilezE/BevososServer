@@ -16,6 +16,8 @@ namespace BevososService.DTOs
         public List<CardDTO> Hand { get; set; } = new List<CardDTO>();
         [DataMember]
         public List<MonsterDTO> Monsters { get; set; } = new List<MonsterDTO>();
+
+        public bool Disconnected { get; set; } = false;
      
         public static explicit operator PlayerStateDTO(GameModels.PlayerState playerState)
         {
@@ -23,7 +25,8 @@ namespace BevososService.DTOs
             {
                 User = playerState.User,
                 Hand = playerState.Hand.Select(card => (CardDTO)card).ToList(),
-                Monsters = playerState.Monsters.Select(monster => (MonsterDTO)monster).ToList()
+                Monsters = playerState.Monsters.Select(monster => (MonsterDTO)monster).ToList(),
+                Disconnected = playerState.Disconnected
             };
         }
 

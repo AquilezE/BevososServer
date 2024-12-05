@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.ServiceModel;
 using System.Text;
 using System.Threading;
@@ -55,6 +56,7 @@ namespace BevososService.Implementations
             IGameManagerCallback callback = (IGameManagerCallback)sender;
             RemoveGameClient(callback);
         }
+
         private static void RemoveGameClient(IGameManagerCallback callback)
         {
             foreach (KeyValuePair<int, ConcurrentDictionary<int, IGameManagerCallback>> gameEntry in _gamePlayerCallBack)
@@ -63,30 +65,38 @@ namespace BevososService.Implementations
                 ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks = gameEntry.Value;
 
                 KeyValuePair<int, IGameManagerCallback> playerToRemove = playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
+
                 if (!playerToRemove.Equals(default(KeyValuePair<int, IGameManagerCallback>)))
                 {
                     int userId = playerToRemove.Key;
                     playerCallbacks.TryRemove(userId, out _);
 
-                    Console.WriteLine($"Player {userId} removed from game {gameId}");
-
-                    if (playerCallbacks.Count < 2)
-                    {
-                        Console.WriteLine($"Game {gameId} no longer has enough players to continue. Ending game.");
-                        EndGame(gameId);
-                    }
+                    Console.WriteLine($"Player {userId} marked as disconnected in game {gameId}");
 
                     if (_activeGames.TryGetValue(gameId, out Game gameInstance))
                     {
-                        gameInstance.Players.Remove(userId);
+                        if (gameInstance.Players.TryGetValue(userId, out PlayerState playerState))
+                        {
+                            playerState.Disconnected = true;
+                        }
+
+                        int connectedPlayers = gameInstance.Players.Values.Count(player => !player.Disconnected);
+
+                        if (connectedPlayers < 2)
+                        {
+                            Console.WriteLine($"All players disconnected from game {gameId}");
+                            EndGame(gameId);
+                        }
+
                     }
 
                     return;
                 }
             }
-
             Console.WriteLine("Callback not found in any active game.");
         }
+
+ 
 
         //GameId-> GameInstance
         private static readonly ConcurrentDictionary<int, Game> _activeGames = new ConcurrentDictionary<int, Game>();
@@ -129,7 +139,7 @@ namespace BevososService.Implementations
 
 
                 // Draw initial hand (e.g., 5 cards per player)
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 35; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
                     {
@@ -183,8 +193,23 @@ namespace BevososService.Implementations
             {
                 gameInstance.TurnTimer?.Dispose();
 
+                foreach (IGameManagerCallback playerCallback in _gamePlayerCallBack[gameId].Values)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Game {gameId} ended");
+                        playerCallback.OnNotifyGameEnded(gameId);
+                    }
+                    catch (Exception ex)
+                    {
+                        RemoveGameClient(playerCallback);
+                    }
+                }
+
                 _gamePlayerCallBack.TryRemove(gameId, out _);
-                Console.WriteLine($"Game {gameId} has been ended and removed from active games.");
+                _playerStatistics.TryRemove(gameId, out _);
+
+                Console.WriteLine($"Game {gameId} has been ended and removed from active games");
             }
         }
         public void DrawCard(int matchCode, int userId)
@@ -217,6 +242,11 @@ namespace BevososService.Implementations
                 if (gameInstance.PlayerActionsRemaining[userId] == 0)
                 {
                     AdvanceTurn(matchCode);
+                }
+
+                if (gameInstance.Deck.Count == 0 && !gameInstance.IsEndGamePhase)
+                {
+                    InitiateEndGamePhase(matchCode);
                 }
             }
             else
@@ -346,6 +376,11 @@ namespace BevososService.Implementations
 
             if (gameInstance.PlayerActionsRemaining[userId] == 0)
             {
+                if (gameInstance.IsEndGamePhase)
+                {
+                    gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                }
+
                 AdvanceTurn(matchCode);
                 return;
             }
@@ -376,6 +411,11 @@ namespace BevososService.Implementations
 
                 if (gameInstance.PlayerActionsRemaining[userId] == 0)
                 {
+                    if (gameInstance.IsEndGamePhase)
+                    {
+                        gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                    }
+
                     AdvanceTurn(matchCode);
                     return;
                 }
@@ -392,6 +432,7 @@ namespace BevososService.Implementations
 
             if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
+                Console.WriteLine("Game not found");
                 return;
             }
 
@@ -435,6 +476,11 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
+                        if (gameInstance.IsEndGamePhase)
+                        {
+                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                        }
+
                         AdvanceTurn(matchCode);
                         return;
                     }
@@ -481,6 +527,10 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
+                        if (gameInstance.IsEndGamePhase)
+                        {
+                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                        }
                         AdvanceTurn(matchCode);
                     }
                 }
@@ -523,6 +573,11 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
+                        if (gameInstance.IsEndGamePhase)
+                        {
+                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                        }
+
                         AdvanceTurn(matchCode);
                     }
                 }
@@ -554,9 +609,23 @@ namespace BevososService.Implementations
                 return;
             }
 
+            if(gameInstance.CurrentPlayerId != userId)
+            {
+                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                return;
+            }
+
+            if (gameInstance.PlayerActionsRemaining[userId] < gameInstance.Players[userId].ActionsPerTurn)
+            {
+                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
+                return;
+            }
+
+
             CallOnProvokeForAllPlayers(matchCode, babyPileIndex);
 
-            
+            gameInstance.PlayerActionsRemaining[userId] = 0;
+
 
             Card.CardElement element = gameInstance.BabyPiles[babyPileIndex].Peek().Element;
 
@@ -617,6 +686,10 @@ namespace BevososService.Implementations
                 gameInstance.BabyPiles[babyPileIndex].Clear();
             }
 
+            if (gameInstance.IsEndGamePhase)
+            {
+                CheckEndGame(matchCode);
+            }
 
             AdvanceTurn(matchCode);
 
@@ -639,17 +712,25 @@ namespace BevososService.Implementations
                 StartTurnTimer(matchCode, gameInstance.CurrentPlayerId);
 
                 BroadcastGameState(matchCode);
+
+                if (gameInstance.IsEndGamePhase)
+                {
+                    CheckEndGame(matchCode);
+                }
             }
         }
         private static void StartTurnTimer(int matchCode, int userId)
         {
             int turnDurationInSeconds = 60;
-            Game gameInstance = _activeGames[matchCode];
 
-            if (gameInstance.TurnTimer != null)
-            {
-                gameInstance.TurnTimer.Dispose();
-            }
+            if (!_activeGames.TryGetValue(matchCode, out Game gameInstance)) return;
+
+            gameInstance.TurnTimer?.Dispose();
+
+            gameInstance.Players.TryGetValue(userId, out PlayerState playerState);
+
+            if (playerState.Disconnected) turnDurationInSeconds = 5;
+
 
             gameInstance.TurnTimer = new Timer(
                 callback: state =>
@@ -663,6 +744,44 @@ namespace BevososService.Implementations
                 period: Timeout.Infinite
             );
         }
+
+        public static void InitiateEndGamePhase(int matchCode)
+        {
+            if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                gameInstance.IsEndGamePhase = true;
+                Console.WriteLine($"Game {matchCode} ");
+            }
+
+            foreach (IGameManagerCallback gameManagerCallback in _gamePlayerCallBack[matchCode].Values)
+            {
+                try
+                {
+                    gameManagerCallback.OnNotifyEndGamePhase();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error notifying player: {e.Message}");
+                    
+                    RemoveGameClient(gameManagerCallback);
+                }
+            }
+        }
+
+        public static void CheckEndGame(int matchCode)
+        {
+            if(_activeGames.TryGetValue(matchCode, out Game gameInstance))
+            {
+                bool allActivePlayersFinished = gameInstance.Players.Where(kvp => !kvp.Value.Disconnected)
+                    .All(kvp => gameInstance.PlayersWhoFinishedFinalTurn.Contains(kvp.Key));
+                
+                if (allActivePlayersFinished)
+                {
+                    EndGame(matchCode);
+                }
+            }
+        }
+
         private static void NotifyPlayer(int matchCode, int userId, string messageKey)
         {
             if (_gamePlayerCallBack.TryGetValue(matchCode, out ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks))

@@ -26,6 +26,10 @@ namespace BevososService.GameModels
 
         public DateTime TurnStartTime { get; set; }
 
+        public bool IsEndGamePhase { get; set; } = false;
+
+        public HashSet<int> PlayersWhoFinishedFinalTurn { get; set; } = new HashSet<int>();
+
 
     }
 }

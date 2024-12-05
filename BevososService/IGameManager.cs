@@ -128,8 +128,13 @@ namespace BevososService
 
 
         [OperationContract(IsOneWay = true)]
-        void OnProvoke(int matchCode, int babyPileIndex);   
+        void OnProvoke(int matchCode, int babyPileIndex);
 
+        [OperationContract(IsOneWay = true)]
+        void OnNotifyEndGamePhase();
+
+        [OperationContract(IsOneWay = true)]
+        void OnNotifyGameEnded(int matchCode);
 
     }
 
