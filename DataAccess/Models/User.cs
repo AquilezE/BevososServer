@@ -8,13 +8,16 @@ namespace DataAccess.Models
     {
         [Key]
         public int UserId { get; set; }
+
         [Required]
-        [Index(IsUnique = true)] // Enforces unique Username
+        [Index("IX_UserUsername", IsUnique = true)]
         [MaxLength(50)]
         public string Username { get; set; }
 
         public int ProfilePictureId { get; set; } = 1;
 
-        public Account Account { get; set; }
+        public virtual Account Account { get; set; }
+
+        public virtual Stats Stats { get; set; }
     }
 }

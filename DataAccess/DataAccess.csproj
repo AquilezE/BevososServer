@@ -100,11 +100,16 @@
     <Compile Include="Migrations\202410221654438_AddedFriendsRequestFriendshipBlocked.Designer.cs">
       <DependentUpon>202410221654438_AddedFriendsRequestFriendshipBlocked.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202412060243491_added_Stats.cs" />
+    <Compile Include="Migrations\202412060243491_added_Stats.Designer.cs">
+      <DependentUpon>202412060243491_added_Stats.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Blocked.cs" />
     <Compile Include="Models\FriendRequest.cs" />
     <Compile Include="Models\Friendship.cs" />
+    <Compile Include="Models\Stats.cs" />
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -125,6 +130,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202410221654438_AddedFriendsRequestFriendshipBlocked.resx">
       <DependentUpon>202410221654438_AddedFriendsRequestFriendshipBlocked.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202412060243491_added_Stats.resx">
+      <DependentUpon>202412060243491_added_Stats.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

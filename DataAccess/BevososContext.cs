@@ -14,38 +14,38 @@ namespace DataAccess
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<Blocked> BlockedList { get; set; }
+        public DbSet<Stats> Stats { get; set; }
 
-
-        // Default constructor
+        // Constructor por defecto
         public BevososContext() : base("name=BevososContext")
         {
-
         }
-
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
+            // Configuración del índice único para Username
             modelBuilder.Entity<User>()
                 .Property(u => u.Username)
                 .HasColumnAnnotation(
                     IndexAnnotation.AnnotationName,
                     new IndexAnnotation(
-                        new IndexAttribute("IX_UserUsername") { IsUnique = true })); //Unique
+                        new IndexAttribute("IX_UserUsername") { IsUnique = true }));
 
+            // Configuración del índice único para Email en Account
             modelBuilder.Entity<Account>()
                 .Property(a => a.Email)
                 .HasColumnAnnotation(
                     IndexAnnotation.AnnotationName,
                     new IndexAnnotation(
-                        new IndexAttribute("IX_AccountEmail") { IsUnique = true })); //Unique
+                        new IndexAttribute("IX_AccountEmail") { IsUnique = true }));
 
+            // Relación uno a uno entre User y Account
             modelBuilder.Entity<User>()
                 .HasOptional(u => u.Account)
                 .WithRequired(a => a.User)
-                .WillCascadeOnDelete(true); // Cascadeo
+                .WillCascadeOnDelete(true);
 
-
-            //FriendRequest relationships
+            // Relaciones de FriendRequest
             modelBuilder.Entity<FriendRequest>()
                 .HasRequired(fr => fr.Requester)
                 .WithMany()
@@ -58,7 +58,7 @@ namespace DataAccess
                 .HasForeignKey(fr => fr.RequesteeId)
                 .WillCascadeOnDelete(false);
 
-            //Friendship relationships
+            // Relaciones de Friendship
             modelBuilder.Entity<Friendship>()
                 .HasRequired(f => f.User1)
                 .WithMany()
@@ -71,7 +71,7 @@ namespace DataAccess
                 .HasForeignKey(f => f.User2Id)
                 .WillCascadeOnDelete(false);
 
-            //Blocked relationships
+            // Relaciones de Blocked
             modelBuilder.Entity<Blocked>()
                 .HasRequired(b => b.Blocker)
                 .WithMany()
@@ -84,8 +84,13 @@ namespace DataAccess
                 .HasForeignKey(b => b.BlockeeId)
                 .WillCascadeOnDelete(false);
 
+            // Configuración de la relación uno a uno entre User y Stats
+            modelBuilder.Entity<User>()
+                .HasOptional(u => u.Stats)
+                .WithRequired(s => s.User)
+                .WillCascadeOnDelete(true);
+
             base.OnModelCreating(modelBuilder);
         }
     }
-
-}   
+}

@@ -686,12 +686,16 @@ namespace BevososService.Implementations
                 gameInstance.BabyPiles[babyPileIndex].Clear();
             }
 
-            if (gameInstance.IsEndGamePhase)
-            {
-                CheckEndGame(matchCode);
-            }
 
-            AdvanceTurn(matchCode);
+            if (gameInstance.PlayerActionsRemaining[userId] == 0)
+            {
+                if (gameInstance.IsEndGamePhase)
+                {
+                    gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+                }
+
+                AdvanceTurn(matchCode);
+            }
 
         }
         private static void AdvanceTurn(int matchCode)
