@@ -95,6 +95,7 @@
     <Compile Include="FriendRequestDAOTest.cs" />
     <Compile Include="FriendshipsDAOTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StatsDAOTests.cs" />
     <Compile Include="TokenDAOTests.cs" />
     <Compile Include="UserDAOTests.cs" />
   </ItemGroup>

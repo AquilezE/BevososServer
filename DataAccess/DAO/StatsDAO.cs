@@ -22,15 +22,15 @@ namespace DataAccess.DAO
             });
         }
 
-        public bool AddNewUserStats(int userId, Stats UserStats)
+        public bool AddNewUserStats(int userId, Stats userStats)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (BevososContext context = new BevososContext())
                 {
-                    if (UserStats != null)
+                    if (userStats != null)
                     {
-                        context.Stats.Add(UserStats);
+                        context.Stats.Add(userStats);
                         context.SaveChanges();
 
                         return true;

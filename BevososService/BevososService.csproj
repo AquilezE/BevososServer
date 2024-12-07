@@ -67,7 +67,9 @@
     <Compile Include="Implementations\ServiceImplementation.PlayerManager.cs" />
     <Compile Include="Implementations\ServiceImplementation.ProfileManager.cs" />
     <Compile Include="Implementations\ServiceImplementation.SocialManager.cs" />
+    <Compile Include="Implementations\ServiceImplementation.StatsManager.cs" />
     <Compile Include="Implementations\ServiceImplementation.UsersManager.cs" />
+    <Compile Include="IStatsManager.cs" />
     <Compile Include="Utils\GlobalDeck.cs" />
     <Compile Include="ICardManager.cs" />
     <Compile Include="IGameManager.cs" />
