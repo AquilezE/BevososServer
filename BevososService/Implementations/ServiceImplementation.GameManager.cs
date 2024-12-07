@@ -4,9 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.ServiceModel;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DataAccess.DAO;
@@ -25,7 +23,7 @@ namespace BevososService.Implementations
             }
 
             TimeSpan elapsedTime = DateTime.UtcNow - gameInstance.TurnStartTime;
-            int turnDurationInSeconds = 60;
+            var turnDurationInSeconds = 60;
             int timeRemaining = turnDurationInSeconds - (int)elapsedTime.TotalSeconds;
             return timeRemaining > 0 ? timeRemaining : 0;
 
@@ -34,7 +32,7 @@ namespace BevososService.Implementations
         {
             if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
-                GameStateDTO gameStateDto = (GameStateDTO)gameInstance;
+                var gameStateDto = (GameStateDTO)gameInstance;
 
                 gameStateDto.TurnTimeRemainingInSeconds = GetTurnTimeRemainingInSeconds(gameInstance);
                 gameStateDto.PlayerStatistics = _playerStatistics[matchCode].ToDictionary(kvp => kvp.Key, kvp => (GameStatsDTO)kvp.Value);
@@ -54,7 +52,7 @@ namespace BevososService.Implementations
         }
         private static void GameChannel_Closed(object sender, EventArgs e)
         {
-            IGameManagerCallback callback = (IGameManagerCallback)sender;
+            var callback = (IGameManagerCallback)sender;
             RemoveGameClient(callback);
         }
 
@@ -131,7 +129,7 @@ namespace BevososService.Implementations
             {
                 UserDto userDto = _lobbyUsersDetails[userId];
 
-                PlayerState playerState = new PlayerState
+                var playerState = new PlayerState
                 {
                     User = userDto,
                     Hand = new List<Card>(),
@@ -140,7 +138,7 @@ namespace BevososService.Implementations
 
 
                 // Draw initial hand (e.g., 5 cards per player)
-                for (int i = 0; i < 35; i++)
+                for (var i = 0; i < 35; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
                     {
@@ -166,8 +164,8 @@ namespace BevososService.Implementations
 
         public void JoinGame(int gameId, UserDto userDto)
         {
-            IGameManagerCallback callback = OperationContext.Current.GetCallbackChannel<IGameManagerCallback>();
-            ICommunicationObject clientChannel = (ICommunicationObject)callback;
+            var callback = OperationContext.Current.GetCallbackChannel<IGameManagerCallback>();
+            var clientChannel = (ICommunicationObject)callback;
 
             clientChannel.Closed += GameChannel_Closed;
             clientChannel.Faulted += GameChannel_Closed;
@@ -192,14 +190,14 @@ namespace BevososService.Implementations
         {
             SaveStatsForAllPLayers(gameId);
 
-            List<StatsDTO> gameStats = new List<StatsDTO>();
+            var gameStats = new List<StatsDTO>();
 
             foreach (PlayerState playerStats in _activeGames[gameId].Players.Values)
             {
                 int points = _playerStatistics[gameId][playerStats.User.UserId].PointsThisGame;
                 string username = playerStats.User.Username;
 
-                StatsDTO statsDTO = new StatsDTO();
+                var statsDTO = new StatsDTO();
                 statsDTO.PointsThisGame = points;
                 statsDTO.Username = username;
 
@@ -437,7 +435,7 @@ namespace BevososService.Implementations
             if (_activeGames.TryGetValue(matchCode, out Game gameInstance))
             {
 
-                Monster monster = new Monster
+                var monster = new Monster
                 {
                     Head = card,
                     Torso = null,
@@ -674,10 +672,10 @@ namespace BevososService.Implementations
 
             Card.CardElement element = gameInstance.BabyPiles[babyPileIndex].Peek().Element;
 
-            int monsterArmyMaxStrenght = 0;
-            int playerWithMaxStrenght = 0;
+            var monsterArmyMaxStrenght = 0;
+            var playerWithMaxStrenght = 0;
 
-            int pileStrenght = 0;
+            var pileStrenght = 0;
             int numberBabies = gameInstance.BabyPiles[babyPileIndex].Count;
 
             foreach (Card baby in gameInstance.BabyPiles[babyPileIndex])
@@ -687,8 +685,8 @@ namespace BevososService.Implementations
 
             foreach (PlayerState player in gameInstance.Players.Values)
             {
-                int monsterArmyStrenght = 0;
-                List<Monster> monstersToRemove = new List<Monster>();
+                var monsterArmyStrenght = 0;
+                var monstersToRemove = new List<Monster>();
 
                 foreach (Monster monster in player.Monsters)
                 {
@@ -770,7 +768,7 @@ namespace BevososService.Implementations
         }
         private static void StartTurnTimer(int matchCode, int userId)
         {
-            int turnDurationInSeconds = 60;
+            var turnDurationInSeconds = 60;
 
             if (!_activeGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
@@ -851,8 +849,8 @@ namespace BevososService.Implementations
 
         private static void SaveStatsForAllPLayers(int matchCode)
         {
-            int maxPoints = 0;
-            int winnerId = 0;
+            var maxPoints = 0;
+            var winnerId = 0;
 
             foreach (PlayerState maxPointsPlayer in _activeGames[matchCode].Players.Values)
             {
@@ -885,7 +883,7 @@ namespace BevososService.Implementations
                     }
                     else
                     {
-                        DataAccess.Models.Stats newUserStats = new DataAccess.Models.Stats
+                        var newUserStats = new DataAccess.Models.Stats
                         {
                             UserId = player.User.UserId,
                             Wins = player.User.UserId == winnerId ? 1 : 0,

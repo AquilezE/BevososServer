@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace BevososService.DTOs
 {
@@ -21,11 +17,9 @@ namespace BevososService.DTOs
         public List<CardDTO> BodyParts { get; set; } = new List<CardDTO>();
 
 
-        public MonsterDTO() { }
-
         public static explicit operator MonsterDTO(GameModels.Monster monster)
         {
-            MonsterDTO monsterDTO = new MonsterDTO();
+            var monsterDTO = new MonsterDTO();
 
             //nasty
             monsterDTO.BodyParts.Add(monster.Head != null ? (CardDTO)monster.Head : new CardDTO { CardId = 0 });

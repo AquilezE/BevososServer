@@ -2,10 +2,7 @@
 using DataAccess.Models;
 using DataAccess;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Transactions;
 using Xunit;
 
@@ -18,10 +15,10 @@ namespace TEST
         [Fact]
         public void UserStatsExists_ReturnsTrue_WhenStatsExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
 
                 // Act
@@ -35,10 +32,10 @@ namespace TEST
         [Fact]
         public void UserStatsExists_ReturnsFalse_WhenStatsDoNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
 
                 // Act
@@ -52,11 +49,11 @@ namespace TEST
         [Fact]
         public void UserStatsExists_ReturnsFalse_WhenUserDoesNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
-                int nonExistingUserId = 99999;
+                var statsDAO = new StatsDAO();
+                var nonExistingUserId = 99999;
 
                 // Act
                 bool exists = statsDAO.UserStatsExists(nonExistingUserId);
@@ -69,10 +66,10 @@ namespace TEST
         [Fact]
         public void UserStatsExists_ReturnsFalse_WhenUserIdIsInvalid()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
 
                 // Act
@@ -91,12 +88,12 @@ namespace TEST
         [Fact]
         public void AddNewUserStats_ReturnsTrue_WhenValidStatsProvided()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
-                Stats newStats = new Stats
+                var newStats = new Stats
                 {
                     UserId = userId,
                     Wins = 10,
@@ -109,9 +106,9 @@ namespace TEST
 
                 // Assert
                 Assert.True(result);
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    var stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
+                    Stats stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
                     Assert.NotNull(stats);
                     Assert.Equal(10, stats.Wins);
                     Assert.Equal(5, stats.MonstersCreated);
@@ -123,10 +120,10 @@ namespace TEST
         [Fact]
         public void AddNewUserStats_ReturnsFalse_WhenStatsAreNull()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
                 Stats nullStats = null;
 
@@ -141,12 +138,12 @@ namespace TEST
         [Fact]
         public void AddNewUserStats_ReturnsFalse_WhenUserDoesNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
-                int nonExistingUserId = 99999;
-                Stats newStats = new Stats
+                var statsDAO = new StatsDAO();
+                var nonExistingUserId = 99999;
+                var newStats = new Stats
                 {
                     UserId = nonExistingUserId,
                     Wins = 5,
@@ -165,12 +162,12 @@ namespace TEST
         [Fact]
         public void AddNewUserStats_ReturnsFalse_WhenDuplicateStats()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
-                Stats duplicateStats = new Stats
+                var duplicateStats = new Stats
                 {
                     UserId = userId,
                     Wins = 7,
@@ -194,10 +191,10 @@ namespace TEST
         [Fact]
         public void GetUserStats_ReturnsStats_WhenStatsExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
 
                 // Act
@@ -212,10 +209,10 @@ namespace TEST
         [Fact]
         public void GetUserStats_ReturnsNull_WhenStatsDoNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
 
                 // Act
@@ -229,11 +226,11 @@ namespace TEST
         [Fact]
         public void GetUserStats_ReturnsNull_WhenUserDoesNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
-                int nonExistingUserId = 99999;
+                var statsDAO = new StatsDAO();
+                var nonExistingUserId = 99999;
 
                 // Act
                 Stats stats = statsDAO.GetUserStats(nonExistingUserId);
@@ -246,10 +243,10 @@ namespace TEST
         [Fact]
         public void GetUserStats_ReturnsNull_WhenUserIdIsInvalid()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
 
                 // Act
@@ -268,12 +265,12 @@ namespace TEST
         [Fact]
         public void UpdateUserStats_ReturnsTrue_WhenStatsExistAndUpdated()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
-                Stats updatedStats = new Stats
+                var updatedStats = new Stats
                 {
                     Wins = 20,
                     MonstersCreated = 10,
@@ -285,9 +282,9 @@ namespace TEST
 
                 // Assert
                 Assert.True(result);
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    var stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
+                    Stats stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
                     Assert.NotNull(stats);
                     Assert.Equal(20, stats.Wins);
                     Assert.Equal(10, stats.MonstersCreated);
@@ -299,12 +296,12 @@ namespace TEST
         [Fact]
         public void UpdateUserStats_ReturnsFalse_WhenStatsDoNotExist()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
-                Stats updatedStats = new Stats
+                var updatedStats = new Stats
                 {
                     Wins = 15,
                     MonstersCreated = 7,
@@ -322,10 +319,10 @@ namespace TEST
         [Fact]
         public void UpdateUserStats_ReturnsFalse_WhenStatsAreNull()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
                 Stats nullStats = null;
 
@@ -340,12 +337,12 @@ namespace TEST
         [Fact]
         public void UpdateUserStats_ReturnsFalse_WhenUserIdIsInvalid()
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 // Arrange
-                StatsDAO statsDAO = new StatsDAO();
+                var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
-                Stats updatedStats = new Stats
+                var updatedStats = new Stats
                 {
                     Wins = 5,
                     MonstersCreated = 2,
@@ -369,9 +366,9 @@ namespace TEST
         /// </summary>
         private int AddTestUserWithStats()
         {
-            using (BevososContext context = new BevososContext())
+            using (var context = new BevososContext())
             {
-                User user = new User
+                var user = new User
                 {
                     Username = $"TestUser_{Guid.NewGuid()}",
                     ProfilePictureId = 1,
@@ -398,9 +395,9 @@ namespace TEST
         /// </summary>
         private int AddTestUserWithoutStats()
         {
-            using (BevososContext context = new BevososContext())
+            using (var context = new BevososContext())
             {
-                User user = new User
+                var user = new User
                 {
                     Username = $"TestUser_{Guid.NewGuid()}",
                     ProfilePictureId = 1,

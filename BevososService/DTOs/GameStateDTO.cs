@@ -37,19 +37,16 @@ namespace BevososService.DTOs
         public Dictionary<int, GameStatsDTO> PlayerStatistics { get; set; } = new Dictionary<int, GameStatsDTO>();
 
 
-        public GameStateDTO() { }
-
-
         public static explicit operator GameStateDTO(Game game)
         {
 
-            GameStateDTO gameStateDto = new GameStateDTO
+            var gameStateDto = new GameStateDTO
             {
                 GameStateId = game.GameId,
                 BabyDeck = new List<CardDTO>()
             };
 
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 game.BabyPiles.TryGetValue(i, out Stack<Card> babyPile);
                 if (babyPile != null && babyPile.Count > 0)

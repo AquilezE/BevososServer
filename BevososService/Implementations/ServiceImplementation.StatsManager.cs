@@ -1,11 +1,7 @@
 ﻿using DataAccess.DAO;
 using DataAccess.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BevososService.Implementations
 {
@@ -27,7 +23,7 @@ namespace BevososService.Implementations
                     userMonsters = statsDAO.MonstersCreated;
                     userBabies = statsDAO.AnnihilatedBabies;
 
-                    IStatsManagerCallback callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
+                    var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
                     callback.OnStatsReceived(userWins, userMonsters, userBabies);
                 }
                 else
@@ -36,7 +32,7 @@ namespace BevososService.Implementations
                     userMonsters = 0;
                     userBabies = 0;
 
-                    IStatsManagerCallback callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
+                    var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
                     callback.OnStatsReceived(userWins, userMonsters, userBabies);
                     
                 }
@@ -45,7 +41,7 @@ namespace BevososService.Implementations
             {
                 CreateAndLogFaultException(ex);
 
-                IStatsManagerCallback callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
+                var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
                 callback.OnStatsReceived(userWins, userMonsters, userBabies);
             }
 

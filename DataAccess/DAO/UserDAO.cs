@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Core;
-using System.Data.Entity.Infrastructure;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using DataAccess.Exceptions;
 using DataAccess.Models;
-using DataAccess.Utils;
 
 namespace DataAccess.DAO
 {
@@ -18,7 +12,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Users.Any(u => u.Username == username);
                 }
@@ -29,7 +23,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Account account = context.Accounts
                                          .Include("User")
@@ -43,7 +37,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Users.FirstOrDefault(u => u.UserId == userId);
                 }
@@ -54,7 +48,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     List<int> blockedUserIds = context.BlockedList
                         .Where(b => b.BlockerId == currentUserId)
@@ -80,7 +74,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     User user = context.Users.FirstOrDefault(u => u.UserId == userId);
                     if (user == null)
@@ -105,7 +99,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     User existingUser = context.Users.FirstOrDefault(u => u.UserId == user.UserId);
 
@@ -127,7 +121,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Users.Any(u => u.UserId == userId);
                 }

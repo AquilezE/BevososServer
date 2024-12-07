@@ -16,11 +16,11 @@ namespace TEST {
             int blockerId;
             int blockeeId;
 
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    User blocker = new User
+                    var blocker = new User
                     {
                         Username = "BlockerUser",
                         ProfilePictureId = 1,
@@ -31,7 +31,7 @@ namespace TEST {
                         }
                     };
 
-                    User blockee = new User
+                    var blockee = new User
                     {
                         Username = "BlockeeUser",
                         ProfilePictureId = 1,
@@ -50,7 +50,7 @@ namespace TEST {
                     blockeeId = blockee.UserId;
                 }
 
-                BlockedDAO blockService = new BlockedDAO();
+                var blockService = new BlockedDAO();
 
                 // Act
                 bool result = blockService.AddBlock(blockerId, blockeeId);
@@ -58,7 +58,7 @@ namespace TEST {
                 // Assert
                 Assert.True(result);
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
                     Assert.NotNull(block);
@@ -69,10 +69,10 @@ namespace TEST {
         [Fact]
         public void AddBlock_ShouldReturnFalse_WhenUsersDoNotExist()
         {
-            int blockerId = 999; 
-            int blockeeId = 1000;
+            var blockerId = 999; 
+            var blockeeId = 1000;
 
-            BlockedDAO blockService = new BlockedDAO();
+            var blockService = new BlockedDAO();
 
 
             bool result = blockService.AddBlock(blockerId, blockeeId);
@@ -87,11 +87,11 @@ namespace TEST {
             int blockerId;
             int blockeeId;
 
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    User blocker = new User
+                    var blocker = new User
                     {
                         Username = "BlockerUser",
                         ProfilePictureId = 1,
@@ -102,7 +102,7 @@ namespace TEST {
                         }
                     };
 
-                    User blockee = new User
+                    var blockee = new User
                     {
                         Username = "BlockeeUser",
                         ProfilePictureId = 1,
@@ -120,7 +120,7 @@ namespace TEST {
                     blockerId = blocker.UserId;
                     blockeeId = blockee.UserId;
 
-                    Blocked block = new Blocked
+                    var block = new Blocked
                     {
                         BlockerId = blockerId,
                         BlockeeId = blockeeId
@@ -129,14 +129,14 @@ namespace TEST {
                     context.SaveChanges();
                 }
 
-                BlockedDAO blockService = new BlockedDAO();
+                var blockService = new BlockedDAO();
 
             
                 bool result = blockService.DeleteBlock(blockerId, blockeeId);
 
                 Assert.True(result);
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
                     Assert.Null(block);
@@ -149,14 +149,14 @@ namespace TEST {
         public void DeleteBlock_ShouldReturnFalse_WhenBlockDoesNotExist()
         {
 
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 int blockerId;
                 int blockeeId;
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    User blocker = new User
+                    var blocker = new User
                     {
                         Username = "BlockerUser",
                         ProfilePictureId = 1,
@@ -167,7 +167,7 @@ namespace TEST {
                         }
                     };
 
-                    User blockee = new User
+                    var blockee = new User
                     {
                         Username = "BlockeeUser",
                         ProfilePictureId = 1,
@@ -186,7 +186,7 @@ namespace TEST {
                     blockeeId = blockee.UserId;
                 }
 
-                BlockedDAO blockService = new BlockedDAO();
+                var blockService = new BlockedDAO();
 
                 bool result = blockService.DeleteBlock(blockerId, blockeeId); 
 
@@ -201,12 +201,12 @@ namespace TEST {
             int blockeeId1;
             int blockeeId2;
 
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 int blockerId;
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    User blocker = new User
+                    var blocker = new User
                     {
                         Username = "BlockerUser",
                         ProfilePictureId = 1,
@@ -217,7 +217,7 @@ namespace TEST {
                         }
                     };
 
-                    User blockee1 = new User
+                    var blockee1 = new User
                     {
                         Username = "BlockeeUser1",
                         ProfilePictureId = 1,
@@ -228,7 +228,7 @@ namespace TEST {
                         }
                     };
 
-                    User blockee2 = new User
+                    var blockee2 = new User
                     {
                         Username = "BlockeeUser2",
                         ProfilePictureId = 1,
@@ -253,7 +253,7 @@ namespace TEST {
                     context.SaveChanges();
                 }
 
-                BlockedDAO blockService = new BlockedDAO();
+                var blockService = new BlockedDAO();
 
                 List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
@@ -268,13 +268,13 @@ namespace TEST {
         public void GetBlockList_ShouldReturnEmptyList_WhenNoBlocksExist()
         {
 
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
                 int blockerId;
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    User blocker = new User
+                    var blocker = new User
                     {
                         Username = "BlockerUser",
                         ProfilePictureId = 1,
@@ -291,7 +291,7 @@ namespace TEST {
                     blockerId = blocker.UserId;
                 }
 
-                BlockedDAO blockService = new BlockedDAO();
+                var blockService = new BlockedDAO();
 
                 List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
@@ -303,9 +303,9 @@ namespace TEST {
         [Fact]
         public void GetBlockList_ShouldReturnEmptyList_WhenBlockerDoesNotExist()
         {
-            int blockerId = 999;
+            var blockerId = 999;
 
-            BlockedDAO blockService = new BlockedDAO();
+            var blockService = new BlockedDAO();
 
             List<User> blockedUsers = blockService.GetBlockList(blockerId);
 

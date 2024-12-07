@@ -36,12 +36,12 @@ namespace BevososService.Implementations
 
         public bool RegisterUser(string email, string username, string password)
         {
-            User user = new User
+            var user = new User
             {
                 Username = username
             };
 
-            Account account = new Account
+            var account = new Account
             {
                 Email = email,
                 PasswordHash = SimpleHashing.HashPassword(password)
@@ -61,7 +61,7 @@ namespace BevososService.Implementations
         {
             try
             {
-                TokenDAO tokenDao = new TokenDAO();
+                var tokenDao = new TokenDAO();
                 if (tokenDao.HasToken(email))
                 {
                     return EmailUtils.SendTokenByEmail(email, tokenDao.GetToken(email));
@@ -82,7 +82,7 @@ namespace BevososService.Implementations
         {
             try
             {
-                TokenDAO tokenDao = new TokenDAO();
+                var tokenDao = new TokenDAO();
                 if (tokenDao.HasToken(email) && tokenDao.TokenIsValid(token, email))
                 {
                     tokenDao.DeleteToken(token, email);
@@ -97,8 +97,8 @@ namespace BevososService.Implementations
         }
         public UserDto LogIn(string email, string password)
         {
-            AccountDAO accountDAO = new AccountDAO();
-            UserDAO userDAO = new UserDAO();
+            var accountDAO = new AccountDAO();
+            var userDAO = new UserDAO();
 
             try
             {
@@ -113,7 +113,7 @@ namespace BevososService.Implementations
                 {
                     User user = userDAO.GetUserById(account.UserId);
 
-                    UserDto userDto = new UserDto
+                    var userDto = new UserDto
                     {
                         UserId = user.UserId,
                         Username = user.Username,
@@ -136,7 +136,7 @@ namespace BevososService.Implementations
         {
             try
             {
-                AccountDAO accountDAO = new AccountDAO();
+                var accountDAO = new AccountDAO();
                 if (!accountDAO.EmailExists(email))
                 {
                     return false;

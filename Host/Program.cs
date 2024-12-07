@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ServiceModel;
-using BevososService;
 using BevososService.Implementations;
 
 
@@ -10,7 +9,7 @@ namespace Host
     {
         static void Main(string[] args)
         {
-            using (ServiceHost host = new ServiceHost(typeof(ServiceImplementation)))
+            using (var host = new ServiceHost(typeof(ServiceImplementation)))
             {
                 host.Open();
                 Console.WriteLine("Service is running...");

@@ -17,17 +17,17 @@ namespace TEST
         [InlineData("userWithoutToken@example.com", false)]
         public void HasTokenTest(string email, bool expectedResult)
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                TokenDAO dao = new TokenDAO();
+                var dao = new TokenDAO();
 
                 // Arrange
                 if (expectedResult)
                 {
                     // Create a token for the email
-                    using (BevososContext context = new BevososContext())
+                    using (var context = new BevososContext())
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = "123456",
@@ -54,9 +54,9 @@ namespace TEST
         [InlineData("nonExistingUser@example.com", true)]
         public void AsignTokenTest(string email, bool expectedResult)
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                TokenDAO dao = new TokenDAO();
+                var dao = new TokenDAO();
 
                 // Act
                 int affectedRows = dao.AsignToken(email);
@@ -65,7 +65,7 @@ namespace TEST
                 Assert.Equal(expectedResult, affectedRows > 0);
 
                 // Verify the token was created
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     bool tokenExists = context.Tokens.Any(t => t.Email == email);
                     Assert.True(tokenExists);
@@ -79,16 +79,16 @@ namespace TEST
         [InlineData("userWithoutToken@example.com", "-1")]
         public void GetTokenTest(string email, string expectedToken)
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                TokenDAO dao = new TokenDAO();
+                var dao = new TokenDAO();
 
                 // Arrange
                 if (expectedToken != null)
                 {
-                    using (BevososContext context = new BevososContext())
+                    using (var context = new BevososContext())
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = expectedToken,
@@ -115,15 +115,15 @@ namespace TEST
         [InlineData("expiredToken", "user@example.com", false)]
         public void TokenIsValidTest(string tokenValue, string email, bool expectedResult)
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                TokenDAO dao = new TokenDAO();
+                var dao = new TokenDAO();
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     if (tokenValue == "validToken")
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = tokenValue,
@@ -133,7 +133,7 @@ namespace TEST
                     }
                     else if (tokenValue == "expiredToken")
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = tokenValue,
@@ -159,16 +159,16 @@ namespace TEST
         [InlineData("validToken", "wrongUser@example.com", false)]
         public void DeleteTokenTest(string tokenValue, string email, bool expectedResult)
         {
-            using (TransactionScope scope = new TransactionScope())
+            using (var scope = new TransactionScope())
             {
-                TokenDAO dao = new TokenDAO();
+                var dao = new TokenDAO();
 
                 // Arrange
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     if (tokenValue == "validToken" && email == "user@example.com")
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = tokenValue,

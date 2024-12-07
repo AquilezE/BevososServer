@@ -1,10 +1,6 @@
 ﻿using DataAccess.Exceptions;
 using DataAccess.Models;
-using DataAccess.Utils;
-using System;
 using System.Collections.Generic;
-using System.Data.Entity.Core;
-using System.Data.SqlClient;
 using System.Linq;
 
 
@@ -24,14 +20,14 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     User blocker = context.Users.FirstOrDefault(u => u.UserId == blockerId);
                     User blockee = context.Users.FirstOrDefault(u => u.UserId == blockeeId);
 
                     if (blocker != null && blockee != null)
                     {
-                        Blocked block = new Blocked
+                        var block = new Blocked
                         {
                             Blocker = blocker,
                             Blockee = blockee
@@ -54,7 +50,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
 
@@ -77,9 +73,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    List<User> blockedUsers = context.BlockedList
+                    var blockedUsers = context.BlockedList
                                               .Where(b => b.BlockerId == blockerId)
                                               .Select(b => b.Blockee)
                                               .ToList();
@@ -93,9 +89,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
-                    List<BlockedData> blockedUsers = context.BlockedList
+                    var blockedUsers = context.BlockedList
                         .Where(b => b.BlockerId == currentUserId)
                         .Select(b => new BlockedData
                         {

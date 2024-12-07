@@ -6,9 +6,9 @@ namespace DataAccess
     {
         public string GenerateToken()
         {
-            Random random = new Random();
+            var random = new Random();
             int tokenNumber = random.Next(0, 1000000);
-            string token = tokenNumber.ToString("D6");
+            var token = tokenNumber.ToString("D6");
             return token;
         }
     }

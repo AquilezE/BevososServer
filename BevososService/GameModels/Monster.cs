@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BevososService.GameModels
+﻿namespace BevososService.GameModels
 {
     public class Monster
     {
@@ -86,7 +80,7 @@ namespace BevososService.GameModels
 
         public int GetDamage()
         {
-            int strength = 0;
+            var strength = 0;
             if (Head != null)
             {
                 strength += Head.Damage;

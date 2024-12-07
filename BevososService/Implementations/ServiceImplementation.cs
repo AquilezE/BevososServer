@@ -1,11 +1,8 @@
 ﻿using BevososService.Exceptions;
 using DataAccess.Utils;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using BevososService.GameModels;
 
 namespace BevososService.Implementations
@@ -24,7 +21,7 @@ namespace BevososService.Implementations
 
         private static FaultException<BevososServerExceptions> CreateAndLogFaultException(Exception innerException)
         {
-            BevososServerExceptions serverException = new BevososServerExceptions
+            var serverException = new BevososServerExceptions
             {
                 Message = innerException.Message,
                 StackTrace = innerException.StackTrace

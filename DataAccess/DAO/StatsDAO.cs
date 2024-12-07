@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using DataAccess.Exceptions;
 using DataAccess.Models;
 
@@ -14,7 +10,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Stats userStats = context.Stats.FirstOrDefault(u => u.UserId == userId);
                     return userStats != null;
@@ -26,7 +22,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     if (userStats != null)
                     {
@@ -44,7 +40,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Stats.FirstOrDefault(u => u.UserId == userId);
                 }
@@ -55,7 +51,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Stats stats = context.Stats.FirstOrDefault(u => u.UserId == userId);
                     if (stats != null)

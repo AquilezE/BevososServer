@@ -4,7 +4,6 @@ using DataAccess.Utils;
 using System;
 using System.Data.Entity;
 using System.Data.Entity.Core;
-using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -18,7 +17,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Accounts
                                   .Include(a => a.User)
@@ -31,7 +30,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Accounts
                                   .Include(a => a.User)
@@ -44,7 +43,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Accounts.Any(a => a.Email == email);
                 }
@@ -55,7 +54,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     context.Users.Add(user);
                     context.Accounts.Add(account);
@@ -72,7 +71,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.Email == email);
                     if (account == null)
@@ -91,7 +90,7 @@ namespace DataAccess.DAO
         {
             return ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
                     if (account == null)

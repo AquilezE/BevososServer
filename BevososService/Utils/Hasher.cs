@@ -20,7 +20,7 @@ namespace BevososService.Utils
                 if (password == null)
                     throw new ArgumentNullException(nameof(password));
 
-                using (SHA256 sha256 = SHA256.Create())
+                using (var sha256 = SHA256.Create())
                 {
                     byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
                     byte[] hashBytes = sha256.ComputeHash(passwordBytes);

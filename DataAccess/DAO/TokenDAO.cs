@@ -1,8 +1,5 @@
 ﻿using DataAccess.Exceptions;
-using DataAccess.Utils;
 using System;
-using System.Data.Entity.Core;
-using System.Data.SqlClient;
 using System.Linq;
 using DataAccess.Models;
 
@@ -15,7 +12,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Token existingToken = context.Tokens.FirstOrDefault(t => t.Email == email);
                     if (existingToken != null)
@@ -25,7 +22,7 @@ namespace DataAccess.DAO
                     }
                     else
                     {
-                        Token token = new Token
+                        var token = new Token
                         {
                             Email = email,
                             TokenValue = new TokenGenerator().GenerateToken(),
@@ -44,7 +41,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Tokens.Any(t => t.Email == email && t.ExpiryDate > DateTime.Now);
                 }
@@ -55,7 +52,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Token token = context.Tokens.FirstOrDefault(t => t.Email == email);
                     return token?.TokenValue ?? "-1";
@@ -67,7 +64,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
                 }
@@ -78,7 +75,7 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Token tokenToDelete = context.Tokens.FirstOrDefault(t => t.TokenValue == token && t.Email == email);
                     if (tokenToDelete != null)

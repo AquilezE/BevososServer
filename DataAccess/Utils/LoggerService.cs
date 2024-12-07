@@ -1,10 +1,6 @@
 ﻿using Serilog;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Utils
 {
@@ -67,9 +63,9 @@ namespace DataAccess.Utils
 
 
             DateTime currentDate = DateTime.Now;
-            string date = currentDate.ToString(DATE_FORMAT);
+            var date = currentDate.ToString(DATE_FORMAT);
 
-            string logFileName = $"{ID_FILE_NAME}{CHARACTER_SEPARATOR}{date}{FILE_EXTENSION}";
+            var logFileName = $"{ID_FILE_NAME}{CHARACTER_SEPARATOR}{date}{FILE_EXTENSION}";
             string absoluteLogDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RELATIVE_LOG_FILE_PATH);
 
             if (!Directory.Exists(absoluteLogDirectory))

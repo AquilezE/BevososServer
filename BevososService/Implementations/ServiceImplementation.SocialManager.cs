@@ -1,5 +1,4 @@
 ﻿using BevososService.DTOs;
-using BevososService.Exceptions;
 using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Exceptions;
@@ -10,8 +9,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BevososService.Implementations
 {
@@ -32,8 +29,8 @@ namespace BevososService.Implementations
             {
 
 
-                ISocialManagerCallback callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                ICommunicationObject clientChannel = (ICommunicationObject)callback;
+                var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                var clientChannel = (ICommunicationObject)callback;
 
                 Console.WriteLine("Client connected: " + userId);
 
@@ -102,7 +99,7 @@ namespace BevososService.Implementations
             {
                 try
                 {
-                    FriendRequestDTO friendRequest = new FriendRequestDTO();
+                    var friendRequest = new FriendRequestDTO();
                     User sender = new UserDAO().GetUserById(userId);
                     friendRequest.SenderId = userId;
                     friendRequest.SenderName = sender.Username;
@@ -135,11 +132,11 @@ namespace BevososService.Implementations
                         {
                             int friendshipId = friendship.Id;
 
-                            UserDAO userDao = new UserDAO();
+                            var userDao = new UserDAO();
                             User currentUser = userDao.GetUserById(userId);
                             User friendUser = userDao.GetUserById(friendId);
 
-                            FriendDTO friendDto = new FriendDTO
+                            var friendDto = new FriendDTO
                             {
                                 FriendshipId = friendshipId,
                                 FriendId = friendId,
@@ -148,7 +145,7 @@ namespace BevososService.Implementations
                                 IsConnected = connectedClients.ContainsKey(friendId)
                             };
 
-                            FriendDTO friendDtoForFriend = new FriendDTO
+                            var friendDtoForFriend = new FriendDTO
                             {
                                 FriendshipId = friendshipId,
                                 FriendId = userId,
@@ -233,7 +230,7 @@ namespace BevososService.Implementations
                 if (new UserDAO().UserExists(userId))
                 {
                     List<FriendRequestData> friendRequestsList = new FriendRequestDAO().GetFriendRequestForUser(userId);
-                    List<FriendRequestDTO> friendRequests = new List<FriendRequestDTO>();
+                    var friendRequests = new List<FriendRequestDTO>();
                     foreach (FriendRequestData friendRequest in friendRequestsList)
                     {
                         friendRequests.Add((FriendRequestDTO)friendRequest);
@@ -252,8 +249,8 @@ namespace BevososService.Implementations
         {
             try
             {
-                UserDAO userDao = new UserDAO();
-                FriendshipDAO friendshipDao = new FriendshipDAO();
+                var userDao = new UserDAO();
+                var friendshipDao = new FriendshipDAO();
 
                 if (userDao.UserExists(userId) && userDao.UserExists(friendId))
                 {
@@ -279,7 +276,7 @@ namespace BevososService.Implementations
                 if (new UserDAO().UserExists(userId))
                 {
                     List<FriendData> friendshipList = new FriendshipDAO().GetFriendsForUser(userId);
-                    List<FriendDTO> friends = new List<FriendDTO>();
+                    var friends = new List<FriendDTO>();
                     foreach (FriendData friend in friendshipList)
                     {
                         if (connectedClients.TryGetValue(friend.FriendId, out _))
@@ -369,7 +366,7 @@ namespace BevososService.Implementations
                 if (new UserDAO().UserExists(userId))
                 {
                     List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
-                    List<BlockedDTO> blockedUsers = new List<BlockedDTO>();
+                    var blockedUsers = new List<BlockedDTO>();
                     foreach (BlockedData blockedUser in blockedUsersList)
                     {
                         blockedUsers.Add((BlockedDTO)blockedUser);
@@ -490,7 +487,7 @@ namespace BevososService.Implementations
 
         private void ClientSocialChannelRuined(object sender, EventArgs e)
         {
-            ISocialManagerCallback callback = (ISocialManagerCallback)sender;
+            var callback = (ISocialManagerCallback)sender;
             RemoveClient(callback);
         }
 
@@ -505,7 +502,7 @@ namespace BevososService.Implementations
 
         public List<UserDto> GetUsersFoundByName(int userId, string name)
         {
-            List<UserDto> users = new List<UserDto>();
+            var users = new List<UserDto>();
             List<User> usersData = new UserDAO().GetUsersByName(name, userId);
             foreach (User user in usersData)
             {

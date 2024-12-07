@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using BevososService.GameModels;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BevososService
 {
@@ -18,12 +15,12 @@ namespace BevososService
         {
             Deck = new Dictionary<int, Card>();
 
-            int cardId = 1; 
+            var cardId = 1; 
 
             // 1. BODY PARTS
 
             // a. Any Head: 3 cartas
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -37,7 +34,7 @@ namespace BevososService
             }
 
             // b. Water Head: 5 cartas
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -51,7 +48,7 @@ namespace BevososService
             }
 
             // c. Land Head: 5 cartas
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -65,7 +62,7 @@ namespace BevososService
             }
 
             // d. Air Head: 5 cartas
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -79,7 +76,7 @@ namespace BevososService
             }
 
             // e. Torso: 18 cartas
-            for (int i = 0; i < 18; i++)
+            for (var i = 0; i < 18; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -93,7 +90,7 @@ namespace BevososService
             }
 
             // f. Arms: 12 cartas (6 LeftArm y 6 RightArm)
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 // LeftArm
                 Deck.Add(cardId, new Card
@@ -106,7 +103,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 // RightArm
                 Deck.Add(cardId, new Card
@@ -121,7 +118,7 @@ namespace BevososService
             }
 
             // g. Legs: 10 cartas
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -137,7 +134,7 @@ namespace BevososService
             // 2. TOOLS
 
             // a. Hat: 2 cartas
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -151,7 +148,7 @@ namespace BevososService
             }
 
             // b. Tools: 2 cartas (LeftTool y RightTool)
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -167,7 +164,7 @@ namespace BevososService
             // 3. BABYS
 
             // a. 1 Point Babys: 3 Land, 3 Air, 3 Water
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -179,7 +176,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -191,7 +188,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -205,7 +202,7 @@ namespace BevososService
             }
 
             // b. 2 Point Babys: 3 Land, 3 Air, 3 Water
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -217,7 +214,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -229,7 +226,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -243,7 +240,7 @@ namespace BevososService
             }
 
             // c. 3 Point Babys: 2 Land, 2 Air, 2 Water
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -255,7 +252,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -267,7 +264,7 @@ namespace BevososService
                 });
                 cardId++;
             }
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {
@@ -281,7 +278,7 @@ namespace BevososService
             }
 
             // 4. 2 WILD PROVOKE
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Deck.Add(cardId, new Card
                 {

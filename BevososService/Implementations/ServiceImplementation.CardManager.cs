@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BevososService.GameModels;
 
 namespace BevososService.Implementations
@@ -20,7 +17,7 @@ namespace BevososService.Implementations
 
         private static void Shuffle<T>(IList<T> list)
         {
-            Random rng = new Random();
+            var rng = new Random();
             int n = list.Count;
             while (n > 1)
             {

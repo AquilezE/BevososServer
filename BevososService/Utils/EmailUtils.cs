@@ -1,5 +1,4 @@
-﻿using DataAccess.Models;
-using System;
+﻿using System;
 
 using System.Net;
 using System.Net.Mail;
@@ -22,16 +21,16 @@ namespace BevososService.Utils
 
         public static bool SendInvitationByEmail(string recipientEmail, int lobbyId)
         {
-            string subject = "Bevosos Invite";
-            string body = $"You've been invited to play! Join this lobby before it's too late: {lobbyId}";
+            var subject = "Bevosos Invite";
+            var body = $"You've been invited to play! Join this lobby before it's too late: {lobbyId}";
 
             return SendEmail(recipientEmail, subject, body);
         }
 
         public static bool SendTokenByEmail(string recipientEmail, string token)
         {
-            string subject = "Bevosos";
-            string body = $"Your verification token is: {token}";
+            var subject = "Bevosos";
+            var body = $"Your verification token is: {token}";
 
             return SendEmail(recipientEmail, subject, body);
         }
@@ -40,8 +39,8 @@ namespace BevososService.Utils
         {
             try
             {
-                using (MailMessage mail = new MailMessage())
-                using (SmtpClient smtpClient = new SmtpClient(SmtpServer, SmtpPort))
+                using (var mail = new MailMessage())
+                using (var smtpClient = new SmtpClient(SmtpServer, SmtpPort))
                 {
                     mail.From = new MailAddress(SenderEmail);
                     mail.To.Add(recipientEmail);

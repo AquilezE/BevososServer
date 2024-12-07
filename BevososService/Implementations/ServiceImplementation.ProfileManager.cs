@@ -13,7 +13,7 @@ namespace BevososService.Implementations
     {
         private void InvokeCallback(Action<IProfileManagerCallback> callbackAction, int userId)
         {
-            IProfileManagerCallback callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
+            var callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
             try
             {
                 callbackAction(callback);
@@ -45,7 +45,7 @@ namespace BevososService.Implementations
 
             try
             {
-                AccountDAO accountDAO = new AccountDAO();
+                var accountDAO = new AccountDAO();
                 Account account = accountDAO.GetAccountByUserId(userId);
 
                 if (account == null)
@@ -85,7 +85,7 @@ namespace BevososService.Implementations
 
             try
             {
-                UserDAO userDAO = new UserDAO();
+                var userDAO = new UserDAO();
                 User user = userDAO.GetUserById(userId);
 
                 if (user == null)
