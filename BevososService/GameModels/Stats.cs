@@ -8,7 +8,8 @@ namespace BevososService.GameModels
 {
     public class Stats
     {
-        public int PointsThisGame { get; set; } = 0;
-        public int BabiesKilledThisGame { get; set; } = 0;
+        public int PointsThisGame { get; set; }
+        public int AnihilatedBabies { get; set; }
+        public int MonstersCreated { get; set; }
     }
 }

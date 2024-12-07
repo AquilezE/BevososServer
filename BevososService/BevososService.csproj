@@ -52,6 +52,7 @@
     <Compile Include="DTOs\MonsterDTO.cs" />
     <Compile Include="DTOs\PlayerStateDTO.cs" />
     <Compile Include="DTOs\GameStatsDTO.cs" />
+    <Compile Include="DTOs\StatsDTO.cs" />
     <Compile Include="DTOs\UserDTO.cs" />
     <Compile Include="Exceptions\BevososServerExceptions.cs" />
     <Compile Include="GameModels\Card.cs" />

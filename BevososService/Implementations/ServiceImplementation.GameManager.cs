@@ -9,6 +9,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataAccess.DAO;
 
 namespace BevososService.Implementations
 {
@@ -85,7 +86,7 @@ namespace BevososService.Implementations
                         if (connectedPlayers < 2)
                         {
                             Console.WriteLine($"All players disconnected from game {gameId}");
-                            EndGame(gameId);
+                            EndGameWithNoUsers(gameId);
                         }
 
                     }
@@ -189,6 +190,22 @@ namespace BevososService.Implementations
         }
         private static void EndGame(int gameId)
         {
+            SaveStatsForAllPLayers(gameId);
+
+            List<StatsDTO> gameStats = new List<StatsDTO>();
+
+            foreach (PlayerState playerStats in _activeGames[gameId].Players.Values)
+            {
+                int points = _playerStatistics[gameId][playerStats.User.UserId].PointsThisGame;
+                string username = playerStats.User.Username;
+
+                StatsDTO statsDTO = new StatsDTO();
+                statsDTO.PointsThisGame = points;
+                statsDTO.Username = username;
+
+                gameStats.Add(statsDTO);
+            }
+
             if (_activeGames.TryRemove(gameId, out Game gameInstance))
             {
                 gameInstance.TurnTimer?.Dispose();
@@ -198,7 +215,34 @@ namespace BevososService.Implementations
                     try
                     {
                         Console.WriteLine($"Game {gameId} ended");
-                        playerCallback.OnNotifyGameEnded(gameId);
+                        playerCallback.OnNotifyGameEnded(gameId, gameStats);
+                    }
+                    catch (Exception ex)
+                    {
+                        RemoveGameClient(playerCallback);
+                    }
+                }
+
+
+                _gamePlayerCallBack.TryRemove(gameId, out _);
+                _playerStatistics.TryRemove(gameId, out _);
+
+                Console.WriteLine($"Game {gameId} has been ended and removed from active games");
+            }
+        }
+
+        private static void EndGameWithNoUsers(int gameId)
+        {
+            if (_activeGames.TryRemove(gameId, out Game gameInstance))
+            {
+                gameInstance.TurnTimer?.Dispose();
+
+                foreach (IGameManagerCallback playerCallback in _gamePlayerCallBack[gameId].Values)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Game {gameId} ended");
+                        playerCallback.OnNotifyGameEndedWithoutUsers(gameId);
                     }
                     catch (Exception ex)
                     {
@@ -212,6 +256,7 @@ namespace BevososService.Implementations
                 Console.WriteLine($"Game {gameId} has been ended and removed from active games");
             }
         }
+
         public void DrawCard(int matchCode, int userId)
         {
             if (!_activeGames.TryGetValue(matchCode, out Game gameInstance))
@@ -406,6 +451,8 @@ namespace BevososService.Implementations
                 gameInstance.Players[userId].Monsters.Add(monster);
                 gameInstance.Players[userId].Hand.Remove(card);
 
+                _playerStatistics[gameInstance.GameId][userId].MonstersCreated++;
+                
                 gameInstance.PlayerActionsRemaining[userId]--;
 
 
@@ -420,8 +467,6 @@ namespace BevososService.Implementations
                     return;
                 }
                 BroadcastGameState(matchCode);
-
-
 
             }
 
@@ -681,7 +726,7 @@ namespace BevososService.Implementations
             }
             else if (pileStrenght <= monsterArmyMaxStrenght)
             {
-                _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].BabiesKilledThisGame += numberBabies;
+                _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].AnihilatedBabies += numberBabies;
                 _playerStatistics[gameInstance.GameId][playerWithMaxStrenght].PointsThisGame += pileStrenght;
                 gameInstance.BabyPiles[babyPileIndex].Clear();
             }
@@ -802,6 +847,63 @@ namespace BevososService.Implementations
             {
                 _gamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
             }
+        }
+
+        private static void SaveStatsForAllPLayers(int matchCode)
+        {
+            int maxPoints = 0;
+            int winnerId = 0;
+
+            foreach (PlayerState maxPointsPlayer in _activeGames[matchCode].Players.Values)
+            {
+                int points = _playerStatistics[matchCode][maxPointsPlayer.User.UserId].PointsThisGame;
+
+                if (points > maxPoints)
+                {
+                    maxPoints = points;
+                    winnerId = maxPointsPlayer.User.UserId;
+                }
+            }
+
+            foreach (PlayerState player in _activeGames[matchCode].Players.Values)
+            {
+                
+                int monsters = _playerStatistics[matchCode][player.User.UserId].MonstersCreated;
+                int babies = _playerStatistics[matchCode][player.User.UserId].AnihilatedBabies;
+
+                if (player.User.UserId > 0)
+                {
+                    if (new StatsDAO().UserStatsExists(player.User.UserId))
+                    {
+                        DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(player.User.UserId);
+
+                        userStats.Wins += player.User.UserId == winnerId ? 1 : 0;
+                        userStats.MonstersCreated += monsters;
+                        userStats.AnnihilatedBabies += babies;
+
+                        new StatsDAO().UpdateUserStats(player.User.UserId, userStats);
+                    }
+                    else
+                    {
+                        DataAccess.Models.Stats newUserStats = new DataAccess.Models.Stats
+                        {
+                            UserId = player.User.UserId,
+                            Wins = player.User.UserId == winnerId ? 1 : 0,
+                            MonstersCreated = monsters,
+                            AnnihilatedBabies = babies
+                        };
+
+                        new StatsDAO().AddNewUserStats(player.User.UserId, newUserStats);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Guest user, cannot save Stats");
+                }
+                
+            }
+
+
         }
     }
 

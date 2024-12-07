@@ -84,6 +84,7 @@
     <Compile Include="DAO\BlockedDAO.cs" />
     <Compile Include="DAO\FriendRequestDAO.cs" />
     <Compile Include="DAO\FriendshipDAO.cs" />
+    <Compile Include="DAO\StatsDAO.cs" />
     <Compile Include="DAO\TokenDAO.cs" />
     <Compile Include="DAO\UserDAO.cs" />
     <Compile Include="Exceptions\DataBaseException.cs" />

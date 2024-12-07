@@ -16,7 +16,7 @@ namespace BevososService.DTOs
             return new GameStatsDTO
             {
                 Points = stats.PointsThisGame,
-                BabiesKilled = stats.BabiesKilledThisGame
+                BabiesKilled = stats.AnihilatedBabies
             };
         }
     }

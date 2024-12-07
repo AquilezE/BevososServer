@@ -1,5 +1,7 @@
 ﻿using BevososService.DTOs;
+using BevososService.GameModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
@@ -43,25 +45,57 @@ namespace BevososService
         void PlayCard(int userId, int matchCode, int cardId);
 
         /// <summary>
-        /// Executes the placement of a body part for customization.
+        /// Executes the action of provoking a specific baby pile during a player's turn. This method handles the logic for a player provoking a baby pile,
+        /// updates the game state, and sends the updated game state to all players in the match.
         /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="userId">The unique identifier of the player provoking the baby pile.</param>
         /// <param name="matchCode">The unique code representing the match.</param>
-        /// <param name="cardId">The unique identifier of the card being played.</param>
-        /// <param name="monsterSelectedIndex">The index of the monster selected for customization.</param>
+        /// <param name="babyPileProvoked">The index of the baby pile being provoked.</param>
 
         [OperationContract(IsOneWay = true)]
         void PlayProvoke(int userId, int matchCode, int babyPileProvoked);
 
+
+        /// <summary>
+        /// Executes the action of placing a body part card on a monster during a player's turn. This method handles the logic for a player placing a body part card,
+        /// updates the game state, and sends the updated game state to all players in the match.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the player placing the body part card.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="cardId">The unique identifier of the body part card being placed.</param>
+        /// <param name="monsterSelectedIndex">The index of the monster on which the body part card is being placed.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
 
+        /// <summary>
+        /// Executes the action of placing a tool card on a monster during a player's turn. This method handles the logic for a player placing a tool card,
+        /// updates the game state, and sends the updated game state to all players in the match.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the player placing the tool card.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="cardId">The unique identifier of the tool card being placed.</param>
+        /// <param name="monsterSelectedIndex">The index of the monster on which the tool card is being placed.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteToolPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
 
+        /// <summary>
+        /// Executes the action of placing a hat card on a monster during a player's turn. This method handles the logic for a player placing a hat card,
+        /// updates the game state, and sends the updated game state to all players in the match.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the player placing the hat card.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="cardId">The unique identifier of the hat card being placed.</param>
+        /// <param name="monsterSelectedIndex">The index of the monster on which the hat card is being placed.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteHatPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex);
 
+        /// <summary>
+        /// Executes the action of provoking a specific baby pile during a player's turn. This method handles the logic for a player provoking a baby pile,
+        /// updates the game state, and sends the updated game state to all players in the match.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the player provoking the baby pile.</param>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="babyPileProvoked">The index of the baby pile being provoked.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteProvoke(int userId, int matchCode, int babyPileProvoked);
 
@@ -127,15 +161,33 @@ namespace BevososService
 
 
 
+        /// <summary>
+        /// Notifies the player that a specific baby pile has been provoked during the game.
+        /// </summary>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        /// <param name="babyPileIndex">The index of the provoked baby pile.</param>
         [OperationContract(IsOneWay = true)]
         void OnProvoke(int matchCode, int babyPileIndex);
 
+        /// <summary>
+        /// Notifies the player that the end game phase has started.
+        /// </summary>
         [OperationContract(IsOneWay = true)]
         void OnNotifyEndGamePhase();
 
+        /// <summary>
+        /// Notifies the player that the game has ended.
+        /// </summary>
+        /// <param name="matchCode">The unique code representing the match.</param>
         [OperationContract(IsOneWay = true)]
-        void OnNotifyGameEnded(int matchCode);
+        void OnNotifyGameEnded(int matchCode, List<StatsDTO> stats);
 
+        /// <summary>
+        /// Notifies the player that the game has ended without any users.
+        /// </summary>
+        /// <param name="matchCode">The unique code representing the match.</param>
+        [OperationContract(IsOneWay = true)]
+        void OnNotifyGameEndedWithoutUsers(int matchCode);
     }
 
 }
