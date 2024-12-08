@@ -4,7 +4,7 @@ namespace BevososService.DTOs
 {
 
     [DataContract]
-    public class UserDto
+    public class UserDTO
     {
         [DataMember]
         public int UserId { get; set; }
@@ -21,9 +21,9 @@ namespace BevososService.DTOs
         [DataMember]
         public bool IsReady { get; set; } = false;
 
-        public static explicit operator UserDto(DataAccess.Models.User user)
+        public static explicit operator UserDTO(DataAccess.Models.User user)
         {
-            return new UserDto
+            return new UserDTO
             {
                 UserId = user.UserId,
                 Username = user.Username,

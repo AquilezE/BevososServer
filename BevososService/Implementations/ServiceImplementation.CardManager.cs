@@ -7,14 +7,6 @@ namespace BevososService.Implementations
 
     public partial class ServiceImplementation : ICardManager
     {
-        public static void SeeGlobalDeck()
-        {
-            foreach (KeyValuePair<int, Card> card in GlobalDeck.Deck)
-            {
-                Console.WriteLine(card.Value);
-            }
-        }
-
         private static void Shuffle<T>(IList<T> list)
         {
             var rng = new Random();

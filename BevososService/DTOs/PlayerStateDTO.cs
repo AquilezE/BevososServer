@@ -8,7 +8,7 @@ namespace BevososService.DTOs
     public class PlayerStateDTO
     {
         [DataMember]
-        public UserDto User { get; set; }
+        public UserDTO User { get; set; }
         [DataMember]
         public List<CardDTO> Hand { get; set; } = new List<CardDTO>();
         [DataMember]

@@ -19,7 +19,7 @@ namespace BevososService.DTOs
         public List<CardDTO> BabyDeck { get; set; }
 
         [DataMember]
-        public Dictionary<int, PlayerStateDTO> playerState { get; set;} = new Dictionary<int, PlayerStateDTO>();
+        public Dictionary<int, PlayerStateDTO> PlayerState { get; set;} = new Dictionary<int, PlayerStateDTO>();
 
         [DataMember]
         public int CurrentPlayerId { get; set; }
@@ -64,7 +64,7 @@ namespace BevososService.DTOs
 
             foreach (KeyValuePair<int, PlayerState> player in game.Players)
             {
-                gameStateDto.playerState.Add(player.Key, (PlayerStateDTO)player.Value);
+                gameStateDto.PlayerState.Add(player.Key, (PlayerStateDTO)player.Value);
             }
 
 

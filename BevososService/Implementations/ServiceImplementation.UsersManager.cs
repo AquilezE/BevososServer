@@ -3,13 +3,19 @@ using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Exceptions;
 using DataAccess.Models;
-
+using System.Threading;
 using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
 {
     public partial class ServiceImplementation : IUsersManager
     {
+        private static int _currentGuestId = -4;
+
+        private static int GenerateUniqueGuestId()
+        {
+            return Interlocked.Decrement(ref _currentGuestId);
+        }
         public bool IsEmailTaken(string email)
         {
             try
@@ -95,7 +101,7 @@ namespace BevososService.Implementations
                 throw CreateAndLogFaultException(ex);
             }
         }
-        public UserDto LogIn(string email, string password)
+        public UserDTO LogIn(string email, string password)
         {
             var accountDAO = new AccountDAO();
             var userDAO = new UserDAO();
@@ -113,7 +119,7 @@ namespace BevososService.Implementations
                 {
                     User user = userDAO.GetUserById(account.UserId);
 
-                    var userDto = new UserDto
+                    var userDto = new UserDTO
                     {
                         UserId = user.UserId,
                         Username = user.Username,
@@ -130,6 +136,20 @@ namespace BevososService.Implementations
                 throw CreateAndLogFaultException(ex);
             }
 
+        }
+
+        public UserDTO GetGuestUser()
+        {
+            int guestId = GenerateUniqueGuestId();
+            var user = new UserDTO
+            {
+                UserId = guestId,
+                Username = "Guest" + guestId,
+                Email = "guest" + guestId + "@bevosos.com",
+                ProfilePictureId = 1
+            };
+
+            return user;
         }
 
         public bool RecoverPassword(string email, string password)

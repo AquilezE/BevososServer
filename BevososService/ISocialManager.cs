@@ -147,10 +147,10 @@ namespace BevososService
         /// </summary>
         /// <param name="userId">The unique identifier of the user performing the search.</param>
         /// <param name="name">The name to search for.</param>
-        /// <returns>A list of matching `UserDto` objects.</returns>
+        /// <returns>A list of matching `UserDTO` objects.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-        List<UserDto> GetUsersFoundByName(int userId, string name);
+        List<UserDTO> GetUsersFoundByName(int userId, string name);
 
 
         /// <summary>

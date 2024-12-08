@@ -63,14 +63,21 @@ namespace BevososService
 
 
         /// <summary>
-        /// Authenticates a user using their email and password. Returns a UserDto containing user details if successful.
+        /// Authenticates a user using their email and password. Returns a UserDTO containing user details if successful.
         /// </summary>
         /// <param name="email">The email address of the user.</param>
         /// <param name="password">The password provided by the user.</param>
-        /// <returns>A `UserDto` containing user details if authentication is successful, otherwise null.</returns>
+        /// <returns>A `UserDTO` containing user details if authentication is successful, otherwise null.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-        UserDto LogIn(string email, string password);
+        UserDTO LogIn(string email, string password);
+
+        /// <summary>
+        /// Retrieves the guest user. This user is used for anonymous access to certain features.
+        /// </summary>
+        /// <returns>A UserDTO representing the guest user.</returns>
+        [OperationContract]
+        UserDTO GetGuestUser();
 
 
         /// <summary>

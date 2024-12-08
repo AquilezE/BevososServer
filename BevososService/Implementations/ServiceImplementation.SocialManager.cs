@@ -18,7 +18,7 @@ namespace BevososService.Implementations
     public partial class ServiceImplementation : ISocialManager
     {
 
-        private static readonly ConcurrentDictionary<int, ISocialManagerCallback> connectedClients = new ConcurrentDictionary<int, ISocialManagerCallback>();
+        private static readonly ConcurrentDictionary<int, ISocialManagerCallback> ConnectedClients = new ConcurrentDictionary<int, ISocialManagerCallback>();
 
         private readonly object _lock = new object();
 
@@ -39,7 +39,7 @@ namespace BevososService.Implementations
 
                 lock (_lock)
                 {
-                    connectedClients.TryAdd(userId, callback);
+                    ConnectedClients.TryAdd(userId, callback);
                 }
 
                 NotifyFriendsUserOnline(userId);
@@ -66,7 +66,7 @@ namespace BevososService.Implementations
         {
             lock (_lock)
             {
-                connectedClients.TryRemove(userId, out _); Console.WriteLine("Disconnected: "+ userId);
+                ConnectedClients.TryRemove(userId, out _); Console.WriteLine("Disconnected: "+ userId);
             }
 
             NotifyFriendsUserOffline(userId);
@@ -80,7 +80,7 @@ namespace BevososService.Implementations
                 User user = new UserDAO().GetUserByEmail(email);
                 if (user != null)
                 {
-                    return connectedClients.ContainsKey(user.UserId);
+                    return ConnectedClients.ContainsKey(user.UserId);
                 }
                 return false;
             }
@@ -95,7 +95,7 @@ namespace BevososService.Implementations
         {
             int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
 
-            if (connectedClients.ContainsKey(requesteeId))
+            if (ConnectedClients.ContainsKey(requesteeId))
             {
                 try
                 {
@@ -142,7 +142,7 @@ namespace BevososService.Implementations
                                 FriendId = friendId,
                                 FriendName = friendUser.Username,
                                 ProfilePictureId = friendUser.ProfilePictureId,
-                                IsConnected = connectedClients.ContainsKey(friendId)
+                                IsConnected = ConnectedClients.ContainsKey(friendId)
                             };
 
                             var friendDtoForFriend = new FriendDTO
@@ -151,7 +151,7 @@ namespace BevososService.Implementations
                                 FriendId = userId,
                                 FriendName = currentUser.Username,
                                 ProfilePictureId = currentUser.ProfilePictureId,
-                                IsConnected = connectedClients.ContainsKey(userId)
+                                IsConnected = ConnectedClients.ContainsKey(userId)
                             };
 
 
@@ -161,7 +161,7 @@ namespace BevososService.Implementations
                             try
                             {
 
-                                if (connectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
                                 {
                                     try
                                     {
@@ -279,7 +279,7 @@ namespace BevososService.Implementations
                     var friends = new List<FriendDTO>();
                     foreach (FriendData friend in friendshipList)
                     {
-                        if (connectedClients.TryGetValue(friend.FriendId, out _))
+                        if (ConnectedClients.TryGetValue(friend.FriendId, out _))
                         {
                             friend.IsConnected = true;
                         }
@@ -387,7 +387,7 @@ namespace BevososService.Implementations
 
         private void InvokeCallback<T>(int userId, Action<ISocialManagerCallback, T> callbackAction, T parameter)
         {
-            if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
             {
                 try
                 {
@@ -411,7 +411,7 @@ namespace BevososService.Implementations
 
         private void InvokeCallback(int userId, Action<ISocialManagerCallback> callbackAction)
         {
-            if (connectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
             {
                 try
                 {
@@ -460,11 +460,11 @@ namespace BevososService.Implementations
 
         public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
         {
-            if (_activeLobbiesDict.ContainsKey(lobbyId))
+            if (ActiveLobbiesDict.ContainsKey(lobbyId))
             {
                 try
                 {
-                    if (!connectedClients.ContainsKey(userId))
+                    if (!ConnectedClients.ContainsKey(userId))
                     {
                         Account account = new AccountDAO().GetAccountByUserId(userId);
                         if (account != null)
@@ -493,20 +493,20 @@ namespace BevososService.Implementations
 
         private void RemoveClient(ISocialManagerCallback callback)
         {
-            KeyValuePair<int, ISocialManagerCallback> user = connectedClients.FirstOrDefault(pair => pair.Value == callback);
+            KeyValuePair<int, ISocialManagerCallback> user = ConnectedClients.FirstOrDefault(pair => pair.Value == callback);
             if (user.Key != 0)
             {
                 Disconnect(user.Key);
             }
         }
 
-        public List<UserDto> GetUsersFoundByName(int userId, string name)
+        public List<UserDTO> GetUsersFoundByName(int userId, string name)
         {
-            var users = new List<UserDto>();
+            var users = new List<UserDTO>();
             List<User> usersData = new UserDAO().GetUsersByName(name, userId);
             foreach (User user in usersData)
             {
-                users.Add((UserDto)user);
+                users.Add((UserDTO)user);
             }
             return users;
         }

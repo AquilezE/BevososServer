@@ -15,14 +15,14 @@ namespace BevososService
         /// </summary>
         /// <param name="userDto">The data transfer object containing information about the user creating the lobby.</param>
         [OperationContract(IsOneWay = true)]
-        void NewLobbyCreated(UserDto userDto);
+        void NewLobbyCreated(UserDTO userDto);
         /// <summary>
         /// Allows a user to join an existing lobby. Updates the current lobby state and notifies all existing members of the new joiner.
         /// </summary>
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         /// <param name="userDto">The data transfer object with details of the user joining the lobby.</param>
         [OperationContract(IsOneWay = true)]
-        void JoinLobby(int lobbyId, UserDto userDto);
+        void JoinLobby(int lobbyId, UserDTO userDto);
 
         /// <summary>
         /// Removes a user from a specified lobby. Handles user departure logic and informs the remaining members of the update.
@@ -87,9 +87,9 @@ namespace BevososService
         /// Updates the client with the current list of users in the lobby.
         /// </summary>
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
-        /// <param name="existingUsers">A list of `UserDto` representing the current users in the lobby.</param>
+        /// <param name="existingUsers">A list of `UserDTO` representing the current users in the lobby.</param>
         [OperationContract(IsOneWay = true)]
-        void OnLobbyUsersUpdate(int lobbyId, List<UserDto> existingUsers);
+        void OnLobbyUsersUpdate(int lobbyId, List<UserDTO> existingUsers);
 
         /// <summary>
         /// Notifies all members in the lobby when the lobby leader has changed.
@@ -106,7 +106,7 @@ namespace BevososService
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         /// <param name="userDto">The data transfer object of the user who joined the lobby.</param>
         [OperationContract(IsOneWay = true)]
-        void OnJoinLobby(int lobbyId, UserDto userDto);
+        void OnJoinLobby(int lobbyId, UserDTO userDto);
 
 
         /// <summary>

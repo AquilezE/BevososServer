@@ -15,7 +15,7 @@ namespace BevososService
         /// <param name="userDto">The data transfer object containing information about the user joining the game.</param>
         /// <exception cref="FaultException">Thrown when the game does not exist or the player is not found in the game.</exception>
         [OperationContract(IsOneWay = true)]
-        void JoinGame(int gameId, UserDto userDto);
+        void JoinGame(int gameId, UserDTO userDto);
 
         /// <summary>
         /// Handles the logic for a player drawing a card during their turn. Updates the player's hand
@@ -148,7 +148,6 @@ namespace BevososService
         /// <summary>
         /// Notifies the player that an action they attempted to perform is invalid.
         /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="messageKey">The key representing the message describing the invalid action.</param>
         [OperationContract(IsOneWay = true)]
         void NotifyActionInvalid(string messageKey);

@@ -10,11 +10,11 @@ namespace DataAccess.Utils
     /// </summary>
     public sealed class LoggerService
     {
-        const string DATE_FORMAT = "dd-MM-yyyy";
-        const string ID_FILE_NAME = "Log";
-        const string CHARACTER_SEPARATOR = "_";
-        const string FILE_EXTENSION = ".txt";
-        const string RELATIVE_LOG_FILE_PATH = @"C:\MyCustomLogsDirectory";
+        private const string DATE_FORMAT = "dd-MM-yyyy";
+        private const string ID_FILE_NAME = "Log";
+        private const string CHARACTER_SEPARATOR = "_";
+        private const string FILE_EXTENSION = ".txt";
+        private const string RELATIVE_LOG_FILE_PATH = @"C:\MyCustomLogsDirectory";
 
         private static readonly Lazy<LoggerService> _instance = new Lazy<LoggerService>(() => new LoggerService());
 
