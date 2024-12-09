@@ -2,6 +2,7 @@
 
 using System.Net;
 using System.Net.Mail;
+using DataAccess.Utils;
 
 
 namespace BevososService.Utils
@@ -10,7 +11,6 @@ namespace BevososService.Utils
     {
 
         private const string SenderEmail = "bevososthegame@gmail.com";
-        private const string SenderPassword = "lkzz bghz bwol leiz";
         private const string SmtpServer = "smtp.gmail.com";
         private const int SmtpPort = 587;
 
@@ -47,7 +47,7 @@ namespace BevososService.Utils
                     mail.Subject = subject;
                     mail.Body = body;
 
-                    smtpClient.Credentials = new NetworkCredential(SenderEmail, SenderPassword);
+                    smtpClient.Credentials = new NetworkCredential(SenderEmail, Environment.GetEnvironmentVariable("EmailPassword"));
                     smtpClient.EnableSsl = true;
 
                     smtpClient.Send(mail);
@@ -57,22 +57,22 @@ namespace BevososService.Utils
             }
             catch (SmtpFailedRecipientsException ex)
             {
-                Console.WriteLine($"Failed to deliver email to one or more recipients: {ex.Message}");
+                ExceptionManager.LogErrorException(ex);
                 return false;
             }
             catch (SmtpException ex)
             {
-                Console.WriteLine($"SMTP error occurred: {ex.Message}");
+                ExceptionManager.LogErrorException(ex);
                 return false;
             }
             catch (FormatException ex)
             {
-                Console.WriteLine($"Invalid email format: {ex.Message}");
+                ExceptionManager.LogErrorException(ex);
                 return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An unexpected error occurred while sending email: {ex.Message}");
+                ExceptionManager.LogFatalException(ex);
                 return false;
             }
         }

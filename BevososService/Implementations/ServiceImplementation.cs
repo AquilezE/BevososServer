@@ -14,10 +14,6 @@ namespace BevososService.Implementations
         {
             GlobalDeck.InitializeDeck();
 
-            foreach (Card item in GlobalDeck.Deck.Select(item => item.Value))
-            {
-                Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage + " Parte: " + item.BodyPartIndex);
-            }
         }
 
         private static void Shuffle<T>(IList<T> list)

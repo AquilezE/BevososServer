@@ -16,15 +16,16 @@ namespace DataAccess
         public DbSet<Blocked> BlockedList { get; set; }
         public DbSet<Stats> Stats { get; set; }
 
-        // Constructor por defecto
+
         public BevososContext() : base("name=BevososContext")
         {
             this.Database.CommandTimeout = 5;
+
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            // Configuración del índice único para Username
+
             modelBuilder.Entity<User>()
                 .Property(u => u.Username)
                 .HasColumnAnnotation(
@@ -32,7 +33,6 @@ namespace DataAccess
                     new IndexAnnotation(
                         new IndexAttribute("IX_UserUsername") { IsUnique = true }));
 
-            // Configuración del índice único para Email en Account
             modelBuilder.Entity<Account>()
                 .Property(a => a.Email)
                 .HasColumnAnnotation(
@@ -40,13 +40,11 @@ namespace DataAccess
                     new IndexAnnotation(
                         new IndexAttribute("IX_AccountEmail") { IsUnique = true }));
 
-            // Relación uno a uno entre User y Account
             modelBuilder.Entity<User>()
                 .HasOptional(u => u.Account)
                 .WithRequired(a => a.User)
                 .WillCascadeOnDelete(true);
 
-            // Relaciones de FriendRequest
             modelBuilder.Entity<FriendRequest>()
                 .HasRequired(fr => fr.Requester)
                 .WithMany()
@@ -59,7 +57,6 @@ namespace DataAccess
                 .HasForeignKey(fr => fr.RequesteeId)
                 .WillCascadeOnDelete(false);
 
-            // Relaciones de Friendship
             modelBuilder.Entity<Friendship>()
                 .HasRequired(f => f.User1)
                 .WithMany()
@@ -72,7 +69,6 @@ namespace DataAccess
                 .HasForeignKey(f => f.User2Id)
                 .WillCascadeOnDelete(false);
 
-            // Relaciones de Blocked
             modelBuilder.Entity<Blocked>()
                 .HasRequired(b => b.Blocker)
                 .WithMany()
@@ -85,7 +81,6 @@ namespace DataAccess
                 .HasForeignKey(b => b.BlockeeId)
                 .WillCascadeOnDelete(false);
 
-            // Configuración de la relación uno a uno entre User y Stats
             modelBuilder.Entity<User>()
                 .HasOptional(u => u.Stats)
                 .WithRequired(s => s.User)
