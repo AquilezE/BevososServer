@@ -1,9 +1,12 @@
-﻿using BevososService.DTOs;
+﻿using System;
+using System.ServiceModel;
+using BevososService.DTOs;
 using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Exceptions;
 using DataAccess.Models;
 using System.Threading;
+using DataAccess.Utils;
 using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
@@ -26,6 +29,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch(Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
 
         public bool IsUsernameTaken(string username)
@@ -38,6 +54,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch(CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
 
         public bool RegisterUser(string email, string username, string password)
@@ -61,6 +90,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
 
         public bool SendToken(string email)
@@ -82,6 +124,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
 
         public bool VerifyToken(string email, string token)
@@ -100,6 +155,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
         public UserDTO LogIn(string email, string password)
         {
@@ -135,21 +203,49 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return null;
 
         }
 
         public UserDTO GetGuestUser()
         {
-            int guestId = GenerateUniqueGuestId();
-            var user = new UserDTO
-            {
-                UserId = guestId,
-                Username = "Guest" + guestId,
-                Email = "guest" + guestId + "@bevosos.com",
-                ProfilePictureId = 1
-            };
+            try{
+                int guestId = GenerateUniqueGuestId();
+                var user = new UserDTO
+                {
+                    UserId = guestId,
+                    Username = "Guest" + guestId,
+                    Email = "guest" + guestId + "@bevosos.com",
+                    ProfilePictureId = 1
+                };
 
-            return user;
+                return user;
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return null;
         }
 
         public bool RecoverPassword(string email, string password)
@@ -171,6 +267,19 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return false;
         }
 
     }

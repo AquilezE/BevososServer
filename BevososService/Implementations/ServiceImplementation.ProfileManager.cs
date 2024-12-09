@@ -11,86 +11,68 @@ namespace BevososService.Implementations
     //NEEDS STEROID CALLBACK EXCEPTION HANDLING
     public partial class ServiceImplementation : IProfileManager
     {
-        private void InvokeCallback(Action<IProfileManagerCallback> callbackAction, int userId)
+        public void ChangePassword(int userId, string oldPassword, string newPassword)
         {
             var callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
             try
             {
-                callbackAction(callback);
-            }
-            catch (CommunicationException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                Disconnect(userId); 
-            }
-            catch (TimeoutException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                Disconnect(userId); 
-            }
-        }
+                if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
+                {
+                    callback.OnPasswordChange("Password cannot be empty.");
+                }
 
-        public void ChangePassword(int userId, string oldPassword, string newPassword)
-        {
-            if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
-            {
-                InvokeCallback(cb => cb.OnPasswordChange("Password cannot be empty."), userId);
-                return;
-            }
-
-            try
-            {
                 var accountDAO = new AccountDAO();
                 Account account = accountDAO.GetAccountByUserId(userId);
 
                 if (account == null)
                 {
-                    InvokeCallback(cb => cb.OnPasswordChange("Account not found."), userId);
+                    callback.OnPasswordChange("Account not found.");
                     return;
                 }
 
                 if (!SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
                 {
-                    InvokeCallback(cb => cb.OnPasswordChange("Incorrect password."), userId);
+                    callback.OnPasswordChange("Incorrect password.");
                     return;
                 }
 
                 string newHashedPassword = SimpleHashing.HashPassword(newPassword);
                 bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
 
-                InvokeCallback(
-                    cb => cb.OnPasswordChange(result ? null : "Failed to update password."),
-                    userId
-                );
+                callback.OnPasswordChange(result ? null : "Failed to update password.");
             }
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                callback.OnPasswordChange("An unexpected error occurred.");
+            }
+            catch(TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                callback.OnPasswordChange("An unexpected error occurred.");
+            }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
-                InvokeCallback(cb => cb.OnPasswordChange("An unexpected error occurred."), userId);
+                callback.OnPasswordChange("An unexpected error occurred.");
             }
         }
 
         public void UpdateProfile(int userId, string username, int profilePictureId)
         {
-
-
             try
             {
+                var callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
                 var userDAO = new UserDAO();
                 User user = userDAO.GetUserById(userId);
 
                 if (user == null)
                 {
-                    InvokeCallback(cb => cb.OnProfileUpdate("",profilePictureId,"User not found."), userId);
+                    callback.OnProfileUpdate("", profilePictureId, "User not found.");
                     return;
                 }
 
@@ -102,7 +84,7 @@ namespace BevososService.Implementations
 
                     if (result)
                     {
-                        InvokeCallback(cb => cb.OnProfileUpdate("Not changed", profilePictureId, "Username exists"), userId);
+                        callback.OnProfileUpdate("Not changed", profilePictureId, "Username exists");
                     }
                 }
                 else if (username == "Not changed")
@@ -112,7 +94,7 @@ namespace BevososService.Implementations
 
                     if (result)
                     {
-                        InvokeCallback(cb => cb.OnProfileUpdate(username, profilePictureId, ""), userId);
+                        callback.OnProfileUpdate(username, profilePictureId, "");
                     }
                 }
                 else
@@ -124,7 +106,7 @@ namespace BevososService.Implementations
 
                     if (result)
                     {
-                        InvokeCallback(cb => cb.OnProfileUpdate(username, profilePictureId, ""), userId);
+                        callback.OnProfileUpdate(username, profilePictureId, "");
                     }
                 }
             }
@@ -132,9 +114,20 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
             }
         }
     }

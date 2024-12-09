@@ -2,6 +2,8 @@
 using DataAccess.Models;
 using System;
 using System.ServiceModel;
+using DataAccess.Exceptions;
+using DataAccess.Utils;
 
 namespace BevososService.Implementations
 {
@@ -37,12 +39,24 @@ namespace BevososService.Implementations
                     
                 }
             }
-            catch (Exception ex)
+            catch (DataBaseException ex)
             {
                 CreateAndLogFaultException(ex);
 
                 var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
                 callback.OnStatsReceived(userWins, userMonsters, userBabies);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
             }
 
         }

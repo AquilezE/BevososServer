@@ -7,6 +7,8 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
+using DataAccess.Utils;
+using DataAccess.Models;
 
 namespace BevososService.Implementations
 {
@@ -35,31 +37,47 @@ namespace BevososService.Implementations
 
         private static int GenerateUniqueLobbyId()
         {
-            return Interlocked.Increment(ref _currentLobbyId);
+                return Interlocked.Increment(ref _currentLobbyId);
         }
 
         public void NewLobbyCreated(UserDTO userDto)
         {
-            var lobbyId = GenerateUniqueLobbyId();
+            try
+            {
+                var lobbyId = GenerateUniqueLobbyId();
 
-            var callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
-            var clientChannel = (ICommunicationObject)callback;
+                var callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
+                var clientChannel = (ICommunicationObject)callback;
 
-            clientChannel.Closed += LobbyChannel_Closed;
-            clientChannel.Faulted += LobbyChannel_Faulted;
+                clientChannel.Closed += LobbyChannel_Closed;
+                clientChannel.Faulted += LobbyChannel_Faulted;
 
-            ActiveLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
-            ActiveLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
+                ActiveLobbiesDict.TryAdd(lobbyId, new ConcurrentDictionary<int, ILobbyManagerCallback>());
+                ActiveLobbiesDict[lobbyId].TryAdd(userDto.UserId, callback);
 
-            LobbyLeaders.TryAdd(lobbyId, userDto.UserId);
+                LobbyLeaders.TryAdd(lobbyId, userDto.UserId);
 
-            ClientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
+                ClientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
 
-            userDto.IsReady = true;
-            LobbyUsersDetails.TryAdd(userDto.UserId, userDto);
+                userDto.IsReady = true;
+                LobbyUsersDetails.TryAdd(userDto.UserId, userDto);
 
-            callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
+                callback.OnNewLobbyCreated(lobbyId, userDto.UserId);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+            }
         }
+
         public void JoinLobby(int lobbyId, UserDTO userDto)
         {
             var callback = OperationContext.Current.GetCallbackChannel<ILobbyManagerCallback>();
@@ -99,18 +117,45 @@ namespace BevososService.Implementations
                     {
                         user.Value.OnJoinLobby(lobbyId, userDto);
                     }
-                    catch (Exception)
+                    catch (CommunicationException ex)
                     {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(user.Value);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(user.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionManager.LogFatalException(ex);
                         RemoveLobbyClient(user.Value);
                     }
                 }
             }
-
         }
+
         public void LeaveLobby(int lobbyId, int userId)
         {
-            HandleUserLeavingLobby(lobbyId, userId);
+            try
+            {
+                HandleUserLeavingLobby(lobbyId, userId);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+            }
         }
+
         public void SendMessage(int lobbyId, int userId, string message)
         {
             foreach (ILobbyManagerCallback user in ActiveLobbiesDict[lobbyId].Select(user => user.Value))
@@ -127,49 +172,118 @@ namespace BevososService.Implementations
         }
         public void KickUser(int lobbyId, int kickerId, int targetUserId, string reason)
         {
-            if (LobbyLeaders.TryGetValue(lobbyId, out var leaderId) && leaderId == kickerId)
+            try
             {
-                if (ActiveLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
+                if (LobbyLeaders.TryGetValue(lobbyId, out var leaderId) && leaderId == kickerId)
                 {
-                    if (lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback))
+                    if (ActiveLobbiesDict.TryGetValue(lobbyId,
+                            out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
                     {
-                        try
+                        if (lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback))
                         {
-                            targetCallback.OnKicked(lobbyId, reason);
+                            try
+                            {
+                                targetCallback.OnKicked(lobbyId, reason);
 
-                            RemoveClientFromLobby(lobbyId, targetUserId);
-                            LobbyUsersDetails.TryRemove(targetUserId, out _);
-                        }
-                        catch (Exception)
-                        {
-                            RemoveLobbyClient(targetCallback);
+                                RemoveClientFromLobby(lobbyId, targetUserId);
+                                LobbyUsersDetails.TryRemove(targetUserId, out _);
+                            }
+                            catch (Exception)
+                            {
+                                RemoveLobbyClient(targetCallback);
+                            }
                         }
                     }
                 }
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+            }
         }
+
         private void LobbyChannel_Closed(object sender, EventArgs e)
         {
-            var callback = (ILobbyManagerCallback)sender;
-            RemoveLobbyClient(callback);
-            Console.WriteLine("Client Closed");
+            try
+            {
+                var callback = (ILobbyManagerCallback)sender;
+                RemoveLobbyClient(callback);
+                Console.WriteLine("Client Closed");
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+            }
         }
+
         private void LobbyChannel_Faulted(object sender, EventArgs e)
         {
-            var callback = (ILobbyManagerCallback)sender;
-            RemoveLobbyClient(callback);
-            Console.WriteLine("Client Faulted");
+            try
+            {
+                var callback = (ILobbyManagerCallback)sender;
+                RemoveLobbyClient(callback);
+                Console.WriteLine("Client Faulted");
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                var callback = (ILobbyManagerCallback)sender;
+                RemoveLobbyClient(callback);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                var callback = (ILobbyManagerCallback)sender;
+                RemoveLobbyClient(callback);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                var callback = (ILobbyManagerCallback)sender;
+                RemoveLobbyClient(callback);
+            }
         }
+
         private void RemoveLobbyClient(ILobbyManagerCallback callback)
         {
-            if (ClientCallbackMapping.TryRemove(callback, out (int LobbyId, int UserId) clientInfo))
+            try
             {
-                var lobbyId = clientInfo.LobbyId;
-                var userId = clientInfo.UserId;
+                if (ClientCallbackMapping.TryRemove(callback, out (int LobbyId, int UserId) clientInfo))
+                {
+                    var lobbyId = clientInfo.LobbyId;
+                    var userId = clientInfo.UserId;
 
-                HandleUserLeavingLobby(lobbyId, userId);
+                    HandleUserLeavingLobby(lobbyId, userId);
+                }
             }
-
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+            }
         }
         private void RemoveClientFromLobby(int lobbyId, int userId)
         {
@@ -185,8 +299,19 @@ namespace BevososService.Implementations
                         {
                             user.OnLeaveLobby(lobbyId, userId);
                         }
-                        catch (Exception)
+                        catch (CommunicationException ex)
                         {
+                            ExceptionManager.LogErrorException(ex);
+                            RemoveLobbyClient(user);
+                        }
+                        catch (TimeoutException ex)
+                        {
+                            ExceptionManager.LogErrorException(ex);
+                            RemoveLobbyClient(user);
+                        }
+                        catch (Exception ex)
+                        {
+                            ExceptionManager.LogFatalException(ex);
                             RemoveLobbyClient(user);
                         }
                     }
@@ -212,8 +337,19 @@ namespace BevososService.Implementations
                             {
                                 user.OnLeaderChanged(lobbyId, newLeaderId);
                             }
-                            catch (Exception)
+                            catch (CommunicationException ex)
                             {
+                                ExceptionManager.LogErrorException(ex);
+                                RemoveLobbyClient(user);
+                            }
+                            catch (TimeoutException ex)
+                            {
+                                ExceptionManager.LogErrorException(ex);
+                                RemoveLobbyClient(user);
+                            }
+                            catch (Exception ex)
+                            {
+                                ExceptionManager.LogFatalException(ex);
                                 RemoveLobbyClient(user);
                             }
                         }
@@ -227,9 +363,7 @@ namespace BevososService.Implementations
 
                 RemoveClientFromLobby(lobbyId, userId);
             }
-
             LobbyUsersDetails.TryRemove(userId, out _);
-
         }
         public async void StartGame(int lobbyId)
         {
@@ -242,32 +376,37 @@ namespace BevososService.Implementations
                     Players = new Dictionary<int, PlayerState>(),
                     Deck = new ConcurrentStack<Card>(),
                     BabyPiles = new Dictionary<int, Stack<Card>>(),
-                    ActionsPerTurn = 2 // This can be changed for each player if we have time
+                    ActionsPerTurn = 2
                 };
-
-                // Initialize the game
-
 
                 ActiveGames.TryAdd(gameId, gameInstance);
 
                 InitializeGame(gameInstance, lobby);
 
-                // Notify each player 
                 foreach (ILobbyManagerCallback kvp in lobby.Select(x => x.Value))
                 {
                     ILobbyManagerCallback lobbyCallback = kvp;
                     try
                     {
-                        // Notify the player to join
                         lobbyCallback.GameStarted(gameId);
                     }
-                    catch (Exception)
+                    catch (CommunicationException ex)
                     {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(lobbyCallback);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(lobbyCallback);
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionManager.LogFatalException(ex);
                         RemoveLobbyClient(lobbyCallback);
                     }
                 }
-
-                await Task.Delay(5000); // Wait for 5 seconds to remove the lobby
+                await Task.Delay(5000);
                 ActiveLobbiesDict.TryRemove(lobbyId, out _);
             }
         }
@@ -285,8 +424,19 @@ namespace BevososService.Implementations
                         {
                             user.OnReadyStatusChanged(userId, userDto.IsReady);
                         }
-                        catch (Exception)
+                        catch (CommunicationException ex)
                         {
+                            ExceptionManager.LogErrorException(ex);
+                            RemoveLobbyClient(user);
+                        }
+                        catch (TimeoutException ex)
+                        {
+                            ExceptionManager.LogErrorException(ex);
+                            RemoveLobbyClient(user);
+                        }
+                        catch (Exception ex)
+                        {
+                            ExceptionManager.LogFatalException(ex);
                             RemoveLobbyClient(user);
                         }
                     }
@@ -299,16 +449,53 @@ namespace BevososService.Implementations
     {
         public bool IsLobbyOpen(int lobbyId)
         {
-            return ActiveLobbiesDict.ContainsKey(lobbyId);
+            try
+            {
+                return ActiveLobbiesDict.ContainsKey(lobbyId);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return false;
+            }
         }
 
         public bool IsLobbyFull(int lobbyId)
         {
-            if (ActiveLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
+            try
             {
-                return lobby.Count >= 4;
+                if (ActiveLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
+                {
+                    return lobby.Count >= 4;
+                }
+
+                return false;
             }
-            return false;
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return false;
+            }
         }
 
     }

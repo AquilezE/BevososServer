@@ -15,7 +15,7 @@ namespace BevososService.Implementations
 
             foreach (Card item in GlobalDeck.Deck.Select(item => item.Value))
             {
-                Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage);
+                Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage + " Parte: " + item.BodyPartIndex);
             }
         }
 

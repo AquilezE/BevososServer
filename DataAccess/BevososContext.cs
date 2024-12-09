@@ -19,6 +19,7 @@ namespace DataAccess
         // Constructor por defecto
         public BevososContext() : base("name=BevososContext")
         {
+            this.Database.CommandTimeout = 5
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

@@ -4,10 +4,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using DataAccess.DAO;
+using DataAccess.Exceptions;
+using DataAccess.Utils;
 
 namespace BevososService.Implementations
 {
@@ -17,15 +20,28 @@ namespace BevososService.Implementations
     {
         private static int GetTurnTimeRemainingInSeconds(Game gameInstance)
         {
-            if (gameInstance.TurnTimer == null)
+            try
             {
+                if (gameInstance.TurnTimer == null)
+                {
+                    return 0;
+                }
+
+                TimeSpan elapsedTime = DateTime.UtcNow - gameInstance.TurnStartTime;
+                var turnDurationInSeconds = 60;
+                int timeRemaining = turnDurationInSeconds - (int)elapsedTime.TotalSeconds;
+                return timeRemaining > 0 ? timeRemaining : 0;
+            } 
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
                 return 0;
             }
-
-            TimeSpan elapsedTime = DateTime.UtcNow - gameInstance.TurnStartTime;
-            var turnDurationInSeconds = 60;
-            int timeRemaining = turnDurationInSeconds - (int)elapsedTime.TotalSeconds;
-            return timeRemaining > 0 ? timeRemaining : 0;
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return 0;
+            }
 
         }
         private static void BroadcastGameState(int matchCode)
@@ -43,8 +59,19 @@ namespace BevososService.Implementations
                     {
                         playerCallback.ReceiveGameState(gameStateDto);
                     }
+                    catch (CommunicationException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
                     catch (Exception ex)
                     {
+                        ExceptionManager.LogFatalException(ex);
                         RemoveGameClient(playerCallback);
                     }
                 }
@@ -217,8 +244,19 @@ namespace BevososService.Implementations
                         Console.WriteLine($"Game {gameId} ended");
                         playerCallback.OnNotifyGameEnded(gameId, gameStats);
                     }
+                    catch (CommunicationException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
                     catch (Exception ex)
                     {
+                        ExceptionManager.LogErrorException(ex);
                         RemoveGameClient(playerCallback);
                     }
                 }
@@ -244,8 +282,19 @@ namespace BevososService.Implementations
                         Console.WriteLine($"Game {gameId} ended");
                         playerCallback.OnNotifyGameEndedWithoutUsers(gameId);
                     }
+                    catch(CommunicationException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveGameClient(playerCallback);
+                    }
                     catch (Exception ex)
                     {
+                        ExceptionManager.LogFatalException(ex);
                         RemoveGameClient(playerCallback);
                     }
                 }
@@ -325,75 +374,98 @@ namespace BevososService.Implementations
                 return;
             }
 
-            switch (card.Type)
+            try
             {
-                case Card.CardType.Baby:
-                    PlayBaby(userId, matchCode, card);
+                switch (card.Type)
+                {
+                    case Card.CardType.Baby:
+                        PlayBaby(userId, matchCode, card);
 
-                    break;
-                case Card.CardType.Head:
-                    if (gameInstance.Players[userId].Monsters.Count < 3)
-                    {
-                        PlayHead(userId, matchCode, card);
-
-                    }
-                    else
-                    {
-                        NotifyPlayer(matchCode, userId, "TooManyMonsters");
-                    }
-                    break;
-                case Card.CardType.WildProvoke:
-
-                    //PlayProvoke(userId, matchCode, card);
-                    break;
-
-                case Card.CardType.BodyPart:
-                    if (gameInstance.Players[userId].Monsters.Count == 0)
-                    {
-                        NotifyPlayer(matchCode, userId, "NoMonsters");
-                    }
-                    else
-                    {
-                        await Task.Run(() =>
+                        break;
+                    case Card.CardType.Head:
+                        if (gameInstance.Players[userId].Monsters.Count < 3)
                         {
-                            GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
-                            callback?.RequestBodyPartSelection(userId, matchCode, (CardDTO)card);
-                        });
-                    }
-                    break;
-                case Card.CardType.Tool:
-                    if (gameInstance.Players[userId].Monsters.Count == 0)
-                    {
-                        NotifyPlayer(matchCode, userId, "NoMonsters");
-                    }
-                    else
-                    {
-                        await Task.Run(() =>
-                        {
-                            GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
-                            callback?.RequestToolSelection(userId, matchCode, (CardDTO)card);
-                        });
+                            PlayHead(userId, matchCode, card);
 
-                    }
-                    break;
-                case Card.CardType.Hat:
-                    if (gameInstance.Players[userId].Monsters.Count == 0)
-                    {
-                        NotifyPlayer(matchCode, userId, "NoMonsters");
-                    }
-                    else
-                    {
-                        await Task.Run(() =>
+                        }
+                        else
                         {
-                            GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
-                            callback?.RequestHatSelection(userId, matchCode, (CardDTO)card);
-                        });
-                    }
-                    break;
-                default:
-                    NotifyPlayer(matchCode, userId, "UnknownCardType");
-                    break;
+                            NotifyPlayer(matchCode, userId, "TooManyMonsters");
+                        }
+
+                        break;
+                    case Card.CardType.WildProvoke:
+
+                        //PlayProvoke(userId, matchCode, card);
+                        break;
+
+                    case Card.CardType.BodyPart:
+                        if (gameInstance.Players[userId].Monsters.Count == 0)
+                        {
+                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                        }
+                        else
+                        {
+                            await Task.Run(() =>
+                            {
+                                GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                                callback?.RequestBodyPartSelection(userId, matchCode, (CardDTO)card);
+                            });
+                        }
+
+                        break;
+                    case Card.CardType.Tool:
+                        if (gameInstance.Players[userId].Monsters.Count == 0)
+                        {
+                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                        }
+                        else
+                        {
+                            await Task.Run(() =>
+                            {
+                                GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                                callback?.RequestToolSelection(userId, matchCode, (CardDTO)card);
+                            });
+
+                        }
+
+                        break;
+                    case Card.CardType.Hat:
+                        if (gameInstance.Players[userId].Monsters.Count == 0)
+                        {
+                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                        }
+                        else
+                        {
+                            await Task.Run(() =>
+                            {
+                                GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
+                                callback?.RequestHatSelection(userId, matchCode, (CardDTO)card);
+                            });
+                        }
+
+                        break;
+                    default:
+                        NotifyPlayer(matchCode, userId, "UnknownCardType");
+                        break;
+                }
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
+            }
+
         }
         private static void PlayBaby(int userId, int matchCode, Card card)
         {
@@ -808,10 +880,20 @@ namespace BevososService.Implementations
                 {
                     gameManagerCallback.OnNotifyEndGamePhase();
                 }
-                catch (Exception e)
+                catch (CommunicationException ex)
                 {
-                    Console.WriteLine($"Error notifying player: {e.Message}");
-                    
+                    ExceptionManager.LogErrorException(ex);
+                    RemoveGameClient(gameManagerCallback);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    RemoveGameClient(gameManagerCallback);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error notifying player: {ex.Message}");
+                    ExceptionManager.LogFatalException(ex);   
                     RemoveGameClient(gameManagerCallback);
                 }
             }
@@ -833,19 +915,56 @@ namespace BevososService.Implementations
 
         private static void NotifyPlayer(int matchCode, int userId, string messageKey)
         {
-            if (GamePlayerCallBack.TryGetValue(matchCode, out ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks))
+            try
             {
-                if (playerCallbacks.TryGetValue(userId, out IGameManagerCallback callback))
+                if (GamePlayerCallBack.TryGetValue(matchCode,
+                        out ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks))
                 {
-                    callback.NotifyActionInvalid(messageKey);
+                    if (playerCallbacks.TryGetValue(userId, out IGameManagerCallback callback))
+                    {
+                        callback.NotifyActionInvalid(messageKey);
+                    }
                 }
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
             }
         }
         private static void CallOnProvokeForAllPlayers(int matchCode, int babyPileIndex)
         {
-            foreach (int player in GamePlayerCallBack[matchCode].Keys)
+            try
             {
-                GamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
+                foreach (int player in GamePlayerCallBack[matchCode].Keys)
+                {
+                    GamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
+                }
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
             }
         }
 
@@ -871,40 +990,43 @@ namespace BevososService.Implementations
                 int monsters = PlayerStatistics[matchCode][player.User.UserId].MonstersCreated;
                 int babies = PlayerStatistics[matchCode][player.User.UserId].AnihilatedBabies;
 
-                if (player.User.UserId > 0)
+                try
                 {
-                    if (new StatsDAO().UserStatsExists(player.User.UserId))
+                    if (player.User.UserId > 0)
                     {
-                        DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(player.User.UserId);
+                        if (new StatsDAO().UserStatsExists(player.User.UserId))
+                        {
+                            DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(player.User.UserId);
 
-                        userStats.Wins += player.User.UserId == winnerId ? 1 : 0;
-                        userStats.MonstersCreated += monsters;
-                        userStats.AnnihilatedBabies += babies;
+                            userStats.Wins += player.User.UserId == winnerId ? 1 : 0;
+                            userStats.MonstersCreated += monsters;
+                            userStats.AnnihilatedBabies += babies;
 
-                        new StatsDAO().UpdateUserStats(player.User.UserId, userStats);
+                            new StatsDAO().UpdateUserStats(player.User.UserId, userStats);
+                        }
+                        else
+                        {
+                            var newUserStats = new DataAccess.Models.Stats
+                            {
+                                UserId = player.User.UserId,
+                                Wins = player.User.UserId == winnerId ? 1 : 0,
+                                MonstersCreated = monsters,
+                                AnnihilatedBabies = babies
+                            };
+
+                            new StatsDAO().AddNewUserStats(player.User.UserId, newUserStats);
+                        }
                     }
                     else
                     {
-                        var newUserStats = new DataAccess.Models.Stats
-                        {
-                            UserId = player.User.UserId,
-                            Wins = player.User.UserId == winnerId ? 1 : 0,
-                            MonstersCreated = monsters,
-                            AnnihilatedBabies = babies
-                        };
-
-                        new StatsDAO().AddNewUserStats(player.User.UserId, newUserStats);
+                        Console.WriteLine("Guest user, cannot save Stats");
                     }
                 }
-                else
+                catch (DataBaseException ex)
                 {
-                    Console.WriteLine("Guest user, cannot save Stats");
+                    ExceptionManager.LogErrorException(ex);
                 }
-                
             }
-
-
         }
     }
-
 }

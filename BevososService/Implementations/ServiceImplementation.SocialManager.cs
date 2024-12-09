@@ -27,8 +27,6 @@ namespace BevososService.Implementations
         {
             try
             {
-
-
                 var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
                 var clientChannel = (ICommunicationObject)callback;
 
@@ -88,6 +86,21 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return false;
+            }
         }
 
 
@@ -106,18 +119,34 @@ namespace BevososService.Implementations
                     friendRequest.ProfilePictureId = sender.ProfilePictureId;
                     friendRequest.FriendRequestId = idFriendRequest;
 
-                    InvokeCallback(requesteeId, cb => cb.OnNewFriendRequest(friendRequest));
+                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+
+                    callback.OnNewFriendRequest(friendRequest);
                     return true;
                 }
                 catch (DataBaseException ex)
                 {
                     throw CreateAndLogFaultException(ex);
                 }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    Disconnect(userId);
+                }
             }
             return 0 != idFriendRequest;
         }
 
-        //TODO: FIX THIS UGLY AHH CODE ASAP 
         public bool AcceptFriendRequest(int userId, int friendId, int requestId)
         {
             try
@@ -154,22 +183,23 @@ namespace BevososService.Implementations
                                 IsConnected = ConnectedClients.ContainsKey(userId)
                             };
 
+                            var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
 
-                            InvokeCallback(userId, (callback, dto) => callback.OnNewFriend(dto), friendDto);
+                            callback.OnNewFriend(friendDto);
+                           
 
                             // Invoke callback for the friend
                             try
                             {
 
-                                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback friendCallback))
                                 {
                                     try
                                     {
-                                        callback.OnNewFriend(friendDtoForFriend);
+                                        friendCallback.OnNewFriend(friendDtoForFriend);
                                     }
-                                    catch (CommunicationException ex){
-                                    
-
+                                    catch (CommunicationException ex)
+                                    {
                                         ExceptionManager.LogErrorException(ex);
                                         Disconnect(userId);
                                     }
@@ -195,10 +225,6 @@ namespace BevososService.Implementations
                             } catch (Exception ex) {
                                 Console.WriteLine("ErrG");
                             }
-
-                            
-                            //InvokeCallback(friendId, (callback, dto) => callback.OnNewFriend(dto), friendDtoForFriend);
-
                             return true;
                         }
                     }
@@ -220,6 +246,21 @@ namespace BevososService.Implementations
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return false;
             }
         }
 
@@ -243,6 +284,21 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return null;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return null;
+            }
         }
 
         public bool DeleteFriend(int userId, int friendId)
@@ -257,7 +313,8 @@ namespace BevososService.Implementations
                     bool result = friendshipDao.RemoveFriendship(userId, friendId);
                     if (result)
                     {
-                        InvokeCallback(friendId, (callback, id) => callback.OnFriendshipDeleted(id), userId);
+                        var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                        callback.OnFriendshipDeleted(userId);
                         return true;
                     }
                 }
@@ -265,6 +322,21 @@ namespace BevososService.Implementations
             catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
             }
             return false;
         }
@@ -294,6 +366,21 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return null;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return null;
+            }
 
         }
 
@@ -310,7 +397,9 @@ namespace BevososService.Implementations
                         bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId);
                         if (resultBlockCreated)
                         {
-                            InvokeCallback(friendId, (callback, id) => callback.OnFriendshipDeleted(id), userId);
+
+                            var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                            callback.OnFriendshipDeleted(userId);
                             return true;
                         }
                     }
@@ -321,6 +410,23 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
+            }
+
+            return false;
         }
 
         public bool UnblockUser(int userId, int blockedId)
@@ -337,6 +443,22 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
+            }
+            return false;
         }
 
         public bool BlockUser(int userId, int blockeeId)
@@ -357,6 +479,22 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
+            }
+            return false;
         }
 
         public List<BlockedDTO> GetBlockedUsers(int userId)
@@ -379,84 +517,79 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
-
-        }
-
-
-
-
-        private void InvokeCallback<T>(int userId, Action<ISocialManagerCallback, T> callbackAction, T parameter)
-        {
-            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+            catch (CommunicationException ex)
             {
-                try
-                {
-                    callbackAction(callback, parameter);
-                }
-                catch (CommunicationException ex)
-                {
-                    ExceptionManager.LogErrorException(ex);
-                    Disconnect(userId);
-                }
-                catch (TimeoutException ex)
-                {
-                    ExceptionManager.LogErrorException(ex);
-                }
-                catch (Exception ex)
-                {
-                    ExceptionManager.LogFatalException(ex);
-                }
+                ExceptionManager.LogErrorException(ex);
+                return null;
             }
-        }
-
-        private void InvokeCallback(int userId, Action<ISocialManagerCallback> callbackAction)
-        {
-            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+            catch (TimeoutException ex)
             {
-                try
-                {
-                    callbackAction(callback);
-                }
-                catch (CommunicationException ex)
-                {
-                    ExceptionManager.LogErrorException(ex);
-                    Disconnect(userId);
-                }
-                catch (TimeoutException ex)
-                {
-                    ExceptionManager.LogErrorException(ex);
-                    Disconnect(userId);
-                }
-                catch (Exception ex)
-                {
-                    ExceptionManager.LogFatalException(ex);
-                    Disconnect(userId);
-                }
+                ExceptionManager.LogErrorException(ex);
+                return null;
             }
-        }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                return null;
+            }
 
+        }
 
         private void NotifyFriendsUserOnline(int userId)
         {
-            List<int> friends = GetFriendIds(userId);
-            foreach (int friendId in friends)
+            try
             {
-                InvokeCallback(friendId, (callback, id) => callback.OnFriendOnline(id), userId);
+                List<int> friends = GetFriendIds(userId);
+                foreach (int friendId in friends)
+                {
+                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                    callback.OnFriendOnline(userId);
+                }
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
             }
         }
 
         private void NotifyFriendsUserOffline(int userId)
         {
-            List<int> friends = GetFriendIds(userId);
-            foreach (int friendId in friends)
+            try
             {
-
-
-
-                InvokeCallback(friendId, (callback, id) => callback.OnFriendOffline(id), userId);
+                List<int> friends = GetFriendIds(userId);
+                foreach (int friendId in friends)
+                {
+                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                    callback.OnFriendOffline(userId);
+                }
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
             }
         }
-
 
         public void InviteFriendToLobby(string inviterName, int userId, int lobbyId)
         {
@@ -474,13 +607,30 @@ namespace BevososService.Implementations
                     }
                     else
                     {
-                        InvokeCallback(userId, cb => cb.NotifyGameInvited(inviterName, lobbyId));
+                        var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                        callback.NotifyGameInvited(inviterName, lobbyId);
                     }
                 }
                 catch (DataBaseException ex)
                 {
                     throw CreateAndLogFaultException(ex);
                 }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    Disconnect(userId);
+                }
+
             }
         }
 
@@ -493,28 +643,78 @@ namespace BevososService.Implementations
 
         private void RemoveClient(ISocialManagerCallback callback)
         {
-            KeyValuePair<int, ISocialManagerCallback> user = ConnectedClients.FirstOrDefault(pair => pair.Value == callback);
-            if (user.Key != 0)
+            try
             {
-                Disconnect(user.Key);
+                KeyValuePair<int, ISocialManagerCallback> user =
+                    ConnectedClients.FirstOrDefault(pair => pair.Value == callback);
+                if (user.Key != 0)
+                {
+                    Disconnect(user.Key);
+                }
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
             }
         }
 
         public List<UserDTO> GetUsersFoundByName(int userId, string name)
         {
-            var users = new List<UserDTO>();
-            List<User> usersData = new UserDAO().GetUsersByName(name, userId);
-            foreach (User user in usersData)
+            try
             {
-                users.Add((UserDTO)user);
+                var users = new List<UserDTO>();
+                List<User> usersData = new UserDAO().GetUsersByName(name, userId);
+                foreach (User user in usersData)
+                {
+                    users.Add((UserDTO)user);
+                }
+
+                return users;
             }
-            return users;
+            catch(DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+                return null;
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
+                return null;
+            }
         }
 
         private List<int> GetFriendIds(int userId)
         {
-            List<FriendDTO> friends = GetFriends(userId);
-            return friends.Select(f => f.FriendId).ToList();
+            try
+            {
+                List<FriendDTO> friends = GetFriends(userId);
+                return friends.Select(f => f.FriendId).ToList();
+            }
+            catch (DataBaseException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            return null;
         }
 
     }

@@ -133,18 +133,6 @@ namespace BevososService
         [OperationContract(IsOneWay = true)]
         void RequestHatSelection(int userId, int matchCode, CardDTO card);
 
-
-
-        /// <summary>
-        /// Requests the selection of a baby pile action during the game.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
-        /// <param name="matchCode">The unique code representing the match.</param>
-        [OperationContract(IsOneWay = true)]
-        void RequestProvokeSelection(int userId, int matchCode);
-
-
-
         /// <summary>
         /// Notifies the player that an action they attempted to perform is invalid.
         /// </summary>
