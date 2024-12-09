@@ -24,6 +24,12 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
+                    var userExists = context.Users.Any(u => u.UserId == userId);
+                    if (!userExists)
+                    {
+                        return false;
+                    }
+
                     if (userStats != null)
                     {
                         context.Stats.Add(userStats);
@@ -51,7 +57,12 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                using (var context = new BevososContext())
+                if (userStats == null)
+                {
+                    return false;
+                }
+
+                using (BevososContext context = new BevososContext())
                 {
                     Stats stats = context.Stats.FirstOrDefault(u => u.UserId == userId);
                     if (stats != null)

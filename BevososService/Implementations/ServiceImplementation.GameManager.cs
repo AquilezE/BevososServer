@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -315,13 +314,13 @@ namespace BevososService.Implementations
 
             if (gameInstance.CurrentPlayerId != userId)
             {
-                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                NotifyPlayer(matchCode, userId, "lblNotYourTurn");
                 return;
             }
 
             if (gameInstance.PlayerActionsRemaining[userId] <= 0)
             {
-                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
+                NotifyPlayer(matchCode, userId, "lblNoActionsRemaining");
                 return;
             }
 
@@ -345,7 +344,7 @@ namespace BevososService.Implementations
             }
             else
             {
-                NotifyPlayer(matchCode, userId, "DeckEmpty");
+                NotifyPlayer(matchCode, userId, "lblDeckEmpty");
             }
 
         }
@@ -358,19 +357,19 @@ namespace BevososService.Implementations
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
-                NotifyPlayer(matchCode, userId, "InvalidCard");
+                NotifyPlayer(matchCode, userId, "lblInvalidCard");
                 return;
             }
 
             if (gameInstance.CurrentPlayerId != userId)
             {
-                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                NotifyPlayer(matchCode, userId, "lblNotYourTurn");
                 return;
             }
 
             if (gameInstance.PlayerActionsRemaining[userId] <= 0)
             {
-                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
+                NotifyPlayer(matchCode, userId, "lblNoActionsRemaining");
                 return;
             }
 
@@ -390,19 +389,14 @@ namespace BevososService.Implementations
                         }
                         else
                         {
-                            NotifyPlayer(matchCode, userId, "TooManyMonsters");
+                            NotifyPlayer(matchCode, userId, "lblTooManyMonsters");
                         }
 
                         break;
-                    case Card.CardType.WildProvoke:
-
-                        //PlayProvoke(userId, matchCode, card);
-                        break;
-
                     case Card.CardType.BodyPart:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
                         {
-                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                            NotifyPlayer(matchCode, userId, "lblNoMonsters");
                         }
                         else
                         {
@@ -417,7 +411,7 @@ namespace BevososService.Implementations
                     case Card.CardType.Tool:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
                         {
-                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                            NotifyPlayer(matchCode, userId, "lblNoMonsters");
                         }
                         else
                         {
@@ -433,7 +427,7 @@ namespace BevososService.Implementations
                     case Card.CardType.Hat:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
                         {
-                            NotifyPlayer(matchCode, userId, "NoMonsters");
+                            NotifyPlayer(matchCode, userId, "lblNoMonsters");
                         }
                         else
                         {
@@ -446,7 +440,7 @@ namespace BevososService.Implementations
 
                         break;
                     default:
-                        NotifyPlayer(matchCode, userId, "UnknownCardType");
+                        NotifyPlayer(matchCode, userId, "lblUnknownCardType");
                         break;
                 }
             }
@@ -555,13 +549,13 @@ namespace BevososService.Implementations
 
             if (gameInstance.CurrentPlayerId != userId)
             {
-                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                NotifyPlayer(matchCode, userId, "lblNotYourTurn");
                 return;
             }
 
             if (gameInstance.Players[userId].ActionsPerTurn > gameInstance.PlayerActionsRemaining[userId])
             {
-                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
+                NotifyPlayer(matchCode, userId, "lblNoActionsRemaining");
                 return;
             }
 
@@ -577,7 +571,7 @@ namespace BevososService.Implementations
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
-                NotifyPlayer(matchCode, userId, "InvalidCard");
+                NotifyPlayer(matchCode, userId, "lblInvalidCard");
                 return;
             }
 
@@ -606,12 +600,12 @@ namespace BevososService.Implementations
                 }
                 else
                 {
-                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
+                    NotifyPlayer(matchCode, userId, "lblPartAlreadyExists");
                 }
             }
             else
             {
-                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
+                NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
             }
 
 
@@ -625,7 +619,7 @@ namespace BevososService.Implementations
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
-                NotifyPlayer(matchCode, userId, "InvalidCard");
+                NotifyPlayer(matchCode, userId, "lblInvalidCard");
 
                 return;
             }
@@ -653,13 +647,13 @@ namespace BevososService.Implementations
                 }
                 else
                 {
-                    NotifyPlayer(matchCode, userId, "PartAlreadyExists");
+                    NotifyPlayer(matchCode, userId, "lblPartAlreadyExists");
                 }
 
             }
             else
             {
-                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
+                NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
             }
 
         }
@@ -672,7 +666,7 @@ namespace BevososService.Implementations
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
-                NotifyPlayer(matchCode, userId, "InvalidCard");
+                NotifyPlayer(matchCode, userId, "lblInvalidCard");
                 return;
             }
 
@@ -700,13 +694,13 @@ namespace BevososService.Implementations
                 }
                 else
                 {
-                    NotifyPlayer(matchCode, userId, "You have no head");
+                    NotifyPlayer(matchCode, userId, "lblYouHaveNoHead");
                 }
 
             }
             else
             {
-                NotifyPlayer(matchCode, userId, "InvalidMonsterSelection");
+                NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
             }
         }
         public void ExecuteProvoke(int userId, int matchCode, int babyPileIndex)
@@ -722,19 +716,19 @@ namespace BevososService.Implementations
 
             if (gameInstance.BabyPiles[babyPileIndex].Count == 0)
             {
-                NotifyPlayer(matchCode, userId, "EmptyBabyPile");
+                NotifyPlayer(matchCode, userId, "lblEmptyBabyPile");
                 return;
             }
 
             if(gameInstance.CurrentPlayerId != userId)
             {
-                NotifyPlayer(matchCode, userId, "NotYourTurn");
+                NotifyPlayer(matchCode, userId, "lblNotYourTurn");
                 return;
             }
 
             if (gameInstance.PlayerActionsRemaining[userId] < gameInstance.Players[userId].ActionsPerTurn)
             {
-                NotifyPlayer(matchCode, userId, "NoActionsRemaining");
+                NotifyPlayer(matchCode, userId, "lblNoActionsRemaining");
                 return;
             }
 

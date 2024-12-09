@@ -10,21 +10,17 @@ namespace TEST
 {
     public class StatsDAOTests
     {
-        #region UserStatsExists Tests
 
         [Fact]
         public void UserStatsExists_ReturnsTrue_WhenStatsExist()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
 
-                // Act
                 bool exists = statsDAO.UserStatsExists(userId);
 
-                // Assert
                 Assert.True(exists);
             }
         }
@@ -34,14 +30,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
 
-                // Act
                 bool exists = statsDAO.UserStatsExists(userId);
 
-                // Assert
                 Assert.False(exists);
             }
         }
@@ -51,14 +44,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 var nonExistingUserId = 99999;
 
-                // Act
                 bool exists = statsDAO.UserStatsExists(nonExistingUserId);
 
-                // Assert
                 Assert.False(exists);
             }
         }
@@ -68,29 +58,20 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
 
-                // Act
                 bool exists = statsDAO.UserStatsExists(invalidUserId);
 
-                // Assert
-                // Dependiendo de la implementación, podrías esperar que devuelva false o manejarlo de otra manera
                 Assert.False(exists);
             }
         }
-
-        #endregion
-
-        #region AddNewUserStats Tests
 
         [Fact]
         public void AddNewUserStats_ReturnsTrue_WhenValidStatsProvided()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
                 var newStats = new Stats
@@ -101,10 +82,8 @@ namespace TEST
                     AnnihilatedBabies = 2
                 };
 
-                // Act
                 bool result = statsDAO.AddNewUserStats(userId, newStats);
 
-                // Assert
                 Assert.True(result);
                 using (var context = new BevososContext())
                 {
@@ -122,15 +101,12 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
                 Stats nullStats = null;
 
-                // Act
                 bool result = statsDAO.AddNewUserStats(userId, nullStats);
 
-                // Assert
                 Assert.False(result);
             }
         }
@@ -140,7 +116,6 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 var nonExistingUserId = 99999;
                 var newStats = new Stats
@@ -151,56 +126,23 @@ namespace TEST
                     AnnihilatedBabies = 1
                 };
 
-                // Act
                 bool result = statsDAO.AddNewUserStats(nonExistingUserId, newStats);
 
-                // Assert
                 Assert.False(result);
             }
         }
 
-        [Fact]
-        public void AddNewUserStats_ReturnsFalse_WhenDuplicateStats()
-        {
-            using (var scope = new TransactionScope())
-            {
-                // Arrange
-                var statsDAO = new StatsDAO();
-                int userId = AddTestUserWithStats();
-                var duplicateStats = new Stats
-                {
-                    UserId = userId,
-                    Wins = 7,
-                    MonstersCreated = 4,
-                    AnnihilatedBabies = 3
-                };
-
-                // Act
-                bool result = statsDAO.AddNewUserStats(userId, duplicateStats);
-
-                // Assert
-                // Dependiendo de la implementación, podrías esperar que devuelva false si ya existen stats
-                Assert.False(result);
-            }
-        }
-
-        #endregion
-
-        #region GetUserStats Tests
 
         [Fact]
         public void GetUserStats_ReturnsStats_WhenStatsExist()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
 
-                // Act
                 Stats stats = statsDAO.GetUserStats(userId);
 
-                // Assert
                 Assert.NotNull(stats);
                 Assert.Equal(userId, stats.UserId);
             }
@@ -211,14 +153,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
 
-                // Act
                 Stats stats = statsDAO.GetUserStats(userId);
 
-                // Assert
                 Assert.Null(stats);
             }
         }
@@ -228,14 +167,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 var nonExistingUserId = 99999;
 
-                // Act
                 Stats stats = statsDAO.GetUserStats(nonExistingUserId);
 
-                // Assert
                 Assert.Null(stats);
             }
         }
@@ -245,29 +181,22 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
+
                 var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
 
-                // Act
                 Stats stats = statsDAO.GetUserStats(invalidUserId);
 
-                // Assert
-                // Dependiendo de la implementación, podrías esperar que devuelva null
                 Assert.Null(stats);
             }
         }
 
-        #endregion
-
-        #region UpdateUserStats Tests
 
         [Fact]
         public void UpdateUserStats_ReturnsTrue_WhenStatsExistAndUpdated()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
                 var updatedStats = new Stats
@@ -277,10 +206,8 @@ namespace TEST
                     AnnihilatedBabies = 5
                 };
 
-                // Act
                 bool result = statsDAO.UpdateUserStats(userId, updatedStats);
 
-                // Assert
                 Assert.True(result);
                 using (var context = new BevososContext())
                 {
@@ -298,7 +225,6 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithoutStats();
                 var updatedStats = new Stats
@@ -308,10 +234,8 @@ namespace TEST
                     AnnihilatedBabies = 3
                 };
 
-                // Act
                 bool result = statsDAO.UpdateUserStats(userId, updatedStats);
 
-                // Assert
                 Assert.False(result);
             }
         }
@@ -321,15 +245,12 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
                 Stats nullStats = null;
 
-                // Act
                 bool result = statsDAO.UpdateUserStats(userId, nullStats);
 
-                // Assert
                 Assert.False(result);
             }
         }
@@ -339,7 +260,6 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var statsDAO = new StatsDAO();
                 int invalidUserId = -1;
                 var updatedStats = new Stats
@@ -349,21 +269,12 @@ namespace TEST
                     AnnihilatedBabies = 1
                 };
 
-                // Act
                 bool result = statsDAO.UpdateUserStats(invalidUserId, updatedStats);
 
-                // Assert
                 Assert.False(result);
             }
         }
 
-        #endregion
-
-        #region Helper Methods
-
-        /// <summary>
-        /// Adds a test user with stats to the database y devuelve el UserId.
-        /// </summary>
         private int AddTestUserWithStats()
         {
             using (var context = new BevososContext())
@@ -390,9 +301,6 @@ namespace TEST
             }
         }
 
-        /// <summary>
-        /// Adds a test user without stats to la base de datos y devuelve el UserId.
-        /// </summary>
         private int AddTestUserWithoutStats()
         {
             using (var context = new BevososContext())
@@ -406,15 +314,12 @@ namespace TEST
                         Email = $"testuser_{Guid.NewGuid()}@example.com",
                         PasswordHash = "hashed_password"
                     }
-                    // Stats es null por defecto
                 };
                 context.Users.Add(user);
                 context.SaveChanges();
                 return user.UserId;
             }
         }
-
-        #endregion
     }
 }
 

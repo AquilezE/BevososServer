@@ -277,22 +277,8 @@ namespace BevososService
                 cardId++;
             }
 
-            // 4. 2 WILD PROVOKE
-            for (var i = 0; i < 2; i++)
-            {
-                Deck.Add(cardId, new Card
-                {
-                    CardId = cardId,
-                    Type = Card.CardType.WildProvoke,
-                    Element = Card.CardElement.Any, 
-                    BodyPartIndex = -1, 
-                    Damage = 0
-                });
-                cardId++;
-            }
-
             // Verificación final del número de cartas
-            if (Deck.Count != 88)
+            if (Deck.Count != 86)
             {
                 Console.WriteLine($"Inicialización del mazo falló. Se esperaban 88 cartas, pero se encontraron {Deck.Count}.");
             }

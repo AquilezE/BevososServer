@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.ServiceModel;
 using BevososService.GameModels;
+using System.Collections.Generic;
 
 namespace BevososService.Implementations
 {
@@ -16,6 +17,20 @@ namespace BevososService.Implementations
             foreach (Card item in GlobalDeck.Deck.Select(item => item.Value))
             {
                 Console.WriteLine("Card " + item.CardId + " Element " + item.Element + " Type: " + item.Type + " Damage: " + item.Damage + " Parte: " + item.BodyPartIndex);
+            }
+        }
+
+        private static void Shuffle<T>(IList<T> list)
+        {
+            var rng = new Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
             }
         }
 

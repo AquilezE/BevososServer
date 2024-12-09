@@ -10,7 +10,6 @@
             Baby,
             BodyPart,
             Head,
-            WildProvoke,
             Hat,
             Tool
         }
