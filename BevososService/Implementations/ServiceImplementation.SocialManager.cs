@@ -119,9 +119,11 @@ namespace BevososService.Implementations
                     friendRequest.ProfilePictureId = sender.ProfilePictureId;
                     friendRequest.FriendRequestId = idFriendRequest;
 
-                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-
-                    callback.OnNewFriendRequest(friendRequest);
+                    if (ConnectedClients.TryGetValue(requesteeId, out ISocialManagerCallback callback))
+                    {
+                        callback.OnNewFriendRequest(friendRequest);
+                    }
+                    
                     return true;
                 }
                 catch (DataBaseException ex)
@@ -183,12 +185,11 @@ namespace BevososService.Implementations
                                 IsConnected = ConnectedClients.ContainsKey(userId)
                             };
 
-                            var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
+                            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+                            {
+                                callback.OnNewFriend(friendDto);
+                            }
 
-                            callback.OnNewFriend(friendDto);
-                           
-
-                            // Invoke callback for the friend
                             try
                             {
 
@@ -397,9 +398,10 @@ namespace BevososService.Implementations
                         bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId);
                         if (resultBlockCreated)
                         {
-
-                            var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                            callback.OnFriendshipDeleted(userId);
+                            if(ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                            {
+                                callback.OnFriendshipDeleted(userId);
+                            }
                             return true;
                         }
                     }
@@ -542,8 +544,10 @@ namespace BevososService.Implementations
                 List<int> friends = GetFriendIds(userId);
                 foreach (int friendId in friends)
                 {
-                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                    callback.OnFriendOnline(userId);
+                    if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                    {
+                        callback.OnFriendOnline(userId);
+                    }
                 }
             }
             catch (CommunicationException ex)
@@ -570,8 +574,10 @@ namespace BevososService.Implementations
                 List<int> friends = GetFriendIds(userId);
                 foreach (int friendId in friends)
                 {
-                    var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                    callback.OnFriendOffline(userId);
+                    if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                    {
+                        callback.OnFriendOffline(userId);
+                    }
                 }
             }
             catch (CommunicationException ex)
@@ -607,8 +613,10 @@ namespace BevososService.Implementations
                     }
                     else
                     {
-                        var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                        callback.NotifyGameInvited(inviterName, lobbyId);
+                        if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+                        {
+                            callback.NotifyGameInvited(inviterName, lobbyId);
+                        }
                     }
                 }
                 catch (DataBaseException ex)
