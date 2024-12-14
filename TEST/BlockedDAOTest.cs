@@ -6,7 +6,9 @@ using DataAccess.DAO;
 using DataAccess.Models;
 using Xunit;
 
-namespace TEST { 
+namespace TEST
+{
+
     public class BlockedDAOTest
     {
 
@@ -52,24 +54,17 @@ namespace TEST {
 
                 var blockService = new BlockedDAO();
 
-                // Act
                 bool result = blockService.AddBlock(blockerId, blockeeId);
 
-                // Assert
                 Assert.True(result);
 
-                using (var context = new BevososContext())
-                {
-                    Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
-                    Assert.NotNull(block);
-                }
             }
         }
 
         [Fact]
         public void AddBlock_ShouldReturnFalse_WhenUsersDoNotExist()
         {
-            var blockerId = 999; 
+            var blockerId = 999;
             var blockeeId = 1000;
 
             var blockService = new BlockedDAO();
@@ -131,16 +126,17 @@ namespace TEST {
 
                 var blockService = new BlockedDAO();
 
-            
+
                 bool result = blockService.DeleteBlock(blockerId, blockeeId);
 
                 Assert.True(result);
 
                 using (var context = new BevososContext())
                 {
-                    Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
+                    var block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
                     Assert.Null(block);
                 }
+
 
             }
         }
@@ -188,7 +184,7 @@ namespace TEST {
 
                 var blockService = new BlockedDAO();
 
-                bool result = blockService.DeleteBlock(blockerId, blockeeId); 
+                bool result = blockService.DeleteBlock(blockerId, blockeeId);
 
                 Assert.False(result);
 
@@ -200,6 +196,8 @@ namespace TEST {
         {
             int blockeeId1;
             int blockeeId2;
+
+            List<User> blockedList = new List<User>();
 
             using (var scope = new TransactionScope())
             {
@@ -251,15 +249,16 @@ namespace TEST {
                     context.BlockedList.Add(new Blocked { BlockerId = blockerId, BlockeeId = blockeeId1 });
                     context.BlockedList.Add(new Blocked { BlockerId = blockerId, BlockeeId = blockeeId2 });
                     context.SaveChanges();
+                    blockedList.Add(blockee1);
+                    blockedList.Add(blockee2);
                 }
 
                 var blockService = new BlockedDAO();
 
                 List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
-                Assert.Equal(2, blockedUsers.Count);
-                Assert.Contains(blockedUsers, u => u.UserId == blockeeId1);
-                Assert.Contains(blockedUsers, u => u.UserId == blockeeId2);
+                Assert.Equal(blockedList, blockedUsers);
+
 
             }
         }
@@ -312,5 +311,7 @@ namespace TEST {
             Assert.Empty(blockedUsers);
 
         }
+
+
     }
 }

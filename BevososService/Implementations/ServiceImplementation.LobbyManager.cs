@@ -173,26 +173,20 @@ namespace BevososService.Implementations
         {
             try
             {
-                if (LobbyLeaders.TryGetValue(lobbyId, out var leaderId) && leaderId == kickerId)
+                if (!LobbyLeaders.TryGetValue(lobbyId, out var leaderId) || leaderId != kickerId) return;
+                if (!ActiveLobbiesDict.TryGetValue(lobbyId,
+                        out ConcurrentDictionary<int, ILobbyManagerCallback> lobby)) return;
+                if (!lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback)) return;
+                try
                 {
-                    if (ActiveLobbiesDict.TryGetValue(lobbyId,
-                            out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
-                    {
-                        if (lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback))
-                        {
-                            try
-                            {
-                                targetCallback.OnKicked(lobbyId, reason);
+                    targetCallback.OnKicked(lobbyId, reason);
 
-                                RemoveClientFromLobby(lobbyId, targetUserId);
-                                LobbyUsersDetails.TryRemove(targetUserId, out _);
-                            }
-                            catch (Exception)
-                            {
-                                RemoveLobbyClient(targetCallback);
-                            }
-                        }
-                    }
+                    RemoveClientFromLobby(lobbyId, targetUserId);
+                    LobbyUsersDetails.TryRemove(targetUserId, out _);
+                }
+                catch (Exception)
+                {
+                    RemoveLobbyClient(targetCallback);
                 }
             }
             catch (CommunicationException ex)

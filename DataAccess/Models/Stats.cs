@@ -15,5 +15,20 @@ namespace DataAccess.Models
         public int MonstersCreated { get; set; }
 
         public int AnnihilatedBabies { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+            
+            Stats other = (Stats)obj;
+
+            return UserId == other.UserId &&
+                Wins == other.Wins && 
+                MonstersCreated == other.MonstersCreated && 
+                AnnihilatedBabies == other.AnnihilatedBabies;
+        }
     }
 }
