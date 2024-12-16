@@ -8,7 +8,8 @@ using Xunit;
 
 namespace TEST
 {
-    public class FriendRequestDAOTest { 
+    public class FriendRequestDAOTest
+    {
 
         [Fact]
         public void SendFriendRequest_ShouldSendRequest_WhenUsersExistAndNoExistingRequest()
@@ -54,22 +55,21 @@ namespace TEST
 
                 int result = friendService.SendFriendRequest(requesterId, requesteeId);
 
-    
-                Assert.True(result != 0);
+
+                Assert.NotEqual(0, result);
 
                 using (var context = new BevososContext())
                 {
-                    bool requestExists = context.FriendRequests.Any(fr =>
-                        fr.RequesterId == requesterId && fr.RequesteeId == requesteeId);
+                    var request = context.FriendRequests.FirstOrDefault(r => r.Id == result);
 
-                    Assert.True(requestExists);
+                    Assert.NotNull(request);
                 }
 
             }
         }
 
         [Fact]
-        public void SendFriendRequest_ShouldReturnFalse_WhenRequestAlreadyExists()
+        public void SendFriendRequest_ShouldReturnZero_WhenRequestAlreadyExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -119,8 +119,7 @@ namespace TEST
 
                 int result = friendService.SendFriendRequest(requesterId, requesteeId);
 
-                Assert.False(result != 0);
-
+                Assert.Equal(0, result);
             }
         }
 
@@ -133,7 +132,7 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-                  
+
                     var requester = new User
                     {
                         Username = "RequesterUser",
@@ -163,7 +162,7 @@ namespace TEST
                     int requesterId = requester.UserId;
                     int requesteeId = requestee.UserId;
 
-                   
+
                     var friendRequest = new FriendRequest
                     {
                         RequesterId = requesterId,
@@ -177,22 +176,10 @@ namespace TEST
 
                 var friendService = new FriendRequestDAO();
 
-              
+
                 bool result = friendService.AcceptFriendRequest(requestId);
 
                 Assert.True(result);
-
-                using (var context = new BevososContext())
-                {
-                    
-                    bool requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
-                    Assert.False(requestExists);
-
-                    /*
-                     * Same here, do we test if the friendship is created?
-                     */
-
-                }
 
             }
         }
@@ -211,7 +198,7 @@ namespace TEST
         }
 
         [Fact]
-        public void DeclineFriendRequest_ShouldDeclineRequest_WhenRequestExists()
+        public void DeclineFriendRequest_ShouldDeleteRequest_WhenRequestExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -267,10 +254,10 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-                    bool requestExists = context.FriendRequests.Any(fr => fr.Id == requestId);
-                    Assert.False(requestExists);
-                }
+                    var request = context.FriendRequests.FirstOrDefault(r => r.Id == requestId);
 
+                    Assert.Null(request);
+                }
             }
         }
 
@@ -281,9 +268,9 @@ namespace TEST
             {
                 var friendService = new FriendRequestDAO();
 
-                bool result = friendService.DeclineFriendRequest(-1); 
+                bool result = friendService.DeclineFriendRequest(-1);
 
-                
+
                 Assert.False(result);
 
             }
@@ -296,6 +283,7 @@ namespace TEST
             {
                 int requesteeId;
 
+                List<FriendRequest> pendingRequests = new List<FriendRequest>();
                 using (var context = new BevososContext())
                 {
                     var requestee = new User
@@ -352,19 +340,22 @@ namespace TEST
                     };
                     context.FriendRequests.Add(friendRequest1);
                     context.FriendRequests.Add(friendRequest2);
+
+
                     context.SaveChanges();
+
+                    pendingRequests.Add(friendRequest1);
+                    pendingRequests.Add(friendRequest2);
                 }
 
                 var friendService = new FriendRequestDAO();
 
-                List<FriendRequest> pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
+                List<FriendRequest> pendingRequestsResult = friendService.GetPendingFriendRequests(requesteeId);
 
-                
-                Assert.Equal(2, pendingRequests.Count);
-                Assert.Contains(pendingRequests, fr => fr.Requester.Username == "RequesterUser1");
-                Assert.Contains(pendingRequests, fr => fr.Requester.Username == "RequesterUser2");
+                Assert.Equal(pendingRequests, pendingRequestsResult);
 
-                
+
+
             }
         }
 

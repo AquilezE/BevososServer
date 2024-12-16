@@ -16,6 +16,19 @@ namespace DataAccess.Models
         [Required]
         public string PasswordHash { get; set; }
 
-        public virtual User User { get; set; } 
+        public virtual User User { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if(obj == null)
+            {
+                return false;
+            }
+
+            Account other = (Account)obj;
+
+            return Email == other.Email && PasswordHash == other.PasswordHash;
+
+        }
     }
 }

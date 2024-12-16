@@ -12,7 +12,17 @@ namespace DataAccess.Models
         public int RequesterId { get; set; }
         public int RequesteeId { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
 
+            FriendRequest other = (FriendRequest)obj;
+
+            return RequesterId == other.RequesterId && RequesteeId == other.RequesteeId;
+        }
     }
 
 }

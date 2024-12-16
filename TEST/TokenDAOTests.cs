@@ -11,99 +11,99 @@ namespace TEST
     public class TokenDAOTests
     {
 
-
-        [Theory]
-        [InlineData("userWithToken@example.com", true)]
-        [InlineData("userWithoutToken@example.com", false)]
-        public void HasTokenTest(string email, bool expectedResult)
+        [Fact]
+        public void HasToken_ReturnsTrue_WhenUserHasToken()
         {
             using (var scope = new TransactionScope())
             {
                 var dao = new TokenDAO();
 
-                // Arrange
-                if (expectedResult)
+                using (var context = new BevososContext())
                 {
-                    // Create a token for the email
-                    using (var context = new BevososContext())
+                    var token = new Token
                     {
-                        var token = new Token
-                        {
-                            Email = email,
-                            TokenValue = "123456",
-                            ExpiryDate = DateTime.Now.AddMinutes(15)
-                        };
-                        context.Tokens.Add(token);
-                        context.SaveChanges();
-                    }
+                        Email = "userWithToken@example.com",
+                        TokenValue = "123456",
+                        ExpiryDate = DateTime.Now.AddMinutes(15)
+                    };
+                    context.Tokens.Add(token);
+                    context.SaveChanges();
                 }
 
-                // Act
-                bool result = dao.HasToken(email);
+                bool result = dao.HasToken("userWithToken@example.com");
 
-                // Assert
-                Assert.Equal(expectedResult, result);
+                Assert.True(result);
             }
         }
 
-
-
-
-        [Theory]
-        [InlineData("existingUser@example.com", true)]
-        [InlineData("nonExistingUser@example.com", true)]
-        public void AsignTokenTest(string email, bool expectedResult)
+        [Fact]
+        public void HasToken_ReturnsFalse_WhenUserDoesNotHaveToken()
         {
             using (var scope = new TransactionScope())
             {
                 var dao = new TokenDAO();
 
-                // Act
-                int affectedRows = dao.AsignToken(email);
+                bool result = dao.HasToken("userWithoutToken@example.com");
 
-                // Assert
-                Assert.Equal(expectedResult, affectedRows > 0);
+                Assert.False(result);
+            }
+        }
 
-                // Verify the token was created
+        [Fact]
+        public void AsignToken_AsignsAndReturnsOne()
+        {
+            using (var scope = new TransactionScope())
+            {
+                var dao = new TokenDAO();
+
+                int result = dao.AsignToken("userWithToken@example.com");
+
+                Assert.Equal(1, result);
+
+
                 using (var context = new BevososContext())
                 {
-                    bool tokenExists = context.Tokens.Any(t => t.Email == email);
+                    bool tokenExists = context.Tokens.Any(t => t.Email == "userWithToken@example.com");
                     Assert.True(tokenExists);
                 }
             }
         }
 
 
-        [Theory]
-        [InlineData("userWithToken@example.com", "432543")]
-        [InlineData("userWithoutToken@example.com", "-1")]
-        public void GetTokenTest(string email, string expectedToken)
+        [Fact]
+        public void GetToken_ReturnsToken_WhenUserHasToken()
         {
             using (var scope = new TransactionScope())
             {
                 var dao = new TokenDAO();
 
-                // Arrange
-                if (expectedToken != null)
+                using (var context = new BevososContext())
                 {
-                    using (var context = new BevososContext())
+                    var token = new Token
                     {
-                        var token = new Token
-                        {
-                            Email = email,
-                            TokenValue = expectedToken,
-                            ExpiryDate = DateTime.Now.AddMinutes(15)
-                        };
-                        context.Tokens.Add(token);
-                        context.SaveChanges();
-                    }
+                        Email = "userWithToken@example.com",
+                        TokenValue = "123456",
+                        ExpiryDate = DateTime.Now.AddMinutes(15)
+                    };
+                    context.Tokens.Add(token);
+                    context.SaveChanges();
                 }
 
-                // Act
-                string tokenResult = dao.GetToken(email);
+                string tokenResult = dao.GetToken("userWithToken@example.com");
 
-                // Assert
-                Assert.Equal(expectedToken, tokenResult);
+                Assert.Equal("123456", tokenResult);
+            }
+        }
+
+        [Fact]
+        public void GetToken_ReturnsMinusOne_WhenUserHasNoToken()
+        {
+            using (var scope = new TransactionScope())
+            {
+                var dao = new TokenDAO();
+                string tokenResult = dao.GetToken("userWithoutToken@example.com");
+
+                Assert.Equal("-1", tokenResult);
             }
         }
 
@@ -121,27 +121,32 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-                    if (tokenValue == "validToken")
+                    switch (tokenValue)
                     {
-                        var token = new Token
+                        case "validToken":
                         {
-                            Email = email,
-                            TokenValue = tokenValue,
-                            ExpiryDate = DateTime.Now.AddMinutes(15)
-                        };
-                        context.Tokens.Add(token);
-                    }
-                    else if (tokenValue == "expiredToken")
-                    {
-                        var token = new Token
+                            var token = new Token
+                            {
+                                Email = email,
+                                TokenValue = tokenValue,
+                                ExpiryDate = DateTime.Now.AddMinutes(15)
+                            };
+                            context.Tokens.Add(token);
+                            break;
+                        }
+                        case "expiredToken":
                         {
-                            Email = email,
-                            TokenValue = tokenValue,
-                            ExpiryDate = DateTime.Now.AddMinutes(-20)
-                        };
-                        context.Tokens.Add(token);
+                            var token = new Token
+                            {
+                                Email = email,
+                                TokenValue = tokenValue,
+                                ExpiryDate = DateTime.Now.AddMinutes(-20)
+                            };
+                            context.Tokens.Add(token);
+                            break;
+                        }
                     }
-                    // No token added for "invalidToken"
+
                     context.SaveChanges();
                 }
 
@@ -163,7 +168,6 @@ namespace TEST
             {
                 var dao = new TokenDAO();
 
-                // Arrange
                 using (var context = new BevososContext())
                 {
                     if (tokenValue == "validToken" && email == "user@example.com")
@@ -180,11 +184,9 @@ namespace TEST
                 }
 
                 bool wasDeleted = dao.DeleteToken(tokenValue, email);
-
                 Assert.Equal(expectedResult, wasDeleted);
 
             }
-
         }
     }
 }

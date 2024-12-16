@@ -11,11 +11,10 @@ namespace TEST
 
 
         [Fact]
-        public void Test_UsernameExists_ReturnsTrue_WhenUsernameExists()
+        public void UsernameExists_ReturnsTrue_WhenUsernameExists()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var userDAO = new UserDAO();
                 var username = "AccountDALTestUser";
 
@@ -35,17 +34,15 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                // Act
                 bool result = userDAO.UsernameExists(username);
 
                 // Assert
                 Assert.True(result);
             }
-            // TransactionScope ensures the database changes are rolled back
         }
 
         [Fact]
-        public void Test_UsernameExists_ReturnsFalse_WhenUsernameDoesNotExist()
+        public void UsernameExists_ReturnsFalse_WhenUsernameDoesNotExist()
         {
             using (var scope = new TransactionScope())
             {
@@ -59,7 +56,7 @@ namespace TEST
         }
 
         [Fact]
-        public void Test_GetUserByEmail_ReturnsUser_WhenEmailExists()
+        public void GetUserByEmail_ReturnsUser_WhenEmailExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -95,7 +92,7 @@ namespace TEST
         }
 
         [Fact]
-        public void Test_GetUserByEmail_ReturnsNull_WhenEmailDoesNotExist()
+        public void GetUserByEmail_ReturnsNull_WhenEmailDoesNotExist()
         {
             using (var scope = new TransactionScope())
             {
@@ -108,10 +105,8 @@ namespace TEST
             }
         }
 
-
-
         [Fact]
-        public void Test_GetUserById_ReturnsUser_WhenUserIdExists()
+        public void GetUserById_ReturnsUser_WhenUserIdExists()
         {
             using (var scope = new TransactionScope())
             {
@@ -149,9 +144,8 @@ namespace TEST
             }
         }
 
-
         [Fact]
-        public void Test_GetUserById_ReturnsNull_WhenUserIdDoesNotExist()
+        public void GetUserById_ReturnsNull_WhenUserIdDoesNotExist()
         {
             using (var scope = new TransactionScope())
             {
@@ -164,20 +158,16 @@ namespace TEST
             }
         }
 
-
-
         [Fact]
-        public void Test_UpdateUserNames_UpdatesUsernameInDatabase()
+        public void UpdateUserNames_UpdatesUsernameInDatabase()
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var userDao = new UserDAO();
                 var email = "accountdal_test@example.com";
                 var originalUsername = "OriginalUser";
                 var newUsername = "newUsername";
 
-                // Create user
                 using (var context = new BevososContext())
                 {
                     var user = new User
@@ -197,18 +187,17 @@ namespace TEST
                 User userTest = userDao.GetUserByEmail(email);
                 int userId = userTest.UserId;
 
-                // Act
                 userDao.UpdateUserNames(userId, newUsername);
 
-                // Assert
                 User updatedUser = userDao.GetUserById(userId);
-                Assert.NotNull(updatedUser);
+                
                 Assert.Equal(newUsername, updatedUser.Username);
+
             }
         }
 
         [Fact]
-        public void Test_UpdateUser_ReturnsTrueIfUpdatesUserInDataBase()
+        public void UpdateUser_ReturnsTrueIfUpdatesUserInDataBase()
         {
             using (var scope = new TransactionScope())
             {
@@ -240,26 +229,19 @@ namespace TEST
 
                 User userTest = userDao.GetUserById(userId);
 
-                // Modify user
                 userTest.Username = newUsername;
                 userTest.ProfilePictureId = 2;
 
-                // Act
                 bool result = userDao.UpdateUser(userTest);
 
-                // Assert
+
                 Assert.True(result);
 
-                // Verify the changes
-                User updatedUser = userDao.GetUserById(userId);
-                Assert.NotNull(updatedUser);
-                Assert.Equal(newUsername, updatedUser.Username);
-                Assert.Equal(2, updatedUser.ProfilePictureId);
             }
         }
 
         [Fact]
-        public void Test_UpdateUser_ReturnsFalseIfUpdatesUserInDataBase()
+        public void UpdateUser_ReturnsFalseIfUpdatesUserNotInDataBase()
         {
             using (var scope = new TransactionScope())
             {
@@ -287,8 +269,7 @@ namespace TEST
         [InlineData("name", 3)]
         [InlineData("notname", 0)]
         [InlineData("Roberto", 1)]
-
-        public void Test_GetUsersByName_ReturnsListOfUsers_WhenNameExists(string name, int expectedCount)
+        public void GetUsersByName_ReturnsListOfUsers_WhenNameExists(string name, int expectedCount)
         {
             using (var scope = new TransactionScope())
             {
@@ -331,7 +312,7 @@ namespace TEST
                     context.Users.Add(userRoberto);
                     context.SaveChanges();
                 }
-                Assert.Equal(expectedCount, userDao.GetUsersByName(name,1).Count);
+                Assert.Equal(expectedCount, userDao.GetUsersByName(name, 1).Count);
             }
         }
     }

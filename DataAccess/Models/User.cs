@@ -19,5 +19,17 @@ namespace DataAccess.Models
         public virtual Account Account { get; set; }
 
         public virtual Stats Stats { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            User other = (User)obj;
+
+            return Username == other.Username && ProfilePictureId == other.ProfilePictureId;
+        }
     }
 }

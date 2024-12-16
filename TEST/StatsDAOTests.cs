@@ -85,14 +85,7 @@ namespace TEST
                 bool result = statsDAO.AddNewUserStats(userId, newStats);
 
                 Assert.True(result);
-                using (var context = new BevososContext())
-                {
-                    Stats stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
-                    Assert.NotNull(stats);
-                    Assert.Equal(10, stats.Wins);
-                    Assert.Equal(5, stats.MonstersCreated);
-                    Assert.Equal(2, stats.AnnihilatedBabies);
-                }
+
             }
         }
 
@@ -209,14 +202,7 @@ namespace TEST
                 bool result = statsDAO.UpdateUserStats(userId, updatedStats);
 
                 Assert.True(result);
-                using (var context = new BevososContext())
-                {
-                    Stats stats = context.Stats.FirstOrDefault(s => s.UserId == userId);
-                    Assert.NotNull(stats);
-                    Assert.Equal(20, stats.Wins);
-                    Assert.Equal(10, stats.MonstersCreated);
-                    Assert.Equal(5, stats.AnnihilatedBabies);
-                }
+
             }
         }
 

@@ -550,6 +550,10 @@ namespace BevososService.Implementations
                     }
                 }
             }
+            catch(DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
@@ -583,17 +587,14 @@ namespace BevososService.Implementations
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
-                Disconnect(userId);
             }
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
-                Disconnect(userId);
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
-                Disconnect(userId);
             }
         }
 
@@ -721,8 +722,9 @@ namespace BevososService.Implementations
             catch (DataBaseException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                throw CreateAndLogFaultException(ex);
             }
-            return null;
+
         }
 
     }

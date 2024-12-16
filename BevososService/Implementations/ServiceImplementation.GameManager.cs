@@ -164,7 +164,7 @@ namespace BevososService.Implementations
 
 
                 // Draw initial hand (e.g., 5 cards per player)
-                for (var i = 0; i < 35; i++)
+                for (var i = 0; i < 20; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
                     {
