@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="AccountDAOTests.cs" />
     <Compile Include="BlockedDAOTest.cs" />
+    <Compile Include="CardTest.cs" />
     <Compile Include="FriendRequestDAOTest.cs" />
     <Compile Include="FriendshipsDAOTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -108,6 +109,10 @@
     <Analyzer Include="..\packages\xunit.analyzers.1.16.0\analyzers\dotnet\cs\xunit.analyzers.fixes.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BevososService\BevososService.csproj">
+      <Project>{876D8FD7-0552-4C44-9470-4807A584CD35}</Project>
+      <Name>BevososService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DataAccess\DataAccess.csproj">
       <Project>{799859ae-4c4d-4eaf-9d87-2a71e2df638a}</Project>
       <Name>DataAccess</Name>
