@@ -13,24 +13,19 @@ using DataAccess.Utils;
 
 namespace BevososService.Implementations
 {
-
-    //NEEDS STEROID CALLBACK EXCEPTION HANDLING
     public partial class ServiceImplementation : IGameManager
     {
         private static int GetTurnTimeRemainingInSeconds(Game gameInstance)
         {
             try
             {
-                if (gameInstance.TurnTimer == null)
-                {
-                    return 0;
-                }
+                if (gameInstance.TurnTimer == null) return 0;
 
                 TimeSpan elapsedTime = DateTime.UtcNow - gameInstance.TurnStartTime;
-                var turnDurationInSeconds = 60;
+                int turnDurationInSeconds = 60;
                 int timeRemaining = turnDurationInSeconds - (int)elapsedTime.TotalSeconds;
                 return timeRemaining > 0 ? timeRemaining : 0;
-            } 
+            }
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
@@ -41,8 +36,8 @@ namespace BevososService.Implementations
                 ExceptionManager.LogErrorException(ex);
                 return 0;
             }
-
         }
+
         private static void BroadcastGameState(int matchCode)
         {
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
@@ -50,7 +45,8 @@ namespace BevososService.Implementations
                 var gameStateDto = (GameStateDTO)gameInstance;
 
                 gameStateDto.TurnTimeRemainingInSeconds = GetTurnTimeRemainingInSeconds(gameInstance);
-                gameStateDto.PlayerStatistics = PlayerStatistics[matchCode].ToDictionary(kvp => kvp.Key, kvp => (GameStatsDTO)kvp.Value);
+                gameStateDto.PlayerStatistics = PlayerStatistics[matchCode]
+                    .ToDictionary(kvp => kvp.Key, kvp => (GameStatsDTO)kvp.Value);
 
                 foreach (IGameManagerCallback playerCallback in GamePlayerCallBack[matchCode].Values)
                 {
@@ -76,6 +72,7 @@ namespace BevososService.Implementations
                 }
             }
         }
+
         private static void GameChannel_Closed(object sender, EventArgs e)
         {
             var callback = (IGameManagerCallback)sender;
@@ -89,7 +86,8 @@ namespace BevososService.Implementations
                 int gameId = gameEntry.Key;
                 ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks = gameEntry.Value;
 
-                KeyValuePair<int, IGameManagerCallback> playerToRemove = playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
+                KeyValuePair<int, IGameManagerCallback> playerToRemove =
+                    playerCallbacks.FirstOrDefault(kvp => kvp.Value == callback);
 
                 if (!playerToRemove.Equals(default(KeyValuePair<int, IGameManagerCallback>)))
                 {
@@ -101,9 +99,7 @@ namespace BevososService.Implementations
                     if (ActiveGames.TryGetValue(gameId, out Game gameInstance))
                     {
                         if (gameInstance.Players.TryGetValue(userId, out PlayerState playerState))
-                        {
                             playerState.Disconnected = true;
-                        }
 
                         int connectedPlayers = gameInstance.Players.Values.Count(player => !player.Disconnected);
 
@@ -112,45 +108,41 @@ namespace BevososService.Implementations
                             Console.WriteLine($"All players disconnected from game {gameId}");
                             EndGameWithNoUsers(gameId);
                         }
-
                     }
 
                     return;
                 }
             }
+
             Console.WriteLine("Callback not found in any active game.");
         }
 
- 
 
         //GameId-> GameInstance
         private static readonly ConcurrentDictionary<int, Game> ActiveGames = new ConcurrentDictionary<int, Game>();
+
         //GameId -> (UserId -> Callback)
-        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>> GamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
+        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>
+            GamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
+
         //GameId ->(UserId -> Stats)
-        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>> PlayerStatistics = new ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>>();
+        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>> PlayerStatistics =
+            new ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>>();
 
         private void InitializeGame(Game gameInstance, ConcurrentDictionary<int, ILobbyManagerCallback> lobby)
         {
-            // Initialize the deck
-
             List<Card> allCards = GlobalDeck.Deck.Values.ToList();
-
-            // Shuffle the deck
             Shuffle(allCards);
 
-            // Assign the shuffled deck to the game instance
             gameInstance.Deck = new ConcurrentStack<Card>(allCards);
 
-            // Initialize BabyPiles
             gameInstance.BabyPiles = new Dictionary<int, Stack<Card>>
             {
                 { 0, new Stack<Card>() }, // Baby of Land
                 { 1, new Stack<Card>() }, // Baby of Water
-                { 2, new Stack<Card>() }  // Baby of Air
+                { 2, new Stack<Card>() } // Baby of Air
             };
 
-            // 3. Initialize Players
             foreach (int userId in lobby.Select(x => x.Key))
             {
                 UserDTO userDto = LobbyUsersDetails[userId];
@@ -162,14 +154,10 @@ namespace BevososService.Implementations
                     Monsters = new List<Monster>()
                 };
 
-
-                // Draw initial hand (e.g., 5 cards per player)
-                for (var i = 0; i < 20; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
-                    {
                         playerState.Hand.Add(card);
-                    }
                 }
 
 
@@ -178,14 +166,11 @@ namespace BevososService.Implementations
 
                 PlayerStatistics.TryAdd(gameInstance.GameId, new ConcurrentDictionary<int, Stats>());
                 PlayerStatistics[gameInstance.GameId].TryAdd(userId, new Stats());
-
             }
 
-            // 4. Set the Current Player
             gameInstance.CurrentPlayerId = gameInstance.Players.Keys.First();
             gameInstance.TurnStartTime = DateTime.UtcNow;
             StartTurnTimer(gameInstance.GameId, gameInstance.CurrentPlayerId);
-
         }
 
         public void JoinGame(int gameId, UserDTO userDto)
@@ -199,19 +184,16 @@ namespace BevososService.Implementations
             if (ActiveGames.TryGetValue(gameId, out Game gameInstance))
             {
                 if (!GamePlayerCallBack.ContainsKey(gameId))
-                {
                     GamePlayerCallBack.TryAdd(gameId, new ConcurrentDictionary<int, IGameManagerCallback>());
-                }
 
                 GamePlayerCallBack[gameId].TryAdd(userDto.UserId, callback);
 
                 BroadcastGameState(gameId);
             }
             else
-            {
                 throw new FaultException("Game does not exist.");
-            }
         }
+
         private static void EndGame(int gameId)
         {
             SaveStatsForAllPLayers(gameId);
@@ -281,7 +263,7 @@ namespace BevososService.Implementations
                         Console.WriteLine($"Game {gameId} ended");
                         playerCallback.OnNotifyGameEndedWithoutUsers(gameId);
                     }
-                    catch(CommunicationException ex)
+                    catch (CommunicationException ex)
                     {
                         ExceptionManager.LogErrorException(ex);
                         RemoveGameClient(playerCallback);
@@ -307,10 +289,7 @@ namespace BevososService.Implementations
 
         public void DrawCard(int matchCode, int userId)
         {
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (gameInstance.CurrentPlayerId != userId)
             {
@@ -326,34 +305,22 @@ namespace BevososService.Implementations
 
             if (gameInstance.Deck.TryPop(out Card card))
             {
-
                 gameInstance.Players[userId].Hand.Add(card);
                 gameInstance.PlayerActionsRemaining[userId]--;
 
                 BroadcastGameState(matchCode);
 
-                if (gameInstance.PlayerActionsRemaining[userId] == 0)
-                {
-                    AdvanceTurn(matchCode);
-                }
+                if (gameInstance.PlayerActionsRemaining[userId] == 0) AdvanceTurn(matchCode);
 
-                if (gameInstance.Deck.Count == 0 && !gameInstance.IsEndGamePhase)
-                {
-                    InitiateEndGamePhase(matchCode);
-                }
+                if (gameInstance.Deck.Count == 0 && !gameInstance.IsEndGamePhase) InitiateEndGamePhase(matchCode);
             }
             else
-            {
                 NotifyPlayer(matchCode, userId, "lblDeckEmpty");
-            }
-
         }
+
         public async void PlayCard(int userId, int matchCode, int cardId)
         {
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
@@ -383,21 +350,14 @@ namespace BevososService.Implementations
                         break;
                     case Card.CardType.Head:
                         if (gameInstance.Players[userId].Monsters.Count < 3)
-                        {
                             PlayHead(userId, matchCode, card);
-
-                        }
                         else
-                        {
                             NotifyPlayer(matchCode, userId, "lblTooManyMonsters");
-                        }
 
                         break;
                     case Card.CardType.BodyPart:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
-                        {
                             NotifyPlayer(matchCode, userId, "lblNoMonsters");
-                        }
                         else
                         {
                             await Task.Run(() =>
@@ -410,9 +370,7 @@ namespace BevososService.Implementations
                         break;
                     case Card.CardType.Tool:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
-                        {
                             NotifyPlayer(matchCode, userId, "lblNoMonsters");
-                        }
                         else
                         {
                             await Task.Run(() =>
@@ -420,15 +378,12 @@ namespace BevososService.Implementations
                                 GamePlayerCallBack[matchCode].TryGetValue(userId, out IGameManagerCallback callback);
                                 callback?.RequestToolSelection(userId, matchCode, (CardDTO)card);
                             });
-
                         }
 
                         break;
                     case Card.CardType.Hat:
                         if (gameInstance.Players[userId].Monsters.Count == 0)
-                        {
                             NotifyPlayer(matchCode, userId, "lblNoMonsters");
-                        }
                         else
                         {
                             await Task.Run(() =>
@@ -459,8 +414,8 @@ namespace BevososService.Implementations
                 ExceptionManager.LogErrorException(ex);
                 RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
             }
-
         }
+
         private static void PlayBaby(int userId, int matchCode, Card card)
         {
             switch (card.Element)
@@ -483,26 +438,21 @@ namespace BevososService.Implementations
             gameInstance.PlayerActionsRemaining[userId]--;
 
 
-
-
             if (gameInstance.PlayerActionsRemaining[userId] == 0)
             {
-                if (gameInstance.IsEndGamePhase)
-                {
-                    gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                }
+                if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
 
                 AdvanceTurn(matchCode);
                 return;
             }
-            BroadcastGameState(matchCode);
 
+            BroadcastGameState(matchCode);
         }
+
         private static void PlayHead(int userId, int matchCode, Card card)
         {
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
-
                 var monster = new Monster
                 {
                     Head = card,
@@ -518,28 +468,26 @@ namespace BevososService.Implementations
                 gameInstance.Players[userId].Hand.Remove(card);
 
                 PlayerStatistics[gameInstance.GameId][userId].MonstersCreated++;
-                
+
                 gameInstance.PlayerActionsRemaining[userId]--;
 
 
                 if (gameInstance.PlayerActionsRemaining[userId] == 0)
                 {
-                    if (gameInstance.IsEndGamePhase)
-                    {
-                        gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                    }
+                    if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
 
                     AdvanceTurn(matchCode);
                     return;
                 }
+
                 BroadcastGameState(matchCode);
-
             }
-
         }
+
         public void PlayProvoke(int userId, int matchCode, int babyPileIndex)
         {
-            Console.WriteLine($"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
+            Console.WriteLine(
+                $"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
 
             if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
@@ -560,14 +508,11 @@ namespace BevososService.Implementations
             }
 
             ExecuteProvoke(userId, matchCode, babyPileIndex);
-
         }
+
         public void ExecuteBodyPartPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
         {
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
@@ -577,8 +522,6 @@ namespace BevososService.Implementations
 
             if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
             {
-
-
                 if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
                 {
                     gameInstance.Players[userId].Hand.Remove(card);
@@ -587,35 +530,24 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
-                        if (gameInstance.IsEndGamePhase)
-                        {
-                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                        }
+                        if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
 
                         AdvanceTurn(matchCode);
                         return;
                     }
-                    BroadcastGameState(matchCode);
 
+                    BroadcastGameState(matchCode);
                 }
                 else
-                {
                     NotifyPlayer(matchCode, userId, "lblPartAlreadyExists");
-                }
             }
             else
-            {
                 NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
-            }
-
-
         }
+
         public void ExecuteToolPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
         {
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
@@ -626,10 +558,8 @@ namespace BevososService.Implementations
 
             if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
             {
-
                 if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
                 {
-
                     gameInstance.Players[gameInstance.CurrentPlayerId].ActionsPerTurn++;
                     gameInstance.PlayerActionsRemaining[userId]--;
                     gameInstance.Players[userId].Hand.Remove(card);
@@ -638,31 +568,20 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
-                        if (gameInstance.IsEndGamePhase)
-                        {
-                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                        }
+                        if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
                         AdvanceTurn(matchCode);
                     }
                 }
                 else
-                {
                     NotifyPlayer(matchCode, userId, "lblPartAlreadyExists");
-                }
-
             }
             else
-            {
                 NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
-            }
-
         }
+
         public void ExecuteHatPlacement(int userId, int matchCode, int cardId, int monsterSelectedIndex)
         {
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (!GlobalDeck.Deck.TryGetValue(cardId, out Card card))
             {
@@ -672,7 +591,6 @@ namespace BevososService.Implementations
 
             if (monsterSelectedIndex >= 0 && monsterSelectedIndex < gameInstance.Players[userId].Monsters.Count)
             {
-
                 if (gameInstance.Players[userId].Monsters[monsterSelectedIndex].AddPart(card))
                 {
                     gameInstance.Players[userId].Hand.Remove(card);
@@ -684,35 +602,25 @@ namespace BevososService.Implementations
 
                     if (gameInstance.PlayerActionsRemaining[userId] == 0)
                     {
-                        if (gameInstance.IsEndGamePhase)
-                        {
-                            gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                        }
+                        if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
 
                         AdvanceTurn(matchCode);
                     }
                 }
                 else
-                {
                     NotifyPlayer(matchCode, userId, "lblYouHaveNoHead");
-                }
-
             }
             else
-            {
                 NotifyPlayer(matchCode, userId, "lblInvalidMonsterSelection");
-            }
         }
+
         public void ExecuteProvoke(int userId, int matchCode, int babyPileIndex)
         {
+            Console.WriteLine(
+                $"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
 
-            Console.WriteLine($"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
 
-
-            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
-            {
-                return;
-            }
+            if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
             if (gameInstance.BabyPiles[babyPileIndex].Count == 0)
             {
@@ -720,7 +628,7 @@ namespace BevososService.Implementations
                 return;
             }
 
-            if(gameInstance.CurrentPlayerId != userId)
+            if (gameInstance.CurrentPlayerId != userId)
             {
                 NotifyPlayer(matchCode, userId, "lblNotYourTurn");
                 return;
@@ -740,20 +648,17 @@ namespace BevososService.Implementations
 
             Card.CardElement element = gameInstance.BabyPiles[babyPileIndex].Peek().Element;
 
-            var monsterArmyMaxStrenght = 0;
-            var playerWithMaxStrenght = 0;
+            int monsterArmyMaxStrenght = 0;
+            int playerWithMaxStrenght = 0;
 
-            var pileStrenght = 0;
+            int pileStrenght = 0;
             int numberBabies = gameInstance.BabyPiles[babyPileIndex].Count;
 
-            foreach (Card baby in gameInstance.BabyPiles[babyPileIndex])
-            {
-                pileStrenght += baby.Damage;
-            }
+            foreach (Card baby in gameInstance.BabyPiles[babyPileIndex]) pileStrenght += baby.Damage;
 
             foreach (PlayerState player in gameInstance.Players.Values)
             {
-                var monsterArmyStrenght = 0;
+                int monsterArmyStrenght = 0;
                 var monstersToRemove = new List<Monster>();
 
                 foreach (Monster monster in player.Monsters)
@@ -771,11 +676,14 @@ namespace BevososService.Implementations
                     {
                         gameInstance.Players[player.User.UserId].ActionsPerTurn--;
 
-                        if (gameInstance.PlayerActionsRemaining[player.User.UserId] > gameInstance.Players[player.User.UserId].ActionsPerTurn)
+                        if (gameInstance.PlayerActionsRemaining[player.User.UserId] >
+                            gameInstance.Players[player.User.UserId].ActionsPerTurn)
                         {
-                            gameInstance.PlayerActionsRemaining[player.User.UserId] = gameInstance.Players[player.User.UserId].ActionsPerTurn;
+                            gameInstance.PlayerActionsRemaining[player.User.UserId] =
+                                gameInstance.Players[player.User.UserId].ActionsPerTurn;
                         }
                     }
+
                     player.Monsters.Remove(monster);
                 }
 
@@ -787,9 +695,7 @@ namespace BevososService.Implementations
             }
 
             if (pileStrenght > monsterArmyMaxStrenght)
-            {
                 gameInstance.BabyPiles[babyPileIndex].Clear();
-            }
             else if (pileStrenght <= monsterArmyMaxStrenght)
             {
                 PlayerStatistics[gameInstance.GameId][playerWithMaxStrenght].AnihilatedBabies += numberBabies;
@@ -800,15 +706,12 @@ namespace BevososService.Implementations
 
             if (gameInstance.PlayerActionsRemaining[userId] == 0)
             {
-                if (gameInstance.IsEndGamePhase)
-                {
-                    gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                }
+                if (gameInstance.IsEndGamePhase) gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
 
                 AdvanceTurn(matchCode);
             }
-
         }
+
         private static void AdvanceTurn(int matchCode)
         {
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
@@ -828,15 +731,13 @@ namespace BevososService.Implementations
 
                 BroadcastGameState(matchCode);
 
-                if (gameInstance.IsEndGamePhase)
-                {
-                    CheckEndGame(matchCode);
-                }
+                if (gameInstance.IsEndGamePhase) CheckEndGame(matchCode);
             }
         }
+
         private static void StartTurnTimer(int matchCode, int userId)
         {
-            var turnDurationInSeconds = 60;
+            int turnDurationInSeconds = 60;
 
             if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance)) return;
 
@@ -848,15 +749,15 @@ namespace BevososService.Implementations
 
 
             gameInstance.TurnTimer = new Timer(
-                callback: state =>
+                state =>
                 {
                     //advance turn
                     Console.WriteLine($"Player {userId}'s turn has timed out.");
                     AdvanceTurn(matchCode);
                 },
-                state: null,
-                dueTime: turnDurationInSeconds * 1000,
-                period: Timeout.Infinite
+                null,
+                turnDurationInSeconds * 1000,
+                Timeout.Infinite
             );
         }
 
@@ -887,7 +788,7 @@ namespace BevososService.Implementations
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error notifying player: {ex.Message}");
-                    ExceptionManager.LogFatalException(ex);   
+                    ExceptionManager.LogFatalException(ex);
                     RemoveGameClient(gameManagerCallback);
                 }
             }
@@ -895,15 +796,12 @@ namespace BevososService.Implementations
 
         public static void CheckEndGame(int matchCode)
         {
-            if(ActiveGames.TryGetValue(matchCode, out Game gameInstance))
+            if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
                 bool allActivePlayersFinished = gameInstance.Players.Where(kvp => !kvp.Value.Disconnected)
                     .All(kvp => gameInstance.PlayersWhoFinishedFinalTurn.Contains(kvp.Key));
-                
-                if (allActivePlayersFinished)
-                {
-                    EndGame(matchCode);
-                }
+
+                if (allActivePlayersFinished) EndGame(matchCode);
             }
         }
 
@@ -915,9 +813,7 @@ namespace BevososService.Implementations
                         out ConcurrentDictionary<int, IGameManagerCallback> playerCallbacks))
                 {
                     if (playerCallbacks.TryGetValue(userId, out IGameManagerCallback callback))
-                    {
                         callback.NotifyActionInvalid(messageKey);
-                    }
                 }
             }
             catch (CommunicationException ex)
@@ -936,14 +832,13 @@ namespace BevososService.Implementations
                 RemoveGameClient(GamePlayerCallBack[matchCode][userId]);
             }
         }
+
         private static void CallOnProvokeForAllPlayers(int matchCode, int babyPileIndex)
         {
             try
             {
                 foreach (int player in GamePlayerCallBack[matchCode].Keys)
-                {
                     GamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
-                }
             }
             catch (CommunicationException ex)
             {
@@ -964,8 +859,8 @@ namespace BevososService.Implementations
 
         private static void SaveStatsForAllPLayers(int matchCode)
         {
-            var maxPoints = 0;
-            var winnerId = 0;
+            int maxPoints = 0;
+            int winnerId = 0;
 
             foreach (PlayerState maxPointsPlayer in ActiveGames[matchCode].Players.Values)
             {
@@ -980,7 +875,6 @@ namespace BevososService.Implementations
 
             foreach (PlayerState player in ActiveGames[matchCode].Players.Values)
             {
-                
                 int monsters = PlayerStatistics[matchCode][player.User.UserId].MonstersCreated;
                 int babies = PlayerStatistics[matchCode][player.User.UserId].AnihilatedBabies;
 
@@ -1012,9 +906,7 @@ namespace BevososService.Implementations
                         }
                     }
                     else
-                    {
                         Console.WriteLine("Guest user, cannot save Stats");
-                    }
                 }
                 catch (DataBaseException ex)
                 {

@@ -9,7 +9,6 @@ namespace BevososService
     [ServiceContract(CallbackContract = typeof(ISocialManagerCallback))]
     internal interface ISocialManager
     {
-
         /// <summary>
         /// Connects a user to the social service, registering their callback for notifications and notifying their friends that they are online.
         /// </summary>
@@ -33,7 +32,6 @@ namespace BevososService
         /// <returns>True if the user is connected, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-
         bool IsConnected(string email);
 
 
@@ -76,7 +74,6 @@ namespace BevososService
         /// <returns>True if the friend was successfully deleted, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-
         bool DeleteFriend(int userId, int friendId);
 
         /// <summary>
@@ -117,9 +114,8 @@ namespace BevososService
         /// <returns>True if the user was successfully blocked, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-
         bool BlockUser(int userId, int blockeeId);
-       
+
         /// <summary>
         /// Retrieves a list of blocked users for the specified user.
         /// </summary>
@@ -127,10 +123,7 @@ namespace BevososService
         /// <returns>A list of blocked users as `BlockedDTO` objects, or null if the user does not exist.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-
         List<BlockedDTO> GetBlockedUsers(int userId);
-
-
 
 
         /// <summary>
@@ -161,11 +154,9 @@ namespace BevososService
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         [OperationContract(IsOneWay = true)]
         void InviteFriendToLobby(string inviterName, int userId, int lobbyId);
-
     }
 
     [ServiceContract]
-
     internal interface ISocialManagerCallback
     {
         /// <summary>
@@ -211,7 +202,5 @@ namespace BevososService
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         [OperationContract(IsOneWay = true)]
         void NotifyGameInvited(string inviterName, int lobbyId);
-
-
     }
 }

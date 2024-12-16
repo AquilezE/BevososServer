@@ -12,13 +12,12 @@ using System.ServiceModel;
 
 namespace BevososService.Implementations
 {
-
     //NEEDS STEROID CALLBACK EXCEPTION HANDLING
 
     public partial class ServiceImplementation : ISocialManager
     {
-
-        private static readonly ConcurrentDictionary<int, ISocialManagerCallback> ConnectedClients = new ConcurrentDictionary<int, ISocialManagerCallback>();
+        private static readonly ConcurrentDictionary<int, ISocialManagerCallback> ConnectedClients =
+            new ConcurrentDictionary<int, ISocialManagerCallback>();
 
         private readonly object _lock = new object();
 
@@ -46,7 +45,6 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
                 Disconnect(userId);
-
             }
             catch (TimeoutException ex)
             {
@@ -64,7 +62,8 @@ namespace BevososService.Implementations
         {
             lock (_lock)
             {
-                ConnectedClients.TryRemove(userId, out _); Console.WriteLine("Disconnected: "+ userId);
+                ConnectedClients.TryRemove(userId, out _);
+                Console.WriteLine("Disconnected: " + userId);
             }
 
             NotifyFriendsUserOffline(userId);
@@ -74,12 +73,8 @@ namespace BevososService.Implementations
         {
             try
             {
-
                 User user = new UserDAO().GetUserByEmail(email);
-                if (user != null)
-                {
-                    return ConnectedClients.ContainsKey(user.UserId);
-                }
+                if (user != null) return ConnectedClients.ContainsKey(user.UserId);
                 return false;
             }
             catch (DataBaseException ex)
@@ -120,10 +115,8 @@ namespace BevososService.Implementations
                     friendRequest.FriendRequestId = idFriendRequest;
 
                     if (ConnectedClients.TryGetValue(requesteeId, out ISocialManagerCallback callback))
-                    {
                         callback.OnNewFriendRequest(friendRequest);
-                    }
-                    
+
                     return true;
                 }
                 catch (DataBaseException ex)
@@ -146,6 +139,7 @@ namespace BevososService.Implementations
                     Disconnect(userId);
                 }
             }
+
             return 0 != idFriendRequest;
         }
 
@@ -186,13 +180,10 @@ namespace BevososService.Implementations
                             };
 
                             if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
-                            {
                                 callback.OnNewFriend(friendDto);
-                            }
 
                             try
                             {
-
                                 if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback friendCallback))
                                 {
                                     try
@@ -220,16 +211,20 @@ namespace BevososService.Implementations
                             {
                                 Console.WriteLine("ComErr");
                             }
-                            catch(TimeoutException ex)
+                            catch (TimeoutException ex)
                             {
                                 Console.WriteLine("TErr");
-                            } catch (Exception ex) {
+                            }
+                            catch (Exception ex)
+                            {
                                 Console.WriteLine("ErrG");
                             }
+
                             return true;
                         }
                     }
                 }
+
                 return false;
             }
             catch (DataBaseException ex)
@@ -274,11 +269,10 @@ namespace BevososService.Implementations
                     List<FriendRequestData> friendRequestsList = new FriendRequestDAO().GetFriendRequestForUser(userId);
                     var friendRequests = new List<FriendRequestDTO>();
                     foreach (FriendRequestData friendRequest in friendRequestsList)
-                    {
                         friendRequests.Add((FriendRequestDTO)friendRequest);
-                    }
                     return friendRequests;
                 }
+
                 return null;
             }
             catch (DataBaseException ex)
@@ -339,6 +333,7 @@ namespace BevososService.Implementations
                 ExceptionManager.LogFatalException(ex);
                 Disconnect(userId);
             }
+
             return false;
         }
 
@@ -352,15 +347,14 @@ namespace BevososService.Implementations
                     var friends = new List<FriendDTO>();
                     foreach (FriendData friend in friendshipList)
                     {
-                        if (ConnectedClients.TryGetValue(friend.FriendId, out _))
-                        {
-                            friend.IsConnected = true;
-                        }
+                        if (ConnectedClients.TryGetValue(friend.FriendId, out _)) friend.IsConnected = true;
 
                         friends.Add((FriendDTO)friend);
                     }
+
                     return friends;
                 }
+
                 return null;
             }
             catch (DataBaseException ex)
@@ -382,7 +376,6 @@ namespace BevososService.Implementations
                 ExceptionManager.LogFatalException(ex);
                 return null;
             }
-
         }
 
 
@@ -398,14 +391,13 @@ namespace BevososService.Implementations
                         bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId);
                         if (resultBlockCreated)
                         {
-                            if(ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
-                            {
+                            if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
                                 callback.OnFriendshipDeleted(userId);
-                            }
                             return true;
                         }
                     }
                 }
+
                 return false;
             }
             catch (DataBaseException ex)
@@ -436,9 +428,7 @@ namespace BevososService.Implementations
             try
             {
                 if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockedId))
-                {
                     return new BlockedDAO().DeleteBlock(userId, blockedId);
-                }
                 return false;
             }
             catch (DataBaseException ex)
@@ -460,6 +450,7 @@ namespace BevososService.Implementations
                 ExceptionManager.LogFatalException(ex);
                 Disconnect(userId);
             }
+
             return false;
         }
 
@@ -469,12 +460,10 @@ namespace BevososService.Implementations
             {
                 if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
                 {
-                    if (new BlockedDAO().AddBlock(userId, blockeeId))
-                    {
-                        return true;
-                    }
+                    if (new BlockedDAO().AddBlock(userId, blockeeId)) return true;
                     return false;
                 }
+
                 return false;
             }
             catch (DataBaseException ex)
@@ -496,6 +485,7 @@ namespace BevososService.Implementations
                 ExceptionManager.LogFatalException(ex);
                 Disconnect(userId);
             }
+
             return false;
         }
 
@@ -507,12 +497,10 @@ namespace BevososService.Implementations
                 {
                     List<BlockedData> blockedUsersList = new BlockedDAO().GetBlockedListForUser(userId);
                     var blockedUsers = new List<BlockedDTO>();
-                    foreach (BlockedData blockedUser in blockedUsersList)
-                    {
-                        blockedUsers.Add((BlockedDTO)blockedUser);
-                    }
+                    foreach (BlockedData blockedUser in blockedUsersList) blockedUsers.Add((BlockedDTO)blockedUser);
                     return blockedUsers;
                 }
+
                 return null;
             }
             catch (DataBaseException ex)
@@ -534,7 +522,6 @@ namespace BevososService.Implementations
                 ExceptionManager.LogFatalException(ex);
                 return null;
             }
-
         }
 
         private void NotifyFriendsUserOnline(int userId)
@@ -543,14 +530,10 @@ namespace BevososService.Implementations
             {
                 List<int> friends = GetFriendIds(userId);
                 foreach (int friendId in friends)
-                {
                     if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
-                    {
                         callback.OnFriendOnline(userId);
-                    }
-                }
             }
-            catch(DataBaseException ex)
+            catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
@@ -577,12 +560,8 @@ namespace BevososService.Implementations
             {
                 List<int> friends = GetFriendIds(userId);
                 foreach (int friendId in friends)
-                {
                     if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
-                    {
                         callback.OnFriendOffline(userId);
-                    }
-                }
             }
             catch (CommunicationException ex)
             {
@@ -607,17 +586,12 @@ namespace BevososService.Implementations
                     if (!ConnectedClients.ContainsKey(userId))
                     {
                         Account account = new AccountDAO().GetAccountByUserId(userId);
-                        if (account != null)
-                        {
-                            EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
-                        }
+                        if (account != null) EmailUtils.SendInvitationByEmail(account.Email, lobbyId);
                     }
                     else
                     {
                         if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
-                        {
                             callback.NotifyGameInvited(inviterName, lobbyId);
-                        }
                     }
                 }
                 catch (DataBaseException ex)
@@ -639,7 +613,6 @@ namespace BevososService.Implementations
                     ExceptionManager.LogFatalException(ex);
                     Disconnect(userId);
                 }
-
             }
         }
 
@@ -656,10 +629,7 @@ namespace BevososService.Implementations
             {
                 KeyValuePair<int, ISocialManagerCallback> user =
                     ConnectedClients.FirstOrDefault(pair => pair.Value == callback);
-                if (user.Key != 0)
-                {
-                    Disconnect(user.Key);
-                }
+                if (user.Key != 0) Disconnect(user.Key);
             }
             catch (CommunicationException ex)
             {
@@ -681,14 +651,11 @@ namespace BevososService.Implementations
             {
                 var users = new List<UserDTO>();
                 List<User> usersData = new UserDAO().GetUsersByName(name, userId);
-                foreach (User user in usersData)
-                {
-                    users.Add((UserDTO)user);
-                }
+                foreach (User user in usersData) users.Add((UserDTO)user);
 
                 return users;
             }
-            catch(DataBaseException ex)
+            catch (DataBaseException ex)
             {
                 throw CreateAndLogFaultException(ex);
             }
@@ -724,8 +691,6 @@ namespace BevososService.Implementations
                 ExceptionManager.LogErrorException(ex);
                 throw CreateAndLogFaultException(ex);
             }
-
         }
-
     }
 }

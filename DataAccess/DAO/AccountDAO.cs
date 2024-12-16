@@ -8,11 +8,10 @@ using System.Data.SqlClient;
 using System.Linq;
 
 
-
 namespace DataAccess.DAO
 {
-        public class AccountDAO
-        {
+    public class AccountDAO
+    {
         public Account GetAccountByUserId(int accountId)
         {
             return ExecuteWithExceptionHandling(() =>
@@ -20,8 +19,8 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     return context.Accounts
-                                  .Include(a => a.User)
-                                  .FirstOrDefault(a => a.UserId == accountId);
+                        .Include(a => a.User)
+                        .FirstOrDefault(a => a.UserId == accountId);
                 }
             });
         }
@@ -33,8 +32,8 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     return context.Accounts
-                                  .Include(a => a.User)
-                                  .FirstOrDefault(a => a.Email == email);
+                        .Include(a => a.User)
+                        .FirstOrDefault(a => a.Email == email);
                 }
             });
         }
@@ -74,10 +73,7 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.Email == email);
-                    if (account == null)
-                    {
-                        return false;
-                    }
+                    if (account == null) return false;
 
                     account.PasswordHash = newHashedPassword;
                     int alteredRows = context.SaveChanges();
@@ -93,10 +89,7 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
-                    if (account == null)
-                    {
-                        return false;
-                    }
+                    if (account == null) return false;
 
                     account.PasswordHash = newHashedPassword;
                     int alteredRows = context.SaveChanges();
@@ -128,4 +121,4 @@ namespace DataAccess.DAO
             }
         }
     }
-    }
+}

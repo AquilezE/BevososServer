@@ -2,7 +2,6 @@
 
 namespace BevososService
 {
-
     [ServiceContract(CallbackContract = typeof(IStatsManagerCallback))]
     internal interface IStatsManager
     {

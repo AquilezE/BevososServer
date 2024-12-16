@@ -7,7 +7,6 @@ namespace BevososService
     [ServiceContract]
     internal interface IUsersManager
     {
-
         /// <summary>
         /// Checks if the provided username is already in use by another user.
         /// </summary>
@@ -49,7 +48,6 @@ namespace BevososService
         bool VerifyToken(string email, string token);
 
 
-
         /// <summary>
         /// Registers a new user with the provided email, username, and password. The password is hashed before being stored.
         /// </summary>
@@ -89,8 +87,5 @@ namespace BevososService
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
         bool RecoverPassword(string email, string password);
-
     }
-
-
 }

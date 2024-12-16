@@ -21,6 +21,7 @@
                         Head = card;
                         return true;
                     }
+
                     break;
                 case 1:
                     if (Torso == null)
@@ -28,6 +29,7 @@
                         Torso = card;
                         return true;
                     }
+
                     break;
                 case 2:
                     if (LeftArm == null && Torso != null)
@@ -35,6 +37,7 @@
                         LeftArm = card;
                         return true;
                     }
+
                     break;
                 case 3:
                     if (LeftHandTool == null && LeftArm != null)
@@ -42,6 +45,7 @@
                         LeftHandTool = card;
                         return true;
                     }
+
                     break;
                 case 4:
                     if (RightArm == null && Torso != null)
@@ -49,6 +53,7 @@
                         RightArm = card;
                         return true;
                     }
+
                     break;
                 case 5:
                     if (RightHandTool == null && RightArm != null)
@@ -56,6 +61,7 @@
                         RightHandTool = card;
                         return true;
                     }
+
                     break;
                 case 6:
                     if (Legs == null && Torso != null)
@@ -63,6 +69,7 @@
                         Legs = card;
                         return true;
                     }
+
                     break;
                 case 7:
                     if (Hat == null)
@@ -70,52 +77,29 @@
                         Hat = card;
                         return true;
                     }
+
                     break;
 
                 default:
                     return false;
             }
+
             return false;
         }
 
         public int GetDamage()
         {
-            var strength = 0;
-            if (Head != null)
-            {
-                strength += Head.Damage;
-            }
-            if (Torso != null)
-            {
-                strength += Torso.Damage;
-            }
-            if (LeftArm != null)
-            {
-                strength += LeftArm.Damage;
-            }
-            if (LeftHandTool != null)
-            {
-                strength += LeftHandTool.Damage;
-            }
-            if (RightArm != null)
-            {
-                strength += RightArm.Damage;
-            }
-            if (RightHandTool != null)
-            {
-                strength += RightHandTool.Damage;
-            }
-            if (Legs != null)
-            {
-                strength += Legs.Damage;
-            }
-            if (Hat != null)
-            {
-                strength = strength * 2;
-            }
+            int strength = 0;
+            if (Head != null) strength += Head.Damage;
+            if (Torso != null) strength += Torso.Damage;
+            if (LeftArm != null) strength += LeftArm.Damage;
+            if (LeftHandTool != null) strength += LeftHandTool.Damage;
+            if (RightArm != null) strength += RightArm.Damage;
+            if (RightHandTool != null) strength += RightHandTool.Damage;
+            if (Legs != null) strength += Legs.Damage;
+            if (Hat != null) strength = strength * 2;
 
             return strength;
         }
-
     }
 }

@@ -34,7 +34,6 @@ namespace BevososService
         /// <param name="userId">The unique id of the player that played the card.</param>
         /// <param name="matchCode">The unique code representing the match.</param>
         /// <param name="cardId">The unique identifier of the card being played.</param>
-
         [OperationContract(IsOneWay = true)]
         void PlayCard(int userId, int matchCode, int cardId);
 
@@ -45,7 +44,6 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the player provoking the baby pile.</param>
         /// <param name="matchCode">The unique code representing the match.</param>
         /// <param name="babyPileProvoked">The index of the baby pile being provoked.</param>
-
         [OperationContract(IsOneWay = true)]
         void PlayProvoke(int userId, int matchCode, int babyPileProvoked);
 
@@ -92,7 +90,6 @@ namespace BevososService
         /// <param name="babyPileProvoked">The index of the baby pile being provoked.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteProvoke(int userId, int matchCode, int babyPileProvoked);
-
     }
 
     [ServiceContract]
@@ -141,7 +138,6 @@ namespace BevososService
         void NotifyActionInvalid(string messageKey);
 
 
-
         /// <summary>
         /// Notifies the player that a specific baby pile has been provoked during the game.
         /// </summary>
@@ -170,5 +166,4 @@ namespace BevososService
         [OperationContract(IsOneWay = true)]
         void OnNotifyGameEndedWithoutUsers(int matchCode);
     }
-
 }

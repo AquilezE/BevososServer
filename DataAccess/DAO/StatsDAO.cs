@@ -24,11 +24,8 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
-                    var userExists = context.Users.Any(u => u.UserId == userId);
-                    if (!userExists)
-                    {
-                        return false;
-                    }
+                    bool userExists = context.Users.Any(u => u.UserId == userId);
+                    if (!userExists) return false;
 
                     if (userStats != null)
                     {
@@ -37,6 +34,7 @@ namespace DataAccess.DAO
 
                         return true;
                     }
+
                     return false;
                 }
             });
@@ -57,12 +55,9 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                if (userStats == null)
-                {
-                    return false;
-                }
+                if (userStats == null) return false;
 
-                using (BevososContext context = new BevososContext())
+                using (var context = new BevososContext())
                 {
                     Stats stats = context.Stats.FirstOrDefault(u => u.UserId == userId);
                     if (stats != null)
@@ -74,6 +69,7 @@ namespace DataAccess.DAO
                         context.SaveChanges();
                         return true;
                     }
+
                     return false;
                 }
             });

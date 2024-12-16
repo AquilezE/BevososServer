@@ -5,8 +5,7 @@ namespace DataAccess.Models
 {
     public class Stats
     {
-        [Key, ForeignKey("User")]
-        public int UserId { get; set; }
+        [Key] [ForeignKey("User")] public int UserId { get; set; }
 
         public virtual User User { get; set; }
 
@@ -18,17 +17,14 @@ namespace DataAccess.Models
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-            {
-                return false;
-            }
-            
-            Stats other = (Stats)obj;
+            if (obj == null) return false;
+
+            var other = (Stats)obj;
 
             return UserId == other.UserId &&
-                Wins == other.Wins && 
-                MonstersCreated == other.MonstersCreated && 
-                AnnihilatedBabies == other.AnnihilatedBabies;
+                   Wins == other.Wins &&
+                   MonstersCreated == other.MonstersCreated &&
+                   AnnihilatedBabies == other.AnnihilatedBabies;
         }
     }
 }

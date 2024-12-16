@@ -19,13 +19,11 @@ namespace DataAccess
 
         public BevososContext() : base("name=BevososContext")
         {
-            this.Database.CommandTimeout = 5;
-
+            Database.CommandTimeout = 5;
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-
             modelBuilder.Entity<User>()
                 .Property(u => u.Username)
                 .HasColumnAnnotation(

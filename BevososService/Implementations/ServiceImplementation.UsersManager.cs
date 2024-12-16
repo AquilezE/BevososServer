@@ -19,6 +19,7 @@ namespace BevososService.Implementations
         {
             return Interlocked.Decrement(ref _currentGuestId);
         }
+
         public bool IsEmailTaken(string email)
         {
             try
@@ -37,10 +38,11 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
 
@@ -54,7 +56,7 @@ namespace BevososService.Implementations
             {
                 throw CreateAndLogFaultException(ex);
             }
-            catch(CommunicationException ex)
+            catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
             }
@@ -66,6 +68,7 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
 
@@ -102,6 +105,7 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
 
@@ -111,9 +115,7 @@ namespace BevososService.Implementations
             {
                 var tokenDao = new TokenDAO();
                 if (tokenDao.HasToken(email))
-                {
                     return EmailUtils.SendTokenByEmail(email, tokenDao.GetToken(email));
-                }
                 else
                 {
                     tokenDao.AsignToken(email);
@@ -136,6 +138,7 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
 
@@ -149,6 +152,7 @@ namespace BevososService.Implementations
                     tokenDao.DeleteToken(token, email);
                     return true;
                 }
+
                 return false;
             }
             catch (DataBaseException ex)
@@ -167,8 +171,10 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
+
         public UserDTO LogIn(string email, string password)
         {
             var accountDAO = new AccountDAO();
@@ -178,10 +184,7 @@ namespace BevososService.Implementations
             {
                 Account account = accountDAO.GetAccountByEmail(email);
 
-                if (account == null)
-                {
-                    return null;
-                }
+                if (account == null) return null;
 
                 if (SimpleHashing.VerifyPassword(password, account.PasswordHash))
                 {
@@ -197,6 +200,7 @@ namespace BevososService.Implementations
 
                     return userDto;
                 }
+
                 return null;
             }
             catch (DataBaseException ex)
@@ -215,13 +219,14 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
-            return null;
 
+            return null;
         }
 
         public UserDTO GetGuestUser()
         {
-            try{
+            try
+            {
                 int guestId = GenerateUniqueGuestId();
                 var user = new UserDTO
                 {
@@ -245,6 +250,7 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return null;
         }
 
@@ -254,9 +260,7 @@ namespace BevososService.Implementations
             {
                 var accountDAO = new AccountDAO();
                 if (!accountDAO.EmailExists(email))
-                {
                     return false;
-                }
                 else
                 {
                     string hashedPassword = SimpleHashing.HashPassword(password);
@@ -279,10 +283,8 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogErrorException(ex);
             }
+
             return false;
         }
-
     }
-
-
 }

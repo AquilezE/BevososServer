@@ -1,5 +1,4 @@
 ﻿using System;
-
 using System.Net;
 using System.Net.Mail;
 using DataAccess.Utils;
@@ -9,28 +8,26 @@ namespace BevososService.Utils
 {
     public class EmailUtils
     {
-
         private const string SenderEmail = "bevososthegame@gmail.com";
         private const string SmtpServer = "smtp.gmail.com";
         private const int SmtpPort = 587;
 
         protected EmailUtils()
         {
-
         }
 
         public static bool SendInvitationByEmail(string recipientEmail, int lobbyId)
         {
-            var subject = "Bevosos Invite";
-            var body = $"You've been invited to play! Join this lobby before it's too late: {lobbyId}";
+            string subject = "Bevosos Invite";
+            string body = $"You've been invited to play! Join this lobby before it's too late: {lobbyId}";
 
             return SendEmail(recipientEmail, subject, body);
         }
 
         public static bool SendTokenByEmail(string recipientEmail, string token)
         {
-            var subject = "Bevosos";
-            var body = $"Your verification token is: {token}";
+            string subject = "Bevosos";
+            string body = $"Your verification token is: {token}";
 
             return SendEmail(recipientEmail, subject, body);
         }
@@ -47,7 +44,8 @@ namespace BevososService.Utils
                     mail.Subject = subject;
                     mail.Body = body;
 
-                    smtpClient.Credentials = new NetworkCredential(SenderEmail, Environment.GetEnvironmentVariable("EmailPassword"));
+                    smtpClient.Credentials =
+                        new NetworkCredential(SenderEmail, Environment.GetEnvironmentVariable("EmailPassword"));
                     smtpClient.EnableSsl = true;
 
                     smtpClient.Send(mail);
@@ -77,6 +75,4 @@ namespace BevososService.Utils
             }
         }
     }
-
-
 }

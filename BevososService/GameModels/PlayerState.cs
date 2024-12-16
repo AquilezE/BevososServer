@@ -10,6 +10,5 @@ namespace BevososService.GameModels
         public List<Monster> Monsters { get; set; } = new List<Monster>();
         public int ActionsPerTurn { get; set; } = 2;
         public bool Disconnected { get; set; } = false;
-
     }
 }

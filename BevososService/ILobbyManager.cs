@@ -5,9 +5,7 @@ using System.ServiceModel;
 
 namespace BevososService
 {
-
     [ServiceContract(CallbackContract = typeof(ILobbyManagerCallback))]
-
     public interface ILobbyManager
     {
         /// <summary>
@@ -16,6 +14,7 @@ namespace BevososService
         /// <param name="userDto">The data transfer object containing information about the user creating the lobby.</param>
         [OperationContract(IsOneWay = true)]
         void NewLobbyCreated(UserDTO userDto);
+
         /// <summary>
         /// Allows a user to join an existing lobby. Updates the current lobby state and notifies all existing members of the new joiner.
         /// </summary>
@@ -41,7 +40,6 @@ namespace BevososService
         /// <param name="message">The content of the message to be sent.</param>
         [OperationContract(IsOneWay = true)]
         void SendMessage(int lobbyId, int userId, string message);
-
 
 
         /// <summary>
@@ -135,7 +133,6 @@ namespace BevososService
         void OnSendMessage(int userId, string message);
 
 
-        
         ///<summary>
         /// Notifies all lobby members when a user's ready status has changed.
         /// </summary>
@@ -151,8 +148,6 @@ namespace BevososService
         /// <param name="gameId">The unique identifier of the game session that has started.</param>
         [OperationContract(IsOneWay = true)]
         void GameStarted(int gameId);
-
-
     }
 
     [ServiceContract]

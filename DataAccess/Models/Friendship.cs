@@ -1,6 +1,4 @@
-﻿
-
-namespace DataAccess.Models
+﻿namespace DataAccess.Models
 {
     public class Friendship
     {
@@ -10,19 +8,15 @@ namespace DataAccess.Models
 
         public int User1Id { get; set; }
 
-        public int User2Id{ get; set; }
+        public int User2Id { get; set; }
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-            {
-                return false;
-            }
+            if (obj == null) return false;
 
-            Friendship other = (Friendship)obj;
+            var other = (Friendship)obj;
 
             return User1Id == other.User1Id && User2Id == other.User2Id;
         }
-
     }
 }

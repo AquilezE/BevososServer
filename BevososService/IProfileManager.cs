@@ -1,11 +1,9 @@
-﻿
-using System.ServiceModel;
+﻿using System.ServiceModel;
 
 
 namespace BevososService
 {
-    [ServiceContract (CallbackContract = typeof ( IProfileManagerCallback))]
-
+    [ServiceContract(CallbackContract = typeof(IProfileManagerCallback))]
     internal interface IProfileManager
     {
         /// <summary>
@@ -26,7 +24,6 @@ namespace BevososService
         /// <param name="newPassword">The new password to be set.</param>
         [OperationContract(IsOneWay = true)]
         void ChangePassword(int userId, string oldPassword, string newPassword);
-
     }
 
     [ServiceContract]
@@ -48,6 +45,5 @@ namespace BevososService
         /// <param name="result">A message indicating the result of the password change, or null if the change was successful.</param>
         [OperationContract(IsOneWay = true)]
         void OnPasswordChange(string result);
-
     }
 }

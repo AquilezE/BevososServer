@@ -39,9 +39,7 @@ namespace DataAccess.DAO
                         return true;
                     }
                     else
-                    {
                         return false;
-                    }
                 }
             });
         }
@@ -52,7 +50,8 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
-                    Blocked block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
+                    Blocked block =
+                        context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
 
                     if (block != null)
                     {
@@ -62,9 +61,7 @@ namespace DataAccess.DAO
                         return true;
                     }
                     else
-                    {
                         return false;
-                    }
                 }
             });
         }
@@ -75,10 +72,10 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
-                    var blockedUsers = context.BlockedList
-                                              .Where(b => b.BlockerId == blockerId)
-                                              .Select(b => b.Blockee)
-                                              .ToList();
+                    List<User> blockedUsers = context.BlockedList
+                        .Where(b => b.BlockerId == blockerId)
+                        .Select(b => b.Blockee)
+                        .ToList();
 
                     return blockedUsers;
                 }
@@ -91,7 +88,7 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
-                    var blockedUsers = context.BlockedList
+                    List<BlockedData> blockedUsers = context.BlockedList
                         .Where(b => b.BlockerId == currentUserId)
                         .Select(b => new BlockedData
                         {

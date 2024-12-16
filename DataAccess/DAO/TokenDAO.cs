@@ -66,7 +66,8 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
-                    return context.Tokens.Any(t => t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
+                    return context.Tokens.Any(t =>
+                        t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
                 }
             });
         }
@@ -84,6 +85,7 @@ namespace DataAccess.DAO
                         int affectedRows = context.SaveChanges();
                         return affectedRows > 0;
                     }
+
                     return false;
                 }
             });

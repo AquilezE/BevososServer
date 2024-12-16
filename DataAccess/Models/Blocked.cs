@@ -1,6 +1,4 @@
-﻿
-
-namespace DataAccess.Models
+﻿namespace DataAccess.Models
 {
     public class Blocked
     {
@@ -12,12 +10,9 @@ namespace DataAccess.Models
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-            {
-                return false;
-            }
+            if (obj == null) return false;
 
-            Blocked other = (Blocked)obj;
+            var other = (Blocked)obj;
 
             return BlockerId == other.BlockerId && BlockeeId == other.BlockeeId;
         }

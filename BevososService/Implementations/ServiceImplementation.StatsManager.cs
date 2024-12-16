@@ -36,7 +36,6 @@ namespace BevososService.Implementations
 
                     var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
                     callback.OnStatsReceived(userWins, userMonsters, userBabies);
-                    
                 }
             }
             catch (DataBaseException ex)
@@ -58,7 +57,6 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogFatalException(ex);
             }
-
         }
     }
 }

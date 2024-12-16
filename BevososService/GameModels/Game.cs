@@ -17,8 +17,10 @@ namespace BevososService.GameModels
         public Dictionary<int, PlayerState> Players { get; set; } = new Dictionary<int, PlayerState>();
         public int CurrentPlayerId { get; set; }
         public int ActionsPerTurn { get; set; } = 2;
-        public ConcurrentDictionary<int, int> PlayerActionsRemaining { get; set; } = new ConcurrentDictionary<int, int>();
-        
+
+        public ConcurrentDictionary<int, int> PlayerActionsRemaining { get; set; } =
+            new ConcurrentDictionary<int, int>();
+
         public Timer TurnTimer { get; set; }
 
         public DateTime TurnStartTime { get; set; }
@@ -26,7 +28,5 @@ namespace BevososService.GameModels
         public bool IsEndGamePhase { get; set; } = false;
 
         public HashSet<int> PlayersWhoFinishedFinalTurn { get; set; } = new HashSet<int>();
-
-
     }
 }

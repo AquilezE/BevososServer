@@ -3,11 +3,9 @@
 namespace BevososService.DTOs
 {
     [DataContract]
-
     public class CardDTO
     {
-        [DataMember]
-        public int CardId { get; set; }
+        [DataMember] public int CardId { get; set; }
 
         public static explicit operator CardDTO(GameModels.Card card)
         {

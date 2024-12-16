@@ -13,7 +13,6 @@ namespace BevososService.Implementations
         public ServiceImplementation()
         {
             GlobalDeck.InitializeDeck();
-
         }
 
         private static void Shuffle<T>(IList<T> list)
@@ -40,13 +39,8 @@ namespace BevososService.Implementations
 
             ExceptionManager.LogErrorException(innerException);
 
-            return new FaultException<BevososServerExceptions>(serverException, new FaultReason(serverException.Message));
+            return new FaultException<BevososServerExceptions>(serverException,
+                new FaultReason(serverException.Message));
         }
-
-
     }
-
-
-
-
 }

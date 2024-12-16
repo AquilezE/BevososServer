@@ -8,7 +8,7 @@ namespace DataAccess
         {
             var random = new Random();
             int tokenNumber = random.Next(0, 1000000);
-            var token = tokenNumber.ToString("D6");
+            string token = tokenNumber.ToString("D6");
             return token;
         }
     }
