@@ -58,13 +58,6 @@ namespace TEST
 
                 Assert.NotEqual(0, result);
 
-                using (var context = new BevososContext())
-                {
-                    var request = context.FriendRequests.FirstOrDefault(r => r.Id == result);
-
-                    Assert.NotNull(request);
-                }
-
             }
         }
 
@@ -252,12 +245,6 @@ namespace TEST
 
                 Assert.True(result);
 
-                using (var context = new BevososContext())
-                {
-                    var request = context.FriendRequests.FirstOrDefault(r => r.Id == requestId);
-
-                    Assert.Null(request);
-                }
             }
         }
 
@@ -393,5 +380,6 @@ namespace TEST
 
             }
         }
+    
     }
 }

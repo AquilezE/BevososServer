@@ -16,7 +16,17 @@ namespace TEST
         {
             GlobalDeck.InitializeDeck();
 
-            var cardTest = GlobalDeck.Deck.TryGetValue(18, out var card);
+            GlobalDeck.Deck.TryGetValue(18, out var card);
+
+            Assert.Equal(86, GlobalDeck.Deck.Count);
+        }
+
+        [Fact]
+        public void InitializeDeck_ReturnsTrueWhenExpectedCardIsAExistingCard()
+        {
+            GlobalDeck.InitializeDeck();
+
+            GlobalDeck.Deck.TryGetValue(18, out var card);
 
             var expectedCard = new Card
             {
@@ -27,8 +37,7 @@ namespace TEST
                 Damage = Card.DamageTotal3
             };
 
-            Assert.True(expectedCard.Equals(card));
-            Assert.Equal(86, GlobalDeck.Deck.Count);
+            Assert.Equal(expectedCard, card);
         }
     }
 }

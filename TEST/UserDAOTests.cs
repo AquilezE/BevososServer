@@ -1,4 +1,5 @@
-﻿using System.Transactions;
+﻿using System.Collections.Generic;
+using System.Transactions;
 using DataAccess;
 using DataAccess.DAO;
 using DataAccess.Models;
@@ -36,7 +37,6 @@ namespace TEST
 
                 bool result = userDAO.UsernameExists(username);
 
-                // Assert
                 Assert.True(result);
             }
         }
@@ -60,12 +60,12 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var userDAO = new UserDAO();
                 var email = "accountdal_test@example.com";
                 var username = "AccountDALTestUser";
 
-                // Create a user with the specified email
+                User expectedUser;
+
                 using (var context = new BevososContext())
                 {
                     var user = new User
@@ -80,14 +80,12 @@ namespace TEST
                     };
                     context.Users.Add(user);
                     context.SaveChanges();
+                    expectedUser = user;
                 }
 
-                // Act
                 User result = userDAO.GetUserByEmail(email);
 
-                // Assert
-                Assert.NotNull(result);
-                Assert.Equal(username, result.Username);
+                Assert.Equal(expectedUser, result);
             }
         }
 
@@ -110,7 +108,8 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
+
+                User expectedUser;
                 int testUserId;
                 string testUsername;
                 using (var context = new BevososContext())
@@ -130,17 +129,13 @@ namespace TEST
                     context.SaveChanges();
 
                     testUserId = testUser.UserId;
-                    testUsername = testUser.Username;
+                    expectedUser= testUser;
                 }
                 var userDAO = new UserDAO();
 
-                // Act
                 User result = userDAO.GetUserById(testUserId);
 
-                // Assert
-                Assert.NotNull(result);
-                Assert.Equal(testUserId, result.UserId);
-                Assert.Equal(testUsername, result.Username);
+                Assert.Equal(expectedUser, result);
             }
         }
 
@@ -201,13 +196,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                // Arrange
                 var userDao = new UserDAO();
                 var email = "userTestUpdate@example.com";
                 var originalUsername = "User1";
                 var newUsername = "newUsername";
 
-                // Create user
                 int userId;
                 using (var context = new BevososContext())
                 {
@@ -265,24 +258,19 @@ namespace TEST
             }
         }
 
-        [Theory]
-        [InlineData("name", 3)]
-        [InlineData("notname", 0)]
-        [InlineData("Roberto", 1)]
-        public void GetUsersByName_ReturnsListOfUsers_WhenNameExists(string name, int expectedCount)
+        [Fact]
+        public void GetUsersByName_ReturnsListOfThreeUsers_WhenThreeNamesMatch()
         {
+
             using (var scope = new TransactionScope())
             {
-                // Arrange
-                var userDao = new UserDAO();
-                var email = "elpepe1@example.com";
-                var username = "name";
-                var profilePictureId = 2;
-
-                // Create users
+                var expectedList = new List<User>();
                 using (var context = new BevososContext())
                 {
-                    for (var i = 0; i < 3; i++)
+                    var email = "ExampleEmail";
+                    var username = "name";
+                    var profilePictureId = 1;
+                    for (var i = 1; i < 4; i++)
                     {
                         var account = new Account
                         {
@@ -296,10 +284,51 @@ namespace TEST
                             Account = account
                         };
                         context.Users.Add(user);
+                        expectedList.Add(user);
                     }
+                    context.SaveChanges();
+                }
+
+                var userDao = new UserDAO();
+
+                var result = userDao.GetUsersByName("name", 1);
+
+                Assert.Equal(expectedList, result);
+
+            }
+
+        }
+
+
+        [Fact]
+        public void GetUsersByName_ReturnsListOfZeroUsers_WhenZeroNamesMatch()
+        {
+            using (var scope = new TransactionScope())
+            {
+                
+                var userDao = new UserDAO();
+                var result = userDao.GetUsersByName("notname", 1);
+
+                Assert.Empty(result);
+            }
+
+        }
+
+        [Fact]
+        public void GetUsersByName_ReturnsListOfOneUser_WhenOneNameMatches()
+        {
+            using (var scope = new TransactionScope())
+            {
+                var email = "ExampleEmail";
+                var profilePictureId = 1;
+                
+                var expectedList = new List<User>();
+
+                using (var context = new BevososContext())
+                {
                     var accountRoberto = new Account
                     {
-                        Email = email + 3,
+                        Email = email + 4,
                         PasswordHash = "hashed_password"
                     };
                     var userRoberto = new User
@@ -311,8 +340,12 @@ namespace TEST
 
                     context.Users.Add(userRoberto);
                     context.SaveChanges();
+                    expectedList.Add(userRoberto);
                 }
-                Assert.Equal(expectedCount, userDao.GetUsersByName(name, 1).Count);
+
+                var userDao = new UserDAO();
+                var result = userDao.GetUsersByName("Roberto", 1);
+                Assert.Equal(expectedList, result);
             }
         }
     }

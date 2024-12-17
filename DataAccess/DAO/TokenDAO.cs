@@ -67,7 +67,7 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     return context.Tokens.Any(t =>
-                        t.TokenValue == token && t.ExpiryDate > DateTime.Now && t.Email == email);
+                        t.TokenValue == token && t.ExpiryDate >= DateTime.Now && t.Email == email);
                 }
             });
         }

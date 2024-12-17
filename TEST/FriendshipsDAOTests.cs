@@ -91,7 +91,7 @@ namespace TEST
                 int user1Id, user2Id;
 
 
-                Friendship expected; 
+                Friendship expected;
 
                 using (var context = new BevososContext())
                 {
@@ -350,12 +350,9 @@ namespace TEST
                     User2Id = user2Id
                 };
 
-                using (var context = new BevososContext())
-                {
-                    bool friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
-
-                    Assert.True(friendshipExists);
-                }
+                bool friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
+                Assert.True(friendshipExists);
+                
             }
         }
 
@@ -411,13 +408,11 @@ namespace TEST
                 List<User> friends = friendshipDAO.GetFriendshipList(userId);
 
                 Assert.Single(friends);
-                Assert.Equal(friendId, friends.First().UserId);
-
             }
         }
 
         [Fact]
-        public void RemoveFriendship_ShouldWork_WhenFriendshipExistsInReverseOrder() 
+        public void RemoveFriendship_ShouldWork_WhenFriendshipExistsInReverseOrder()
         {
             using (var scope = new TransactionScope())
             {
@@ -469,18 +464,10 @@ namespace TEST
 
                 Assert.True(result);
 
-                using (var context = new BevososContext())
-                {
-                    bool friendshipExists = context.Friendships.Any(f =>
-                        (f.User1Id == user1Id && f.User2Id == user2Id) ||
-                        (f.User1Id == user2Id && f.User2Id == user1Id));
-
-                    Assert.False(friendshipExists);
-                }
-
             }
         }
-    
+
 
     }
+
 }

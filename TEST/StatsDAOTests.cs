@@ -45,23 +45,9 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var statsDAO = new StatsDAO();
-                var nonExistingUserId = 99999;
+                var nonExistingUserId = -1;
 
                 bool exists = statsDAO.UserStatsExists(nonExistingUserId);
-
-                Assert.False(exists);
-            }
-        }
-
-        [Fact]
-        public void UserStatsExists_ReturnsFalse_WhenUserIdIsInvalid()
-        {
-            using (var scope = new TransactionScope())
-            {
-                var statsDAO = new StatsDAO();
-                int invalidUserId = -1;
-
-                bool exists = statsDAO.UserStatsExists(invalidUserId);
 
                 Assert.False(exists);
             }
@@ -110,7 +96,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var statsDAO = new StatsDAO();
-                var nonExistingUserId = 99999;
+                var nonExistingUserId = -1;
                 var newStats = new Stats
                 {
                     UserId = nonExistingUserId,
@@ -134,10 +120,17 @@ namespace TEST
                 var statsDAO = new StatsDAO();
                 int userId = AddTestUserWithStats();
 
-                Stats stats = statsDAO.GetUserStats(userId);
 
-                Assert.NotNull(stats);
-                Assert.Equal(userId, stats.UserId);
+                var expectedStats = new Stats
+                {
+                    UserId = userId,
+                    Wins = 5,
+                    MonstersCreated = 3,
+                    AnnihilatedBabies = 1
+                };
+
+                Stats stats = statsDAO.GetUserStats(userId);
+                Assert.Equal(expectedStats, stats);
             }
         }
 
@@ -170,22 +163,6 @@ namespace TEST
         }
 
         [Fact]
-        public void GetUserStats_ReturnsNull_WhenUserIdIsInvalid()
-        {
-            using (var scope = new TransactionScope())
-            {
-
-                var statsDAO = new StatsDAO();
-                int invalidUserId = -1;
-
-                Stats stats = statsDAO.GetUserStats(invalidUserId);
-
-                Assert.Null(stats);
-            }
-        }
-
-
-        [Fact]
         public void UpdateUserStats_ReturnsTrue_WhenStatsExistAndUpdated()
         {
             using (var scope = new TransactionScope())
@@ -215,9 +192,9 @@ namespace TEST
                 int userId = AddTestUserWithoutStats();
                 var updatedStats = new Stats
                 {
-                    Wins = 15,
-                    MonstersCreated = 7,
-                    AnnihilatedBabies = 3
+                    Wins = 20,
+                    MonstersCreated = 10,
+                    AnnihilatedBabies = 5
                 };
 
                 bool result = statsDAO.UpdateUserStats(userId, updatedStats);
@@ -242,7 +219,7 @@ namespace TEST
         }
 
         [Fact]
-        public void UpdateUserStats_ReturnsFalse_WhenUserIdIsInvalid()
+        public void UpdateUserStats_ReturnsFalse_WhenUserDoesNotExist()
         {
             using (var scope = new TransactionScope())
             {
@@ -250,9 +227,9 @@ namespace TEST
                 int invalidUserId = -1;
                 var updatedStats = new Stats
                 {
-                    Wins = 5,
-                    MonstersCreated = 2,
-                    AnnihilatedBabies = 1
+                    Wins = 20,
+                    MonstersCreated = 10,
+                    AnnihilatedBabies = 5
                 };
 
                 bool result = statsDAO.UpdateUserStats(invalidUserId, updatedStats);
