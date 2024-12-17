@@ -11,26 +11,21 @@ using DataAccess.Utils;
 
 namespace BevososService.Implementations
 {
-    //NEEDS STEROID CALLBACK EXCEPTION HANDLING
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public partial class ServiceImplementation : ILobbyManager
     {
         private static int _currentLobbyId = 4;
 
-        // Lobby ID -> (User ID -> Callback)
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>
             ActiveLobbiesDict = new ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>();
 
-        // Callback -> (Lobby ID, User ID)
         private static readonly ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>
             ClientCallbackMapping = new ConcurrentDictionary<ILobbyManagerCallback, (int LobbyId, int UserId)>();
 
-        // User ID -> UserDTO
         private static readonly ConcurrentDictionary<int, UserDTO> LobbyUsersDetails =
             new ConcurrentDictionary<int, UserDTO>();
 
-        //  ID -> Lobby ID
         private static readonly ConcurrentDictionary<int, int> LobbyLeaders = new ConcurrentDictionary<int, int>();
 
 

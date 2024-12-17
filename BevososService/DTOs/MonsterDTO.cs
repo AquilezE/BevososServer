@@ -4,15 +4,7 @@ namespace BevososService.DTOs
 {
     public class MonsterDTO
     {
-        //this is going to be the CardDTO of the cards that represent the body parts of the monster
-        //0	Head       
-        //1	Torso      
-        //2	LeftArm
-        //3	LeftTool
-        //4	RightArm
-        //5	RightTool
-        //6	Legs
-        //7 Hat
+
         public List<CardDTO> BodyParts { get; set; } = new List<CardDTO>();
 
 
@@ -20,7 +12,6 @@ namespace BevososService.DTOs
         {
             var monsterDTO = new MonsterDTO();
 
-            //nasty
             monsterDTO.BodyParts.Add(monster.Head != null ? (CardDTO)monster.Head : new CardDTO { CardId = 0 });
             monsterDTO.BodyParts.Add(monster.Torso != null ? (CardDTO)monster.Torso : new CardDTO { CardId = 0 });
             monsterDTO.BodyParts.Add(monster.LeftArm != null ? (CardDTO)monster.LeftArm : new CardDTO { CardId = 0 });

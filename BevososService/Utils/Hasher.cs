@@ -7,7 +7,7 @@ namespace BevososService.Utils
 {
     public class Hasher
     {
-        //Aqui podriamos usar BCrypt, pero por simplicidad usaremos SHA256
+
         public class SimpleHashing
         {
             protected SimpleHashing()
