@@ -18,18 +18,6 @@ namespace DataAccess.Utils
 
         public static void LogFatalException(Exception ex)
         {
-                "Fatal error in method '{0}'.\nMessage: {1}\nStackTrace:\n{2}",
-                ex.TargetSite, ex.Message, ex.StackTrace
-            );
-                "Fatal error in method '{0}'.\nMessage: {1}\nStackTrace:\n{2}",
-                ex.TargetSite, ex.Message, ex.StackTrace
-            );
-                "Fatal error in method '{0}'.\nMessage: {1}\nStackTrace:\n{2}",
-                ex.TargetSite, ex.Message, ex.StackTrace
-            );
-                "Fatal error in method '{0}'.\nMessage: {1}\nStackTrace:\n{2}",
-                ex.TargetSite, ex.Message, ex.StackTrace
-            );
             Logger.Fatal("Fatal error in method '{0}'.\nMessage: {1}\nStackTrace:\n{2}",
                 ex.TargetSite, ex.Message, ex.StackTrace);
         }
