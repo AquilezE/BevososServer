@@ -11,8 +11,10 @@ using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
 {
+
     public partial class ServiceImplementation : IUsersManager
     {
+
         private static int _currentGuestId = -4;
 
         private static int GenerateUniqueGuestId()
@@ -115,7 +117,9 @@ namespace BevososService.Implementations
             {
                 var tokenDao = new TokenDAO();
                 if (tokenDao.HasToken(email))
+                {
                     return EmailUtils.SendTokenByEmail(email, tokenDao.GetToken(email));
+                }
                 else
                 {
                     tokenDao.AsignToken(email);
@@ -184,7 +188,10 @@ namespace BevososService.Implementations
             {
                 Account account = accountDAO.GetAccountByEmail(email);
 
-                if (account == null) return null;
+                if (account == null)
+                {
+                    return null;
+                }
 
                 if (SimpleHashing.VerifyPassword(password, account.PasswordHash))
                 {
@@ -260,7 +267,9 @@ namespace BevososService.Implementations
             {
                 var accountDAO = new AccountDAO();
                 if (!accountDAO.EmailExists(email))
+                {
                     return false;
+                }
                 else
                 {
                     string hashedPassword = SimpleHashing.HashPassword(password);
@@ -286,5 +295,7 @@ namespace BevososService.Implementations
 
             return false;
         }
+
     }
+
 }

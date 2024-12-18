@@ -4,12 +4,19 @@ using System.Runtime.Serialization;
 
 namespace BevososService.DTOs
 {
+
     [DataContract]
     public class PlayerStateDTO
     {
-        [DataMember] public UserDTO User { get; set; }
-        [DataMember] public List<CardDTO> Hand { get; set; } = new List<CardDTO>();
-        [DataMember] public List<MonsterDTO> Monsters { get; set; } = new List<MonsterDTO>();
+
+        [DataMember]
+        public UserDTO User { get; set; }
+
+        [DataMember]
+        public List<CardDTO> Hand { get; set; } = new List<CardDTO>();
+
+        [DataMember]
+        public List<MonsterDTO> Monsters { get; set; } = new List<MonsterDTO>();
 
         public bool Disconnected { get; set; } = false;
 
@@ -23,5 +30,7 @@ namespace BevososService.DTOs
                 Disconnected = playerState.Disconnected
             };
         }
+
     }
+
 }

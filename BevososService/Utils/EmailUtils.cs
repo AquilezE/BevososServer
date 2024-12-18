@@ -6,8 +6,10 @@ using DataAccess.Utils;
 
 namespace BevososService.Utils
 {
+
     public class EmailUtils
     {
+
         private const string SenderEmail = "bevososthegame@gmail.com";
         private const string SmtpServer = "smtp.gmail.com";
         private const int SmtpPort = 587;
@@ -74,5 +76,7 @@ namespace BevososService.Utils
                 return false;
             }
         }
+
     }
+
 }

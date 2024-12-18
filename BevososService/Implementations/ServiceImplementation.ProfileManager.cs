@@ -11,13 +11,16 @@ namespace BevososService.Implementations
 
     public partial class ServiceImplementation : IProfileManager
     {
+
         public void ChangePassword(int userId, string oldPassword, string newPassword)
         {
             var callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
             try
             {
                 if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
+                {
                     callback.OnPasswordChange("Password cannot be empty.");
+                }
 
                 var accountDAO = new AccountDAO();
                 Account account = accountDAO.GetAccountByUserId(userId);
@@ -80,14 +83,20 @@ namespace BevososService.Implementations
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
 
-                    if (result) callback.OnProfileUpdate("Not changed", profilePictureId, "Username exists");
+                    if (result)
+                    {
+                        callback.OnProfileUpdate("Not changed", profilePictureId, "Username exists");
+                    }
                 }
                 else if (username == "Not changed")
                 {
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
 
-                    if (result) callback.OnProfileUpdate(username, profilePictureId, "");
+                    if (result)
+                    {
+                        callback.OnProfileUpdate(username, profilePictureId, "");
+                    }
                 }
                 else
                 {
@@ -96,7 +105,10 @@ namespace BevososService.Implementations
 
                     bool result = userDAO.UpdateUser(user);
 
-                    if (result) callback.OnProfileUpdate(username, profilePictureId, "");
+                    if (result)
+                    {
+                        callback.OnProfileUpdate(username, profilePictureId, "");
+                    }
                 }
             }
             catch (DataBaseException ex)
@@ -119,5 +131,7 @@ namespace BevososService.Implementations
                 Disconnect(userId);
             }
         }
+
     }
+
 }

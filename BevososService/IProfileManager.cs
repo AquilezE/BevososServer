@@ -3,9 +3,11 @@
 
 namespace BevososService
 {
+
     [ServiceContract(CallbackContract = typeof(IProfileManagerCallback))]
     internal interface IProfileManager
     {
+
         /// <summary>
         /// Updates the profile of a user, including the username and profile picture. Sends a callback indicating the result.
         /// </summary>
@@ -24,11 +26,13 @@ namespace BevososService
         /// <param name="newPassword">The new password to be set.</param>
         [OperationContract(IsOneWay = true)]
         void ChangePassword(int userId, string oldPassword, string newPassword);
+
     }
 
     [ServiceContract]
     internal interface IProfileManagerCallback
     {
+
         /// <summary>
         /// Notifies the client about the result of a profile update operation.
         /// </summary>
@@ -45,5 +49,7 @@ namespace BevososService
         /// <param name="result">A message indicating the result of the password change, or null if the change was successful.</param>
         [OperationContract(IsOneWay = true)]
         void OnPasswordChange(string result);
+
     }
+
 }

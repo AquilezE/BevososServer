@@ -5,8 +5,10 @@ using System.Threading;
 
 namespace BevososService.GameModels
 {
+
     public class Game
     {
+
         public int GameId { get; set; }
         public ConcurrentStack<Card> Deck { get; set; }
         public Dictionary<int, Stack<Card>> BabyPiles { get; set; }
@@ -24,5 +26,7 @@ namespace BevososService.GameModels
         public bool IsEndGamePhase { get; set; } = false;
 
         public HashSet<int> PlayersWhoFinishedFinalTurn { get; set; } = new HashSet<int>();
+
     }
+
 }

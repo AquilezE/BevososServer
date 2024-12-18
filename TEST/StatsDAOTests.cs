@@ -8,6 +8,7 @@ using Xunit;
 
 namespace TEST
 {
+
     public class StatsDAOTests
     {
 
@@ -45,7 +46,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var statsDAO = new StatsDAO();
-                var nonExistingUserId = -1;
+                int nonExistingUserId = -1;
 
                 bool exists = statsDAO.UserStatsExists(nonExistingUserId);
 
@@ -71,7 +72,6 @@ namespace TEST
                 bool result = statsDAO.AddNewUserStats(userId, newStats);
 
                 Assert.True(result);
-
             }
         }
 
@@ -96,7 +96,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var statsDAO = new StatsDAO();
-                var nonExistingUserId = -1;
+                int nonExistingUserId = -1;
                 var newStats = new Stats
                 {
                     UserId = nonExistingUserId,
@@ -154,7 +154,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var statsDAO = new StatsDAO();
-                var nonExistingUserId = 99999;
+                int nonExistingUserId = 99999;
 
                 Stats stats = statsDAO.GetUserStats(nonExistingUserId);
 
@@ -179,7 +179,6 @@ namespace TEST
                 bool result = statsDAO.UpdateUserStats(userId, updatedStats);
 
                 Assert.True(result);
-
             }
         }
 
@@ -283,6 +282,7 @@ namespace TEST
                 return user.UserId;
             }
         }
-    }
-}
 
+    }
+
+}

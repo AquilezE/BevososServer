@@ -4,9 +4,11 @@ using BevososService.Exceptions;
 
 namespace BevososService
 {
+
     [ServiceContract]
     internal interface IUsersManager
     {
+
         /// <summary>
         /// Checks if the provided username is already in use by another user.
         /// </summary>
@@ -87,5 +89,7 @@ namespace BevososService
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
         bool RecoverPassword(string email, string password);
+
     }
+
 }

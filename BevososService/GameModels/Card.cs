@@ -1,7 +1,9 @@
 ﻿namespace BevososService.GameModels
 {
+
     public class Card
     {
+
         public const int HeadIndex = 0;
         public const int BodyIndex = 1;
         public const int LeftArmIndex = 2;
@@ -22,19 +24,23 @@
 
         public enum CardType
         {
+
             Baby,
             BodyPart,
             Head,
             Hat,
             Tool
+
         }
 
         public enum CardElement
         {
+
             Land,
             Water,
             Air,
             Any
+
         }
 
 
@@ -46,11 +52,16 @@
 
         public override bool Equals(object obj)
         {
-            if (obj == null || GetType() != obj.GetType()) return false;
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
 
             var card = (Card)obj;
             return CardId == card.CardId && Damage == card.Damage && BodyPartIndex == card.BodyPartIndex &&
                    Element == card.Element;
         }
+
     }
+
 }

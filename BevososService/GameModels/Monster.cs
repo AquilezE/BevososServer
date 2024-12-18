@@ -1,7 +1,9 @@
 ﻿namespace BevososService.GameModels
 {
+
     public class Monster
     {
+
         public Card Head { get; set; }
         public Card Torso { get; set; }
         public Card LeftArm { get; set; }
@@ -90,16 +92,49 @@
         public int GetDamage()
         {
             int strength = 0;
-            if (Head != null) strength += Head.Damage;
-            if (Torso != null) strength += Torso.Damage;
-            if (LeftArm != null) strength += LeftArm.Damage;
-            if (LeftHandTool != null) strength += LeftHandTool.Damage;
-            if (RightArm != null) strength += RightArm.Damage;
-            if (RightHandTool != null) strength += RightHandTool.Damage;
-            if (Legs != null) strength += Legs.Damage;
-            if (Hat != null) strength = strength * 2;
+            if (Head != null)
+            {
+                strength += Head.Damage;
+            }
+
+            if (Torso != null)
+            {
+                strength += Torso.Damage;
+            }
+
+            if (LeftArm != null)
+            {
+                strength += LeftArm.Damage;
+            }
+
+            if (LeftHandTool != null)
+            {
+                strength += LeftHandTool.Damage;
+            }
+
+            if (RightArm != null)
+            {
+                strength += RightArm.Damage;
+            }
+
+            if (RightHandTool != null)
+            {
+                strength += RightHandTool.Damage;
+            }
+
+            if (Legs != null)
+            {
+                strength += Legs.Damage;
+            }
+
+            if (Hat != null)
+            {
+                strength = strength * 2;
+            }
 
             return strength;
         }
+
     }
+
 }

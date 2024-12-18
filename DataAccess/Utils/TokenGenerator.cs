@@ -2,8 +2,10 @@
 
 namespace DataAccess
 {
+
     public class TokenGenerator
     {
+
         public string GenerateToken()
         {
             var random = new Random();
@@ -11,5 +13,7 @@ namespace DataAccess
             string token = tokenNumber.ToString("D6");
             return token;
         }
+
     }
+
 }

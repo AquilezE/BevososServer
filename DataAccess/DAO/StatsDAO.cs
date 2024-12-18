@@ -4,8 +4,10 @@ using DataAccess.Models;
 
 namespace DataAccess.DAO
 {
+
     public class StatsDAO
     {
+
         public bool UserStatsExists(int userId)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -25,7 +27,10 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     bool userExists = context.Users.Any(u => u.UserId == userId);
-                    if (!userExists) return false;
+                    if (!userExists)
+                    {
+                        return false;
+                    }
 
                     if (userStats != null)
                     {
@@ -55,7 +60,10 @@ namespace DataAccess.DAO
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
-                if (userStats == null) return false;
+                if (userStats == null)
+                {
+                    return false;
+                }
 
                 using (var context = new BevososContext())
                 {
@@ -74,5 +82,7 @@ namespace DataAccess.DAO
                 }
             });
         }
+
     }
+
 }

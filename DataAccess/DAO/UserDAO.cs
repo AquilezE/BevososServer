@@ -6,8 +6,10 @@ using DataAccess.Models;
 
 namespace DataAccess.DAO
 {
+
     public class UserDAO
     {
+
         public bool UsernameExists(string username)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -78,11 +80,16 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     User user = context.Users.FirstOrDefault(u => u.UserId == userId);
-                    if (user == null) return 0;
+                    if (user == null)
+                    {
+                        return 0;
+                    }
 
                     User existingUser = context.Users.FirstOrDefault(u => u.Username == username && u.UserId != userId);
                     if (existingUser != null)
+                    {
                         throw new InvalidOperationException("Username already exists for another user.");
+                    }
 
                     user.Username = username;
                     return context.SaveChanges();
@@ -99,7 +106,10 @@ namespace DataAccess.DAO
                 {
                     User existingUser = context.Users.FirstOrDefault(u => u.UserId == user.UserId);
 
-                    if (existingUser == null) return false;
+                    if (existingUser == null)
+                    {
+                        return false;
+                    }
 
                     existingUser.Username = user.Username;
                     existingUser.ProfilePictureId = user.ProfilePictureId;
@@ -120,5 +130,7 @@ namespace DataAccess.DAO
                 }
             });
         }
+
     }
+
 }

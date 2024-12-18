@@ -5,9 +5,11 @@ using System.ServiceModel;
 
 namespace BevososService
 {
+
     [ServiceContract(CallbackContract = typeof(ILobbyManagerCallback))]
     public interface ILobbyManager
     {
+
         /// <summary>
         /// Creates a new lobby and registers the creator as the lobby leader. Notifies the creator about the new lobby creation.
         /// </summary>
@@ -68,11 +70,13 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the user whose ready status has changed.</param>
         [OperationContract(IsOneWay = true)]
         void ChangeReadyStatus(int lobbyId, int userId);
+
     }
 
     [ServiceContract]
     internal interface ILobbyManagerCallback
     {
+
         /// <summary>
         /// Notifies the creator that a new lobby has been successfully created.
         /// </summary>
@@ -148,11 +152,13 @@ namespace BevososService
         /// <param name="gameId">The unique identifier of the game session that has started.</param>
         [OperationContract(IsOneWay = true)]
         void GameStarted(int gameId);
+
     }
 
     [ServiceContract]
     public interface ILobbyChecker
     {
+
         /// <summary>
         /// Checks if a lobby is currently open and active.
         /// </summary>
@@ -168,5 +174,7 @@ namespace BevososService
         /// <returns>True if the lobby has reached its maximum capacity, false otherwise.</returns>
         [OperationContract]
         bool IsLobbyFull(int lobbyId);
+
     }
+
 }

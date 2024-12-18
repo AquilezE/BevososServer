@@ -9,8 +9,10 @@ using Xunit;
 
 namespace TEST
 {
+
     public class CardTest
     {
+
         [Fact]
         public void InitializeDeckMakes86CardsWhenUsed()
         {
@@ -24,7 +26,7 @@ namespace TEST
         {
             GlobalDeck.InitializeDeck();
 
-            GlobalDeck.Deck.TryGetValue(18, out var card);
+            GlobalDeck.Deck.TryGetValue(18, out Card card);
 
             var expectedCard = new Card
             {
@@ -37,5 +39,7 @@ namespace TEST
 
             Assert.Equal(expectedCard, card);
         }
+
     }
+
 }

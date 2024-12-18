@@ -2,6 +2,7 @@
 
 namespace BevososService.DTOs
 {
+
     public class MonsterDTO
     {
 
@@ -27,5 +28,7 @@ namespace BevososService.DTOs
 
             return monsterDTO;
         }
+
     }
+
 }

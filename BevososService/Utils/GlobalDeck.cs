@@ -3,8 +3,10 @@ using BevososService.GameModels;
 
 namespace BevososService
 {
+
     public class GlobalDeck
     {
+
         protected GlobalDeck()
         {
         }
@@ -270,5 +272,7 @@ namespace BevososService
                 cardId++;
             }
         }
+
     }
+
 }

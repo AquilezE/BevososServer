@@ -6,8 +6,10 @@ using DataAccess.Models;
 
 namespace DataAccess.DAO
 {
+
     public class TokenDAO
     {
+
         public int AsignToken(string email)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -90,5 +92,7 @@ namespace DataAccess.DAO
                 }
             });
         }
+
     }
+
 }

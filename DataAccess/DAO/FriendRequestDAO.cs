@@ -7,16 +7,20 @@ using System.Linq;
 
 namespace DataAccess.DAO
 {
+
     public class FriendRequestData
     {
+
         public int FriendRequestId { get; set; }
         public int SenderId { get; set; }
         public string SenderName { get; set; }
         public int ProfilePictureId { get; set; }
+
     }
 
     public class FriendRequestDAO
     {
+
         public int SendFriendRequest(int requesterId, int requesteeId)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -26,13 +30,19 @@ namespace DataAccess.DAO
                     User requester = context.Users.FirstOrDefault(u => u.UserId == requesterId);
                     User requestee = context.Users.FirstOrDefault(u => u.UserId == requesteeId);
 
-                    if (requester == null || requestee == null) return 0;
+                    if (requester == null || requestee == null)
+                    {
+                        return 0;
+                    }
 
                     bool requestExists = context.FriendRequests.Any(fr =>
                         (fr.RequesterId == requesterId && fr.RequesteeId == requesteeId) ||
                         (fr.RequesterId == requesteeId && fr.RequesteeId == requesterId));
 
-                    if (requestExists) return 0;
+                    if (requestExists)
+                    {
+                        return 0;
+                    }
 
                     var friendRequest = new FriendRequest
                     {
@@ -55,7 +65,10 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     FriendRequest friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
-                    if (friendRequest == null) return false;
+                    if (friendRequest == null)
+                    {
+                        return false;
+                    }
 
                     context.FriendRequests.Remove(friendRequest);
                     context.SaveChanges();
@@ -72,7 +85,10 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     FriendRequest friendRequest = context.FriendRequests.FirstOrDefault(fr => fr.Id == requestId);
-                    if (friendRequest == null) return false;
+                    if (friendRequest == null)
+                    {
+                        return false;
+                    }
 
                     context.FriendRequests.Remove(friendRequest);
                     context.SaveChanges();
@@ -130,5 +146,7 @@ namespace DataAccess.DAO
                 }
             });
         }
+
     }
+
 }

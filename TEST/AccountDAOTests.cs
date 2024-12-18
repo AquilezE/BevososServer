@@ -9,7 +9,6 @@ using Xunit;
 namespace TEST
 {
 
-
     public class AccountDAOTests
     {
 
@@ -19,8 +18,8 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var accountDAO = new AccountDAO();
-                var email = "accountdal_test@example.com";
-                var username = "AccountDALTestUser";
+                string email = "accountdal_test@example.com";
+                string username = "AccountDALTestUser";
 
                 var account = new Account
                 {
@@ -30,8 +29,6 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-
-
                     var user = new User
                     {
                         Username = username,
@@ -42,7 +39,7 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var result = accountDAO.GetAccountByEmail(email);
+                Account result = accountDAO.GetAccountByEmail(email);
 
                 Assert.Equal(result, account);
             }
@@ -73,7 +70,7 @@ namespace TEST
                 }
 
 
-                var result = accountDAO.EmailExists("existingEmail@example.com");
+                bool result = accountDAO.EmailExists("existingEmail@example.com");
 
                 Assert.True(result);
             }
@@ -82,12 +79,11 @@ namespace TEST
         [Fact]
         public void EmailExists_ReturnsFalse_WhenAccountDoesNotExist()
         {
-
-            var email = "doesntExist@example.com";
+            string email = "doesntExist@example.com";
 
             var accountDAO = new AccountDAO();
 
-            var result = accountDAO.EmailExists(email);
+            bool result = accountDAO.EmailExists(email);
 
             Assert.False(result);
         }
@@ -115,10 +111,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var result = accountDAO.UpdatePasswordByEmail("accountdal_test@example.com", "newHashedPassword");
+                bool result = accountDAO.UpdatePasswordByEmail("accountdal_test@example.com", "newHashedPassword");
 
                 Assert.True(result);
-
             }
         }
 
@@ -132,7 +127,7 @@ namespace TEST
                 var user = new User
                 {
                     Username = "newUser",
-                    ProfilePictureId = 1,
+                    ProfilePictureId = 1
                 };
                 var account = new Account
                 {
@@ -140,14 +135,13 @@ namespace TEST
                     PasswordHash = "passwordHash"
                 };
 
-                var result = accountDAO.AddUserWithAccount(user, account);
+                bool result = accountDAO.AddUserWithAccount(user, account);
 
                 Assert.True(result);
 
                 using (var context = new BevososContext())
                 {
-
-                    var userFromDb = context.Users.FirstOrDefault(u => u.Username == user.Username);
+                    User userFromDb = context.Users.FirstOrDefault(u => u.Username == user.Username);
                     Assert.NotNull(userFromDb);
                 }
             }
@@ -160,9 +154,9 @@ namespace TEST
             {
                 var accountDAO = new AccountDAO();
                 var userDAO = new UserDAO();
-                var email = "accountTestUpdate@example.com";
-                var initialPasswordHash = "test_hashed_password";
-                var newPasswordHash = "new_hashed_password";
+                string email = "accountTestUpdate@example.com";
+                string initialPasswordHash = "test_hashed_password";
+                string newPasswordHash = "new_hashed_password";
 
                 var accountTest = new Account
                 {
@@ -183,10 +177,9 @@ namespace TEST
                     context.SaveChanges();
                 }
 
-                var result = accountDAO.UpdatePasswordByUserId(accountTest.UserId, newPasswordHash);
+                bool result = accountDAO.UpdatePasswordByUserId(accountTest.UserId, newPasswordHash);
 
                 Assert.True(result);
-
             }
         }
 
@@ -196,16 +189,15 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var accountDAO = new AccountDAO();
-                var nonExistingUserId = -1;
-                var newPasswordHash = "newPasswordHashed";
+                int nonExistingUserId = -1;
+                string newPasswordHash = "newPasswordHashed";
 
-                var result = accountDAO.UpdatePasswordByUserId(nonExistingUserId, newPasswordHash);
+                bool result = accountDAO.UpdatePasswordByUserId(nonExistingUserId, newPasswordHash);
 
                 Assert.False(result);
             }
         }
 
-  
     }
-}
 
+}

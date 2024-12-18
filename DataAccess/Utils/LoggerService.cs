@@ -4,8 +4,10 @@ using System.IO;
 
 namespace DataAccess.Utils
 {
+
     public sealed class LoggerService
     {
+
         private const string DateFormat = "dd-MM-yyyy";
         private const string IdFileName = "Log";
         private const string CharacterSeparator = "_";
@@ -29,7 +31,6 @@ namespace DataAccess.Utils
                 .Enrich.FromLogContext()
                 .WriteTo.File(
                     logFilePath,
-                    rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 7,
                     outputTemplate:
                     "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
@@ -45,7 +46,10 @@ namespace DataAccess.Utils
             string logFileName = $"{IdFileName}{CharacterSeparator}{date}{FileExtension}";
             string absoluteLogDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeLogFilePath);
 
-            if (!Directory.Exists(absoluteLogDirectory)) Directory.CreateDirectory(absoluteLogDirectory);
+            if (!Directory.Exists(absoluteLogDirectory))
+            {
+                Directory.CreateDirectory(absoluteLogDirectory);
+            }
 
             string logFilePath = Path.Combine(absoluteLogDirectory, logFileName);
 
@@ -82,5 +86,7 @@ namespace DataAccess.Utils
             CloseAndFlush();
             ConfigureLogger(BuildLogFilePath());
         }
+
     }
+
 }

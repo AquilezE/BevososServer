@@ -10,8 +10,10 @@ using System.Linq;
 
 namespace DataAccess.DAO
 {
+
     public class AccountDAO
     {
+
         public Account GetAccountByUserId(int accountId)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -73,7 +75,10 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.Email == email);
-                    if (account == null) return false;
+                    if (account == null)
+                    {
+                        return false;
+                    }
 
                     account.PasswordHash = newHashedPassword;
                     int alteredRows = context.SaveChanges();
@@ -89,7 +94,10 @@ namespace DataAccess.DAO
                 using (var context = new BevososContext())
                 {
                     Account account = context.Accounts.FirstOrDefault(a => a.UserId == userId);
-                    if (account == null) return false;
+                    if (account == null)
+                    {
+                        return false;
+                    }
 
                     account.PasswordHash = newHashedPassword;
                     int alteredRows = context.SaveChanges();
@@ -99,4 +107,5 @@ namespace DataAccess.DAO
         }
 
     }
+
 }

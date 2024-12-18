@@ -8,6 +8,7 @@ using Xunit;
 
 namespace TEST
 {
+
     public class FriendshipsDAOTests
     {
 
@@ -79,7 +80,6 @@ namespace TEST
                 Friendship result = friendshipDAO.AddFriendship(user1Id, user2Id);
 
                 Assert.Null(result);
-
             }
         }
 
@@ -147,12 +147,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-
                 var friendshipDAO = new FriendshipDAO();
 
                 int userId, friendId1, friendId2;
 
-                List<User> friends = new List<User>();
+                var friends = new List<User>();
 
 
                 using (var context = new BevososContext())
@@ -205,14 +204,12 @@ namespace TEST
 
                     friends.Add(friend1);
                     friends.Add(friend2);
-
                 }
 
 
                 List<User> friendsResults = friendshipDAO.GetFriendshipList(userId);
 
                 Assert.Equal(friendsResults, friends);
-
             }
         }
 
@@ -272,7 +269,6 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-
                     var user = new User
                     {
                         Username = "LonelyUser",
@@ -308,7 +304,6 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-
                     var user1 = new User
                     {
                         Username = "User1",
@@ -352,7 +347,6 @@ namespace TEST
 
                 bool friendshipExists = friendshipDAO.FriendshipExists(user1Id, user2Id);
                 Assert.True(friendshipExists);
-                
             }
         }
 
@@ -463,10 +457,8 @@ namespace TEST
                 bool result = friendshipDAO.RemoveFriendship(user1Id, user2Id);
 
                 Assert.True(result);
-
             }
         }
-
 
     }
 

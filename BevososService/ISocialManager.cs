@@ -6,9 +6,11 @@ using System.ServiceModel;
 
 namespace BevososService
 {
+
     [ServiceContract(CallbackContract = typeof(ISocialManagerCallback))]
     internal interface ISocialManager
     {
+
         /// <summary>
         /// Connects a user to the social service, registering their callback for notifications and notifying their friends that they are online.
         /// </summary>
@@ -154,11 +156,13 @@ namespace BevososService
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         [OperationContract(IsOneWay = true)]
         void InviteFriendToLobby(string inviterName, int userId, int lobbyId);
+
     }
 
     [ServiceContract]
     internal interface ISocialManagerCallback
     {
+
         /// <summary>
         /// Notifies the client that one of their friends has come online.
         /// </summary>
@@ -202,5 +206,7 @@ namespace BevososService
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
         [OperationContract(IsOneWay = true)]
         void NotifyGameInvited(string inviterName, int lobbyId);
+
     }
+
 }

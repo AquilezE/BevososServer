@@ -8,8 +8,10 @@ using System.Collections.Generic;
 
 namespace BevososService.Implementations
 {
+
     public partial class ServiceImplementation
     {
+
         public ServiceImplementation()
         {
             GlobalDeck.InitializeDeck();
@@ -42,5 +44,7 @@ namespace BevososService.Implementations
             return new FaultException<BevososServerExceptions>(serverException,
                 new FaultReason(serverException.Message));
         }
+
     }
+
 }
