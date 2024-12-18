@@ -118,14 +118,10 @@ namespace BevososService.Implementations
         }
 
 
-        //GameId-> GameInstance
         private static readonly ConcurrentDictionary<int, Game> ActiveGames = new ConcurrentDictionary<int, Game>();
 
-        //GameId -> (UserId -> Callback)
-        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>
-            GamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
+        private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>GamePlayerCallBack = new ConcurrentDictionary<int, ConcurrentDictionary<int, IGameManagerCallback>>();
 
-        //GameId ->(UserId -> Stats)
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>> PlayerStatistics =
             new ConcurrentDictionary<int, ConcurrentDictionary<int, Stats>>();
 
@@ -138,9 +134,9 @@ namespace BevososService.Implementations
 
             gameInstance.BabyPiles = new Dictionary<int, Stack<Card>>
             {
-                { 0, new Stack<Card>() }, // Baby of Land
-                { 1, new Stack<Card>() }, // Baby of Water
-                { 2, new Stack<Card>() } // Baby of Air
+                { 0, new Stack<Card>() },
+                { 1, new Stack<Card>() },
+                { 2, new Stack<Card>() } 
             };
 
             foreach (int userId in lobby.Select(x => x.Key))
@@ -751,7 +747,6 @@ namespace BevososService.Implementations
             gameInstance.TurnTimer = new Timer(
                 state =>
                 {
-                    //advance turn
                     Console.WriteLine($"Player {userId}'s turn has timed out.");
                     AdvanceTurn(matchCode);
                 },

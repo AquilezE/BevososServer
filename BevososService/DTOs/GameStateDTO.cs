@@ -10,10 +10,6 @@ namespace BevososService.DTOs
     {
         [DataMember] public int GameStateId { get; set; }
 
-
-        //0 is the top baby of Land
-        //1 is the top baby of Water
-        //2 is the top baby of Air
         [DataMember] public List<CardDTO> BabyDeck { get; set; }
 
         [DataMember]

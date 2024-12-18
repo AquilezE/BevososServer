@@ -12,7 +12,6 @@ using System.ServiceModel;
 
 namespace BevososService.Implementations
 {
-    //NEEDS STEROID CALLBACK EXCEPTION HANDLING
 
     public partial class ServiceImplementation : ISocialManager
     {

@@ -8,7 +8,7 @@ using static BevososService.Utils.Hasher;
 
 namespace BevososService.Implementations
 {
-    //NEEDS STEROID CALLBACK EXCEPTION HANDLING
+
     public partial class ServiceImplementation : IProfileManager
     {
         public void ChangePassword(int userId, string oldPassword, string newPassword)
