@@ -5,9 +5,11 @@ using System.ServiceModel;
 
 namespace BevososService
 {
+
     [ServiceContract(CallbackContract = typeof(IGameManagerCallback))]
     public interface IGameManager
     {
+
         /// <summary>
         /// Allows a player to join an active game session. This method registers the player's callback
         /// and sends the current game state to the joining player.
@@ -95,11 +97,13 @@ namespace BevososService
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
         void SaveStatsForPLayer(StatsDTO userStatsDto, int userId);
+
     }
 
     [ServiceContract]
     public interface IGameManagerCallback
     {
+
         /// <summary>
         /// Sends the current game state to a player. This is used to update the player's view
         /// with the latest game status, including player hands, card decks, and game progress.
@@ -170,5 +174,7 @@ namespace BevososService
         /// <param name="matchCode">The unique code representing the match.</param>
         [OperationContract(IsOneWay = true)]
         void OnNotifyGameEndedWithoutUsers(int matchCode);
+
     }
+
 }

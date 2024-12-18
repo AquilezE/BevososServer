@@ -8,8 +8,10 @@ using BevososService.DTOs;
 
 namespace BevososService.Implementations
 {
+
     public partial class ServiceImplementation : IStatsManager
     {
+
         public StatsDTO GetCurrentUserStats(int userId)
         {
             int userWins = 0;
@@ -39,7 +41,7 @@ namespace BevososService.Implementations
                     return userStats;
                 }
 
-                return userStats;   
+                return userStats;
             }
             catch (DataBaseException ex)
             {
@@ -57,7 +59,10 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogFatalException(ex);
             }
+
             return userStats;
         }
+
     }
+
 }

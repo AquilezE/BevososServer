@@ -5,8 +5,10 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class FriendshipDAOExTests
     {
+
         [Fact]
         public void AddFriendship_ThrowsDBException_WhenDBNotAvaliable()
         {
@@ -56,5 +58,7 @@ namespace EXCEPTIONTESTS
                 Assert.Throws<DataBaseException>(() => dao.GetFriendsForUser(1));
             }
         }
+
     }
+
 }

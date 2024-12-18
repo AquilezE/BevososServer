@@ -5,11 +5,13 @@ using System.Text;
 
 namespace BevososService.Utils
 {
+
     public class Hasher
     {
 
         public class SimpleHashing
         {
+
             protected SimpleHashing()
             {
             }
@@ -17,7 +19,9 @@ namespace BevososService.Utils
             public static string HashPassword(string password)
             {
                 if (password == null)
+                {
                     throw new ArgumentNullException(nameof(password));
+                }
 
                 using (var sha256 = SHA256.Create())
                 {
@@ -30,13 +34,21 @@ namespace BevososService.Utils
             public static bool VerifyPassword(string password, string hashedPassword)
             {
                 if (password == null)
+                {
                     throw new ArgumentNullException(nameof(password));
+                }
+
                 if (hashedPassword == null)
+                {
                     throw new ArgumentNullException(nameof(hashedPassword));
+                }
 
                 string hashedInput = HashPassword(password);
                 return hashedInput == hashedPassword;
             }
+
         }
+
     }
+
 }

@@ -5,9 +5,11 @@ using BevososService.Implementations;
 
 namespace Host
 {
+
     internal class Program
     {
-        static void Main(string[] args)
+
+        private static void Main(string[] args)
         {
             using (var host = new ServiceHost(typeof(ServiceImplementation)))
             {
@@ -16,5 +18,7 @@ namespace Host
                 Console.ReadLine();
             }
         }
+
     }
+
 }

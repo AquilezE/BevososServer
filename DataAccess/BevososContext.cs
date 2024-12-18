@@ -6,8 +6,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DataAccess
 {
+
     public class BevososContext : DbContext
     {
+
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Token> Tokens { get; set; }
@@ -86,5 +88,7 @@ namespace DataAccess
 
             base.OnModelCreating(modelBuilder);
         }
+
     }
+
 }

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class AccountDAOExTests
     {
 
@@ -96,5 +97,7 @@ namespace EXCEPTIONTESTS
                 Assert.Throws<DataBaseException>(() => dao.UpdatePasswordByUserId(1, "hashed_password"));
             }
         }
+
     }
+
 }

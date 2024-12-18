@@ -10,8 +10,10 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class BlockedDAOExTests
     {
+
         [Fact]
         public void AddBlock_ThrowsDBException_WhenDBNotAvaliable()
         {
@@ -46,7 +48,7 @@ namespace EXCEPTIONTESTS
                 var dao = new BlockedDAO();
                 int blockerId = 1;
 
-               Assert.Throws<DataBaseException>(() => dao.GetBlockList(blockerId));
+                Assert.Throws<DataBaseException>(() => dao.GetBlockList(blockerId));
             }
         }
 
@@ -58,8 +60,10 @@ namespace EXCEPTIONTESTS
                 var dao = new BlockedDAO();
                 int currentUserId = 1;
 
-               Assert.Throws<DataBaseException>(() => dao.GetBlockedListForUser(currentUserId));
+                Assert.Throws<DataBaseException>(() => dao.GetBlockedListForUser(currentUserId));
             }
         }
+
     }
+
 }

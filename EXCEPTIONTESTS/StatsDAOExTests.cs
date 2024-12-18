@@ -11,8 +11,10 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class StatsDAOExTests
     {
+
         [Fact]
         public void UserStatsExists_ThrowsDBException_WhenDBNotAvaliable()
         {
@@ -54,5 +56,7 @@ namespace EXCEPTIONTESTS
                 Assert.Throws<DataBaseException>(() => dao.UpdateUserStats(1, userStats));
             }
         }
+
     }
+
 }

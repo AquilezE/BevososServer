@@ -4,9 +4,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataAccess.Models
 {
+
     public class User
     {
-        [Key] public int UserId { get; set; }
+
+        [Key]
+        public int UserId { get; set; }
 
         [Required]
         [Index("IX_UserUsername", IsUnique = true)]
@@ -21,11 +24,16 @@ namespace DataAccess.Models
 
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
+            if (obj == null)
+            {
+                return false;
+            }
 
             var other = (User)obj;
 
             return Username == other.Username && ProfilePictureId == other.ProfilePictureId;
         }
+
     }
+
 }

@@ -5,8 +5,10 @@ using System.Data.SqlClient;
 
 namespace DataAccess.Exceptions
 {
+
     public static class ExceptionHelper
     {
+
         public static T ExecuteWithExceptionHandling<T>(Func<T> func)
         {
             try
@@ -29,5 +31,7 @@ namespace DataAccess.Exceptions
                 throw new DataBaseException(ex.Message);
             }
         }
+
     }
+
 }

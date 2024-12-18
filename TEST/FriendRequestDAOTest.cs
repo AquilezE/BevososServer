@@ -8,6 +8,7 @@ using Xunit;
 
 namespace TEST
 {
+
     public class FriendRequestDAOTest
     {
 
@@ -57,7 +58,6 @@ namespace TEST
 
 
                 Assert.NotEqual(0, result);
-
             }
         }
 
@@ -125,7 +125,6 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-
                     var requester = new User
                     {
                         Username = "RequesterUser",
@@ -173,7 +172,6 @@ namespace TEST
                 bool result = friendService.AcceptFriendRequest(requestId);
 
                 Assert.True(result);
-
             }
         }
 
@@ -244,7 +242,6 @@ namespace TEST
                 bool result = friendService.DeclineFriendRequest(requestId);
 
                 Assert.True(result);
-
             }
         }
 
@@ -259,7 +256,6 @@ namespace TEST
 
 
                 Assert.False(result);
-
             }
         }
 
@@ -270,7 +266,7 @@ namespace TEST
             {
                 int requesteeId;
 
-                List<FriendRequest> pendingRequests = new List<FriendRequest>();
+                var pendingRequests = new List<FriendRequest>();
                 using (var context = new BevososContext())
                 {
                     var requestee = new User
@@ -340,9 +336,6 @@ namespace TEST
                 List<FriendRequest> pendingRequestsResult = friendService.GetPendingFriendRequests(requesteeId);
 
                 Assert.Equal(pendingRequests, pendingRequestsResult);
-
-
-
             }
         }
 
@@ -377,9 +370,9 @@ namespace TEST
                 List<FriendRequest> pendingRequests = friendService.GetPendingFriendRequests(requesteeId);
 
                 Assert.Empty(pendingRequests);
-
             }
         }
-    
+
     }
+
 }

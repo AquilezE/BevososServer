@@ -15,6 +15,7 @@ namespace BevososService.Implementations
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public partial class ServiceImplementation : ILobbyManager
     {
+
         private static int _currentLobbyId = 4;
 
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<int, ILobbyManagerCallback>>
@@ -81,7 +82,9 @@ namespace BevososService.Implementations
             clientChannel.Faulted += LobbyChannel_Faulted;
 
             if (!ActiveLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> value))
+            {
                 return;
+            }
 
             value.TryAdd(userDto.UserId, callback);
             ClientCallbackMapping.TryAdd(callback, (lobbyId, userDto.UserId));
@@ -96,7 +99,10 @@ namespace BevososService.Implementations
 
             callback.OnLobbyUsersUpdate(lobbyId, existingUsers);
 
-            if (LobbyLeaders.TryGetValue(lobbyId, out int leaderId)) callback.OnLeaderChanged(lobbyId, leaderId);
+            if (LobbyLeaders.TryGetValue(lobbyId, out int leaderId))
+            {
+                callback.OnLeaderChanged(lobbyId, leaderId);
+            }
 
             foreach (KeyValuePair<int, ILobbyManagerCallback> user in ActiveLobbiesDict[lobbyId])
             {
@@ -164,10 +170,22 @@ namespace BevososService.Implementations
         {
             try
             {
-                if (!LobbyLeaders.TryGetValue(lobbyId, out int leaderId) || leaderId != kickerId) return;
+                if (!LobbyLeaders.TryGetValue(lobbyId, out int leaderId) || leaderId != kickerId)
+                {
+                    return;
+                }
+
                 if (!ActiveLobbiesDict.TryGetValue(lobbyId,
-                        out ConcurrentDictionary<int, ILobbyManagerCallback> lobby)) return;
-                if (!lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback)) return;
+                        out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
+                {
+                    return;
+                }
+
+                if (!lobby.TryGetValue(targetUserId, out ILobbyManagerCallback targetCallback))
+                {
+                    return;
+                }
+
                 try
                 {
                     targetCallback.OnKicked(lobbyId, reason);
@@ -434,10 +452,12 @@ namespace BevososService.Implementations
                 }
             }
         }
+
     }
 
     public partial class ServiceImplementation : ILobbyChecker
     {
+
         public bool IsLobbyOpen(int lobbyId)
         {
             try
@@ -466,7 +486,9 @@ namespace BevososService.Implementations
             try
             {
                 if (ActiveLobbiesDict.TryGetValue(lobbyId, out ConcurrentDictionary<int, ILobbyManagerCallback> lobby))
+                {
                     return lobby.Count >= 4;
+                }
 
                 return false;
             }
@@ -486,5 +508,7 @@ namespace BevososService.Implementations
                 return false;
             }
         }
+
     }
+
 }

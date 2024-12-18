@@ -7,9 +7,9 @@ using Xunit;
 
 namespace TEST
 {
+
     public class UserDAOTests
     {
-
 
         [Fact]
         public void UsernameExists_ReturnsTrue_WhenUsernameExists()
@@ -17,7 +17,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDAO = new UserDAO();
-                var username = "AccountDALTestUser";
+                string username = "AccountDALTestUser";
 
                 using (var context = new BevososContext())
                 {
@@ -47,7 +47,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDAO = new UserDAO();
-                var username = "nonExistingUsername";
+                string username = "nonExistingUsername";
 
                 bool result = userDAO.UsernameExists(username);
 
@@ -61,8 +61,8 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDAO = new UserDAO();
-                var email = "accountdal_test@example.com";
-                var username = "AccountDALTestUser";
+                string email = "accountdal_test@example.com";
+                string username = "AccountDALTestUser";
 
                 User expectedUser;
 
@@ -95,7 +95,7 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDAO = new UserDAO();
-                var email = "nonExistingEmail@example.com";
+                string email = "nonExistingEmail@example.com";
 
                 User result = userDAO.GetUserByEmail(email);
 
@@ -108,7 +108,6 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-
                 User expectedUser;
                 int testUserId;
                 string testUsername;
@@ -129,8 +128,9 @@ namespace TEST
                     context.SaveChanges();
 
                     testUserId = testUser.UserId;
-                    expectedUser= testUser;
+                    expectedUser = testUser;
                 }
+
                 var userDAO = new UserDAO();
 
                 User result = userDAO.GetUserById(testUserId);
@@ -159,9 +159,9 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDao = new UserDAO();
-                var email = "accountdal_test@example.com";
-                var originalUsername = "OriginalUser";
-                var newUsername = "newUsername";
+                string email = "accountdal_test@example.com";
+                string originalUsername = "OriginalUser";
+                string newUsername = "newUsername";
 
                 using (var context = new BevososContext())
                 {
@@ -185,9 +185,8 @@ namespace TEST
                 userDao.UpdateUserNames(userId, newUsername);
 
                 User updatedUser = userDao.GetUserById(userId);
-                
-                Assert.Equal(newUsername, updatedUser.Username);
 
+                Assert.Equal(newUsername, updatedUser.Username);
             }
         }
 
@@ -197,9 +196,9 @@ namespace TEST
             using (var scope = new TransactionScope())
             {
                 var userDao = new UserDAO();
-                var email = "userTestUpdate@example.com";
-                var originalUsername = "User1";
-                var newUsername = "newUsername";
+                string email = "userTestUpdate@example.com";
+                string originalUsername = "User1";
+                string newUsername = "newUsername";
 
                 int userId;
                 using (var context = new BevososContext())
@@ -229,7 +228,6 @@ namespace TEST
 
 
                 Assert.True(result);
-
             }
         }
 
@@ -261,16 +259,15 @@ namespace TEST
         [Fact]
         public void GetUsersByName_ReturnsListOfThreeUsers_WhenThreeNamesMatch()
         {
-
             using (var scope = new TransactionScope())
             {
                 var expectedList = new List<User>();
                 using (var context = new BevososContext())
                 {
-                    var email = "ExampleEmail";
-                    var username = "name";
-                    var profilePictureId = 1;
-                    for (var i = 1; i < 4; i++)
+                    string email = "ExampleEmail";
+                    string username = "name";
+                    int profilePictureId = 1;
+                    for (int i = 1; i < 4; i++)
                     {
                         var account = new Account
                         {
@@ -286,17 +283,16 @@ namespace TEST
                         context.Users.Add(user);
                         expectedList.Add(user);
                     }
+
                     context.SaveChanges();
                 }
 
                 var userDao = new UserDAO();
 
-                var result = userDao.GetUsersByName("name", 1);
+                List<User> result = userDao.GetUsersByName("name", 1);
 
                 Assert.Equal(expectedList, result);
-
             }
-
         }
 
 
@@ -305,13 +301,11 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                
                 var userDao = new UserDAO();
-                var result = userDao.GetUsersByName("notname", 1);
+                List<User> result = userDao.GetUsersByName("notname", 1);
 
                 Assert.Empty(result);
             }
-
         }
 
         [Fact]
@@ -319,9 +313,9 @@ namespace TEST
         {
             using (var scope = new TransactionScope())
             {
-                var email = "ExampleEmail";
-                var profilePictureId = 1;
-                
+                string email = "ExampleEmail";
+                int profilePictureId = 1;
+
                 var expectedList = new List<User>();
 
                 using (var context = new BevososContext())
@@ -344,9 +338,11 @@ namespace TEST
                 }
 
                 var userDao = new UserDAO();
-                var result = userDao.GetUsersByName("Roberto", 1);
+                List<User> result = userDao.GetUsersByName("Roberto", 1);
                 Assert.Equal(expectedList, result);
             }
         }
+
     }
+
 }

@@ -6,16 +6,20 @@ using System.Linq;
 
 namespace DataAccess.DAO
 {
+
     public class BlockedData
     {
+
         public int BlockId { get; set; }
         public int BlockedId { get; set; }
         public string BlockerUsername { get; set; }
         public int ProfilePictureId { get; set; }
+
     }
 
     public class BlockedDAO
     {
+
         public bool AddBlock(int blockerId, int blockeeId)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
@@ -39,7 +43,9 @@ namespace DataAccess.DAO
                         return true;
                     }
                     else
+                    {
                         return false;
+                    }
                 }
             });
         }
@@ -61,7 +67,9 @@ namespace DataAccess.DAO
                         return true;
                     }
                     else
+                    {
                         return false;
+                    }
                 }
             });
         }
@@ -103,5 +111,7 @@ namespace DataAccess.DAO
                 }
             });
         }
+
     }
+
 }

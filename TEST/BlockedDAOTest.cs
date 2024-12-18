@@ -57,15 +57,14 @@ namespace TEST
                 bool result = blockService.AddBlock(blockerId, blockeeId);
 
                 Assert.True(result);
-
             }
         }
 
         [Fact]
         public void AddBlock_ShouldReturnFalse_WhenUsersDoNotExist()
         {
-            var blockerId = 999;
-            var blockeeId = 1000;
+            int blockerId = 999;
+            int blockeeId = 1000;
 
             var blockService = new BlockedDAO();
 
@@ -133,18 +132,16 @@ namespace TEST
 
                 using (var context = new BevososContext())
                 {
-                    var block = context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
+                    Blocked block =
+                        context.BlockedList.FirstOrDefault(b => b.BlockerId == blockerId && b.BlockeeId == blockeeId);
                     Assert.Null(block);
                 }
-
-
             }
         }
 
         [Fact]
         public void DeleteBlock_ShouldReturnFalse_WhenBlockDoesNotExist()
         {
-
             using (var scope = new TransactionScope())
             {
                 int blockerId;
@@ -187,7 +184,6 @@ namespace TEST
                 bool result = blockService.DeleteBlock(blockerId, blockeeId);
 
                 Assert.False(result);
-
             }
         }
 
@@ -197,7 +193,7 @@ namespace TEST
             int blockeeId1;
             int blockeeId2;
 
-            List<User> blockedList = new List<User>();
+            var blockedList = new List<User>();
 
             using (var scope = new TransactionScope())
             {
@@ -258,15 +254,12 @@ namespace TEST
                 List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
                 Assert.Equal(blockedList, blockedUsers);
-
-
             }
         }
 
         [Fact]
         public void GetBlockList_ShouldReturnEmptyList_WhenNoBlocksExist()
         {
-
             using (var scope = new TransactionScope())
             {
                 int blockerId;
@@ -295,23 +288,21 @@ namespace TEST
                 List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
                 Assert.Empty(blockedUsers);
-
             }
         }
 
         [Fact]
         public void GetBlockList_ShouldReturnEmptyList_WhenBlockerDoesNotExist()
         {
-            var blockerId = 999;
+            int blockerId = 999;
 
             var blockService = new BlockedDAO();
 
             List<User> blockedUsers = blockService.GetBlockList(blockerId);
 
             Assert.Empty(blockedUsers);
-
         }
 
-
     }
+
 }

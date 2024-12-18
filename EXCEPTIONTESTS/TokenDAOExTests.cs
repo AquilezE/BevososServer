@@ -10,8 +10,10 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class TokenDAOExTests
     {
+
         [Fact]
         public void AsignToken_ThrowsDBException_WhenDBNotAvaliable()
         {
@@ -61,5 +63,7 @@ namespace EXCEPTIONTESTS
                 Assert.Throws<DataBaseException>(() => dao.DeleteToken("tokenValue", "email@example.com"));
             }
         }
+
     }
+
 }

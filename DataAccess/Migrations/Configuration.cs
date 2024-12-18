@@ -1,9 +1,11 @@
 ﻿namespace DataAccess.Migrations
 {
+
     using System.Data.Entity.Migrations;
 
     internal sealed class Configuration : DbMigrationsConfiguration<BevososContext>
     {
+
         public Configuration()
         {
             AutomaticMigrationsEnabled = false;
@@ -16,5 +18,7 @@
             //  You can use the DbSet<T>.AddOrUpdate() helper extension method
             //  to avoid creating duplicate seed data.
         }
+
     }
+
 }

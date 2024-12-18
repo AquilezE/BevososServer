@@ -4,9 +4,11 @@ using BevososService.Exceptions;
 
 namespace BevososService
 {
+
     [ServiceContract]
     internal interface IStatsManager
     {
+
         /// <summary>
         /// Retrieves the current user's statistics.
         /// </summary>
@@ -14,5 +16,7 @@ namespace BevososService
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
         StatsDTO GetCurrentUserStats(int userId);
+
     }
+
 }

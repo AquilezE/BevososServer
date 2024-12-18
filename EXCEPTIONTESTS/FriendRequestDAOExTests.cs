@@ -10,8 +10,10 @@ using Xunit;
 
 namespace EXCEPTIONTESTS
 {
+
     public class FriendRequestDAOExTests
     {
+
         [Fact]
         public void SendFriendRequest_ThrowsDBException_WhenDBNotAvailable()
         {
@@ -44,7 +46,7 @@ namespace EXCEPTIONTESTS
                 Assert.Throws<DataBaseException>(() => dao.DeclineFriendRequest(1));
             }
         }
-         
+
         [Fact]
         public void GetPendingFriendRequests_ThrowsDBException_WhenDBNotAvailable()
         {
@@ -78,8 +80,9 @@ namespace EXCEPTIONTESTS
                 int requestId = 1;
 
                 Assert.Throws<DataBaseException>(() => dao.FriendRequestExists(requestId));
-                
             }
         }
+
     }
+
 }
