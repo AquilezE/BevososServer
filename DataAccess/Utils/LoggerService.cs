@@ -12,8 +12,6 @@ namespace DataAccess.Utils
         private const string FileExtension = ".txt";
         private const string RelativeLogFilePath = @"Logs";
 
-        private static readonly Lazy<LoggerService> Instance = new Lazy<LoggerService>(() => new LoggerService());
-
         private static ILogger _logger;
 
         private static readonly object Lock = new object();
@@ -25,12 +23,11 @@ namespace DataAccess.Utils
 
         private static void ConfigureLogger(string logFilePath)
         {
-            _logger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.FromLogContext()
                 .WriteTo.File(
                     logFilePath,
-                    rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 7,
                     outputTemplate:
                     "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"

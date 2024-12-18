@@ -150,7 +150,7 @@ namespace BevososService.Implementations
                     Monsters = new List<Monster>()
                 };
 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 35; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
                         playerState.Hand.Add(card);
@@ -192,19 +192,27 @@ namespace BevososService.Implementations
 
         private static void EndGame(int gameId)
         {
-            SaveStatsForAllPLayers(gameId);
 
             var gameStats = new List<StatsDTO>();
 
-            foreach (PlayerState playerStats in ActiveGames[gameId].Players.Values)
+            int winnerId = GetWinnerId(gameId);
+
+            foreach (PlayerState playerState in ActiveGames[gameId].Players.Values)
             {
-                int points = PlayerStatistics[gameId][playerStats.User.UserId].PointsThisGame;
-                string username = playerStats.User.Username;
+                int points = PlayerStatistics[gameId][playerState.User.UserId].PointsThisGame;
+                string username = playerState.User.Username;
+                int anihilatedBabies = PlayerStatistics[gameId][playerState.User.UserId].AnihilatedBabies;
+                int monstersCreated = PlayerStatistics[gameId][playerState.User.UserId].MonstersCreated;
+
+                
 
                 var statsDTO = new StatsDTO
                 {
                     PointsThisGame = points,
-                    Username = username
+                    Username = username,
+                    AnihilatedBabies = anihilatedBabies,
+                    MonstersCreated = monstersCreated,
+                    IsWinner = playerState.User.UserId == winnerId
                 };
 
                 gameStats.Add(statsDTO);
@@ -830,84 +838,104 @@ namespace BevososService.Implementations
 
         private static void CallOnProvokeForAllPlayers(int matchCode, int babyPileIndex)
         {
-            try
+            foreach (int playerId in GamePlayerCallBack[matchCode].Keys)
             {
-                foreach (int player in GamePlayerCallBack[matchCode].Keys)
-                    GamePlayerCallBack[matchCode][player].OnProvoke(matchCode, babyPileIndex);
-            }
-            catch (CommunicationException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
-            }
-            catch (TimeoutException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                RemoveGameClient(GamePlayerCallBack[matchCode].Values.First());
+                try
+                {
+                    GamePlayerCallBack[matchCode][playerId].OnProvoke(matchCode, babyPileIndex);
+
+                }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    RemoveGameClient(GamePlayerCallBack[matchCode][playerId]);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    RemoveGameClient(GamePlayerCallBack[matchCode][playerId]);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    RemoveGameClient(GamePlayerCallBack[matchCode][playerId]);
+                }
             }
         }
 
-        private static void SaveStatsForAllPLayers(int matchCode)
+        private static int GetWinnerId(int matchCode)
         {
             int maxPoints = 0;
             int winnerId = 0;
 
-            foreach (PlayerState maxPointsPlayer in ActiveGames[matchCode].Players.Values)
+            foreach (int playerId in PlayerStatistics[matchCode].Keys)
             {
-                int points = PlayerStatistics[matchCode][maxPointsPlayer.User.UserId].PointsThisGame;
+                int points = PlayerStatistics[matchCode][playerId].PointsThisGame;
 
                 if (points > maxPoints)
                 {
                     maxPoints = points;
-                    winnerId = maxPointsPlayer.User.UserId;
+                    winnerId = playerId;
                 }
             }
+            return winnerId;
+        }
 
-            foreach (PlayerState player in ActiveGames[matchCode].Players.Values)
+
+        public void SaveStatsForPLayer(StatsDTO userStatsDto, int userId)
+        {
+
+            int monsters = userStatsDto.MonstersCreated;
+            int babies = userStatsDto.AnihilatedBabies;
+            bool isWinner = userStatsDto.IsWinner;
+
+            try
             {
-                int monsters = PlayerStatistics[matchCode][player.User.UserId].MonstersCreated;
-                int babies = PlayerStatistics[matchCode][player.User.UserId].AnihilatedBabies;
-
-                try
+                if (userId > 0)
                 {
-                    if (player.User.UserId > 0)
+                    if (new StatsDAO().UserStatsExists(userId))
                     {
-                        if (new StatsDAO().UserStatsExists(player.User.UserId))
-                        {
-                            DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(player.User.UserId);
+                        DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(userId);
 
-                            userStats.Wins += player.User.UserId == winnerId ? 1 : 0;
-                            userStats.MonstersCreated += monsters;
-                            userStats.AnnihilatedBabies += babies;
+                        userStats.Wins += isWinner ? 1 : 0;
+                        userStats.MonstersCreated += monsters;
+                        userStats.AnnihilatedBabies += babies;
 
-                            new StatsDAO().UpdateUserStats(player.User.UserId, userStats);
-                        }
-                        else
-                        {
-                            var newUserStats = new DataAccess.Models.Stats
-                            {
-                                UserId = player.User.UserId,
-                                Wins = player.User.UserId == winnerId ? 1 : 0,
-                                MonstersCreated = monsters,
-                                AnnihilatedBabies = babies
-                            };
-
-                            new StatsDAO().AddNewUserStats(player.User.UserId, newUserStats);
-                        }
+                        new StatsDAO().UpdateUserStats(userId, userStats);
                     }
                     else
-                        Console.WriteLine("Guest user, cannot save Stats");
+                    {
+                        var newUserStats = new DataAccess.Models.Stats
+                        {
+                            UserId = userId,
+                            Wins = isWinner ? 1 : 0,
+                            MonstersCreated = monsters,
+                            AnnihilatedBabies = babies
+                        };
+
+                        new StatsDAO().AddNewUserStats(userId, newUserStats);
+                    }
                 }
-                catch (DataBaseException ex)
-                {
-                    ExceptionManager.LogErrorException(ex);
-                }
+                else
+                    Console.WriteLine("Guest user, cannot save Stats");
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
             }
         }
+
     }
 }

@@ -4,16 +4,23 @@ using System;
 using System.ServiceModel;
 using DataAccess.Exceptions;
 using DataAccess.Utils;
+using BevososService.DTOs;
 
 namespace BevososService.Implementations
 {
     public partial class ServiceImplementation : IStatsManager
     {
-        public void GetCurrentUserStats(int userId)
+        public StatsDTO GetCurrentUserStats(int userId)
         {
-            int userWins = -1;
-            int userMonsters = -1;
-            int userBabies = -1;
+            int userWins = 0;
+            int userMonsters = 0;
+            int userBabies = 0;
+
+            var userStats = new StatsDTO();
+
+            userStats.Wins = userWins;
+            userStats.MonstersCreated = userMonsters;
+            userStats.AnihilatedBabies = userBabies;
 
             try
             {
@@ -25,25 +32,18 @@ namespace BevososService.Implementations
                     userMonsters = statsDAO.MonstersCreated;
                     userBabies = statsDAO.AnnihilatedBabies;
 
-                    var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
-                    callback.OnStatsReceived(userWins, userMonsters, userBabies);
-                }
-                else
-                {
-                    userWins = 0;
-                    userMonsters = 0;
-                    userBabies = 0;
+                    userStats.Wins = userWins;
+                    userStats.MonstersCreated = userMonsters;
+                    userStats.AnihilatedBabies = userBabies;
 
-                    var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
-                    callback.OnStatsReceived(userWins, userMonsters, userBabies);
+                    return userStats;
                 }
+
+                return userStats;   
             }
             catch (DataBaseException ex)
             {
-                CreateAndLogFaultException(ex);
-
-                var callback = OperationContext.Current.GetCallbackChannel<IStatsManagerCallback>();
-                callback.OnStatsReceived(userWins, userMonsters, userBabies);
+                throw CreateAndLogFaultException(ex);
             }
             catch (CommunicationException ex)
             {
@@ -57,6 +57,7 @@ namespace BevososService.Implementations
             {
                 ExceptionManager.LogFatalException(ex);
             }
+            return userStats;
         }
     }
 }

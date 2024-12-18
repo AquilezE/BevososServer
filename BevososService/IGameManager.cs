@@ -1,4 +1,5 @@
 ﻿using BevososService.DTOs;
+using BevososService.Exceptions;
 using System.Collections.Generic;
 using System.ServiceModel;
 
@@ -90,6 +91,10 @@ namespace BevososService
         /// <param name="babyPileProvoked">The index of the baby pile being provoked.</param>
         [OperationContract(IsOneWay = true)]
         void ExecuteProvoke(int userId, int matchCode, int babyPileProvoked);
+
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+        void SaveStatsForPLayer(StatsDTO userStatsDto, int userId);
     }
 
     [ServiceContract]
