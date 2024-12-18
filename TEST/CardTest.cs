@@ -16,8 +16,6 @@ namespace TEST
         {
             GlobalDeck.InitializeDeck();
 
-            GlobalDeck.Deck.TryGetValue(18, out var card);
-
             Assert.Equal(86, GlobalDeck.Deck.Count);
         }
 

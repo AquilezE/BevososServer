@@ -8,8 +8,5 @@ namespace DataAccess.Exceptions
         {
         }
 
-        public DataBaseException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
     }
 }

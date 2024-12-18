@@ -14,7 +14,7 @@ namespace DataAccess.DAO
     {
         public Account GetAccountByUserId(int accountId)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -27,7 +27,7 @@ namespace DataAccess.DAO
 
         public Account GetAccountByEmail(string email)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -40,7 +40,7 @@ namespace DataAccess.DAO
 
         public bool EmailExists(string email)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -51,7 +51,7 @@ namespace DataAccess.DAO
 
         public bool AddUserWithAccount(User user, Account account)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -68,7 +68,7 @@ namespace DataAccess.DAO
 
         public bool UpdatePasswordByEmail(string email, string newHashedPassword)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -84,7 +84,7 @@ namespace DataAccess.DAO
 
         public bool UpdatePasswordByUserId(int userId, string newHashedPassword)
         {
-            return ExecuteWithExceptionHandling(() =>
+            return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
@@ -98,27 +98,5 @@ namespace DataAccess.DAO
             });
         }
 
-        private T ExecuteWithExceptionHandling<T>(Func<T> func)
-        {
-            try
-            {
-                return func();
-            }
-            catch (EntityException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-                throw new DataBaseException(ex.Message);
-            }
-        }
     }
 }
