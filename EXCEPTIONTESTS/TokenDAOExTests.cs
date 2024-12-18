@@ -48,7 +48,7 @@ namespace EXCEPTIONTESTS
             using (var scope = new TransactionScope())
             {
                 var dao = new TokenDAO();
-                Assert.Throws<DataBaseException>(() => dao.TokenIsValid("tokenValue", "email@example.com"));
+                Assert.Throws<DataBaseException>(() => dao.TokenIsValid("123456", "email@example.com"));
             }
         }
 
@@ -58,7 +58,7 @@ namespace EXCEPTIONTESTS
             using (var scope = new TransactionScope())
             {
                 var dao = new TokenDAO();
-                Assert.Throws<DataBaseException>(() => dao.DeleteToken("tokenValue", "email@example.com"));
+                Assert.Throws<DataBaseException>(() => dao.DeleteToken("123456", "email@example.com"));
             }
         }
     }

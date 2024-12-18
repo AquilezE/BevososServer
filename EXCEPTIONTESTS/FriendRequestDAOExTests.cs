@@ -19,7 +19,7 @@ namespace EXCEPTIONTESTS
             {
                 var dao = new FriendRequestDAO();
 
-                var exception = Assert.Throws<DataBaseException>(() => dao.SendFriendRequest(1, 2));
+                Assert.Throws<DataBaseException>(() => dao.SendFriendRequest(1, 2));
             }
         }
 

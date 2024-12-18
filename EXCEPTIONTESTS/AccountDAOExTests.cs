@@ -58,11 +58,6 @@ namespace EXCEPTIONTESTS
                 {
                     Username = "TestUser",
                     ProfilePictureId = 1,
-                    Account = new Account
-                    {
-                        Email = "testuser@example.com",
-                        PasswordHash = "hashed_password"
-                    }
                 };
 
                 var account = new Account

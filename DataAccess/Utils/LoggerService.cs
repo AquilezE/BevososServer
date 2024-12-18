@@ -10,9 +10,7 @@ namespace DataAccess.Utils
         private const string IdFileName = "Log";
         private const string CharacterSeparator = "_";
         private const string FileExtension = ".txt";
-        private const string RelativeLogFilePath = @"Logs";
-
-        private static readonly Lazy<LoggerService> Instance = new Lazy<LoggerService>(() => new LoggerService());
+        private const string RelativeLogFilePath = @"Logsitos";
 
         private static ILogger _logger;
 
@@ -21,11 +19,12 @@ namespace DataAccess.Utils
         private LoggerService()
         {
             ConfigureLogger(BuildLogFilePath());
+            _logger.Information("Logger initialized and ready to write logs.");
         }
 
         private static void ConfigureLogger(string logFilePath)
         {
-            _logger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.FromLogContext()
                 .WriteTo.File(
@@ -49,6 +48,9 @@ namespace DataAccess.Utils
             if (!Directory.Exists(absoluteLogDirectory)) Directory.CreateDirectory(absoluteLogDirectory);
 
             string logFilePath = Path.Combine(absoluteLogDirectory, logFileName);
+
+            Console.WriteLine($"Absolute Log Directory: {absoluteLogDirectory}");
+            Console.WriteLine($"Log File Path: {logFilePath}");
 
             return logFilePath;
         }

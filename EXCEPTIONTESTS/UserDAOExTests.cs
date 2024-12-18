@@ -49,7 +49,7 @@ namespace EXCEPTIONTESTS
             using (var scope = new TransactionScope())
             {
                 var dao = new UserDAO();
-                Assert.Throws<DataBaseException>(() => dao.GetUsersByName("John", 1));
+                Assert.Throws<DataBaseException>(() => dao.GetUsersByName("Juan", 1));
             }
         }
 
