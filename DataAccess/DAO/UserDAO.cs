@@ -52,9 +52,15 @@ namespace DataAccess.DAO
             {
                 using (var context = new BevososContext())
                 {
+
                     List<int> blockedUserIds = context.BlockedList
                         .Where(b => b.BlockerId == currentUserId)
                         .Select(b => b.BlockeeId)
+                        .ToList();
+
+                    List<int> blockedByUserIds = context.BlockedList
+                        .Where(b => b.BlockeeId == currentUserId)
+                        .Select(b => b.BlockerId)
                         .ToList();
 
                     List<int> friendUserIds = context.Friendships
@@ -66,6 +72,7 @@ namespace DataAccess.DAO
                         .Where(u => u.Username.Contains(name)
                                     && u.UserId != currentUserId
                                     && !blockedUserIds.Contains(u.UserId)
+                                    && !blockedByUserIds.Contains(u.UserId) 
                                     && !friendUserIds.Contains(u.UserId))
                         .Take(20)
                         .ToList();
