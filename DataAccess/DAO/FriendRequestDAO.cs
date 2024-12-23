@@ -35,6 +35,14 @@ namespace DataAccess.DAO
                         return 0;
                     }
 
+                    var blockedDAO = new BlockedDAO();
+                    var blockedList = blockedDAO.GetBlockList(requesteeId);
+
+                    if (blockedList.Any(b => b.UserId == requesterId))
+                    {
+                        return 0;
+                    }
+
                     bool requestExists = context.FriendRequests.Any(fr =>
                         (fr.RequesterId == requesterId && fr.RequesteeId == requesteeId) ||
                         (fr.RequesterId == requesteeId && fr.RequesteeId == requesterId));

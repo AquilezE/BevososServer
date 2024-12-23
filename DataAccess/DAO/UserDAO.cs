@@ -68,12 +68,18 @@ namespace DataAccess.DAO
                         .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
                         .ToList();
 
+                    List<int> friendRequestExist = context.FriendRequests
+                        .Where(fr => fr.RequesterId == currentUserId || fr.RequesteeId == currentUserId)
+                        .Select(fr => fr.RequesterId == currentUserId ? fr.RequesteeId : fr.RequesterId)
+                        .ToList();
+
                     return context.Users.Include("Account")
                         .Where(u => u.Username.Contains(name)
                                     && u.UserId != currentUserId
                                     && !blockedUserIds.Contains(u.UserId)
-                                    && !blockedByUserIds.Contains(u.UserId) 
-                                    && !friendUserIds.Contains(u.UserId))
+                                    && !blockedByUserIds.Contains(u.UserId)
+                                    && !friendUserIds.Contains(u.UserId)
+                                    && !friendRequestExist.Contains(u.UserId))
                         .Take(20)
                         .ToList();
                 }

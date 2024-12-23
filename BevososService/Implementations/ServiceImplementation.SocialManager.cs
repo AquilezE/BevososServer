@@ -107,6 +107,11 @@ namespace BevososService.Implementations
         {
             int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
 
+            if(idFriendRequest == 0)
+            {
+                return false;
+            }
+
             if (ConnectedClients.ContainsKey(requesteeId))
             {
                 try
@@ -146,94 +151,101 @@ namespace BevososService.Implementations
                 }
             }
 
-            return 0 != idFriendRequest;
+            return true;
         }
 
         public bool AcceptFriendRequest(int userId, int friendId, int requestId)
         {
             try
             {
-                if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+                if (!new UserDAO().UserExists(userId) || !new UserDAO().UserExists(friendId))
                 {
-                    bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
-                    if (result)
-                    {
-                        Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
-                        if (friendship != null)
-                        {
-                            int friendshipId = friendship.Id;
-
-                            var userDao = new UserDAO();
-                            User currentUser = userDao.GetUserById(userId);
-                            User friendUser = userDao.GetUserById(friendId);
-
-                            var friendDto = new FriendDTO
-                            {
-                                FriendshipId = friendshipId,
-                                FriendId = friendId,
-                                FriendName = friendUser.Username,
-                                ProfilePictureId = friendUser.ProfilePictureId,
-                                IsConnected = ConnectedClients.ContainsKey(friendId)
-                            };
-
-                            var friendDtoForFriend = new FriendDTO
-                            {
-                                FriendshipId = friendshipId,
-                                FriendId = userId,
-                                FriendName = currentUser.Username,
-                                ProfilePictureId = currentUser.ProfilePictureId,
-                                IsConnected = ConnectedClients.ContainsKey(userId)
-                            };
-
-                            if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
-                            {
-                                callback.OnNewFriend(friendDto);
-                            }
-
-                            try
-                            {
-                                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback friendCallback))
-                                {
-                                    try
-                                    {
-                                        friendCallback.OnNewFriend(friendDtoForFriend);
-                                    }
-                                    catch (CommunicationException ex)
-                                    {
-                                        ExceptionManager.LogErrorException(ex);
-                                        Disconnect(userId);
-                                    }
-                                    catch (TimeoutException ex)
-                                    {
-                                        ExceptionManager.LogErrorException(ex);
-                                        Disconnect(userId);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        ExceptionManager.LogFatalException(ex);
-                                        Disconnect(userId);
-                                    }
-                                }
-                            }
-                            catch (CommunicationException ex)
-                            {
-                                Console.WriteLine("ComErr");
-                            }
-                            catch (TimeoutException ex)
-                            {
-                                Console.WriteLine("TErr");
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine("ErrG");
-                            }
-
-                            return true;
-                        }
-                    }
+                    return false;
                 }
 
-                return false;
+                bool result = new FriendRequestDAO().AcceptFriendRequest(requestId);
+                if (!result)
+                {
+                    return false;
+                }
+
+                Friendship friendship = new FriendshipDAO().AddFriendship(userId, friendId);
+
+                if (friendship == null)
+                {
+                    return false;
+                }
+
+                int friendshipId = friendship.Id;
+
+                var userDao = new UserDAO();
+                User currentUser = userDao.GetUserById(userId);
+                User friendUser = userDao.GetUserById(friendId);
+
+                var friendDto = new FriendDTO
+                {
+                    FriendshipId = friendshipId,
+                    FriendId = friendId,
+                    FriendName = friendUser.Username,
+                    ProfilePictureId = friendUser.ProfilePictureId,
+                    IsConnected = ConnectedClients.ContainsKey(friendId)
+                };
+
+                var friendDtoForFriend = new FriendDTO
+                {
+                    FriendshipId = friendshipId,
+                    FriendId = userId,
+                    FriendName = currentUser.Username,
+                    ProfilePictureId = currentUser.ProfilePictureId,
+                    IsConnected = ConnectedClients.ContainsKey(userId)
+                };
+
+                try
+                {
+                    if (ConnectedClients.TryGetValue(userId, out ISocialManagerCallback callback))
+                    {
+                        callback.OnNewFriend(friendDto);
+                    }
+                }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                    Disconnect(userId);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                    Disconnect(userId);
+                }
+
+                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback friendCallback))
+                {
+                    try
+                    {
+                        friendCallback.OnNewFriend(friendDtoForFriend);
+                    }
+                    catch (CommunicationException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        Disconnect(userId);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        Disconnect(userId);
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionManager.LogFatalException(ex);
+                        Disconnect(userId);
+                    }
+                }
+                return true;
             }
             catch (DataBaseException ex)
             {
@@ -241,7 +253,7 @@ namespace BevososService.Implementations
             }
         }
 
-        public bool DeclineFriendRequest(int requestId)
+        public bool DeclineFriendRequest(int userId, int requestId)
         {
             try
             {
@@ -254,18 +266,22 @@ namespace BevososService.Implementations
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return false;
             }
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return false;
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
                 return false;
             }
+
         }
 
         public List<FriendRequestDTO> GetFriendRequests(int userId)
@@ -293,16 +309,19 @@ namespace BevososService.Implementations
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
                 return null;
             }
         }
@@ -378,16 +397,19 @@ namespace BevososService.Implementations
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
                 return null;
             }
         }
@@ -538,16 +560,19 @@ namespace BevososService.Implementations
             catch (CommunicationException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (TimeoutException ex)
             {
                 ExceptionManager.LogErrorException(ex);
+                Disconnect(userId);
                 return null;
             }
             catch (Exception ex)
             {
                 ExceptionManager.LogFatalException(ex);
+                Disconnect(userId);
                 return null;
             }
         }

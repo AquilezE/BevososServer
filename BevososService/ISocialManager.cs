@@ -61,11 +61,12 @@ namespace BevososService
         /// <summary>
         /// Declines a pending friend request.
         /// </summary>
+        /// <param name="userId">The unique identifier of the user declining the friend request.</param>
         /// <param name="requestId">The unique identifier of the friend request to be declined.</param>
         /// <returns>True if the request was successfully declined, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-        bool DeclineFriendRequest(int requestId);
+        bool DeclineFriendRequest(int userId, int requestId);
 
 
         /// <summary>
