@@ -218,7 +218,7 @@ namespace BevososService.Implementations
             {
                 var callback = (ILobbyManagerCallback)sender;
                 RemoveLobbyClient(callback);
-                Console.WriteLine("Client Closed");
+                Console.WriteLine("Lobby Client Closed");
             }
             catch (CommunicationException ex)
             {
@@ -240,7 +240,7 @@ namespace BevososService.Implementations
             {
                 var callback = (ILobbyManagerCallback)sender;
                 RemoveLobbyClient(callback);
-                Console.WriteLine("Client Faulted");
+                Console.WriteLine("Lobby Client Faulted");
             }
             catch (CommunicationException ex)
             {

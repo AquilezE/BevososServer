@@ -158,7 +158,7 @@ namespace BevososService.Implementations
                     Monsters = new List<Monster>()
                 };
 
-                for (int i = 0; i < 35; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     if (gameInstance.Deck.TryPop(out Card card))
                     {

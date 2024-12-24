@@ -339,7 +339,12 @@ namespace BevososService.Implementations
                     if (result)
                     {
                         var callback = OperationContext.Current.GetCallbackChannel<ISocialManagerCallback>();
-                        callback.OnFriendshipDeleted(userId);
+                        callback.OnFriendshipDeleted(friendId);
+
+                        if(ConnectedClients.TryGetValue(friendId, out callback))
+                        {
+                            callback.OnFriendshipDeleted(userId);
+                        }
                         return true;
                     }
                 }
