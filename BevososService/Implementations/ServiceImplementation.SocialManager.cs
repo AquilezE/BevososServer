@@ -420,7 +420,7 @@ namespace BevososService.Implementations
         }
 
 
-        public bool BlockFriend(int userId, int friendId)
+        public bool BlockFriend(int userId, int friendId, string blockReason)
         {
             try
             {
@@ -429,7 +429,7 @@ namespace BevososService.Implementations
                     bool resultFriendDeleted = new FriendshipDAO().RemoveFriendship(userId, friendId);
                     if (resultFriendDeleted)
                     {
-                        bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId);
+                        bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId, blockReason);
                         if (resultBlockCreated)
                         {
                             if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
@@ -501,13 +501,13 @@ namespace BevososService.Implementations
             return false;
         }
 
-        public bool BlockUser(int userId, int blockeeId)
+        public bool BlockUser(int userId, int blockeeId, string blockReason)
         {
             try
             {
                 if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(blockeeId))
                 {
-                    if (new BlockedDAO().AddBlock(userId, blockeeId))
+                    if (new BlockedDAO().AddBlock(userId, blockeeId,blockReason))
                     {
                         return true;
                     }

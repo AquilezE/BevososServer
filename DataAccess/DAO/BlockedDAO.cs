@@ -20,7 +20,7 @@ namespace DataAccess.DAO
     public class BlockedDAO
     {
 
-        public bool AddBlock(int blockerId, int blockeeId)
+        public bool AddBlock(int blockerId, int blockeeId,string blockReason)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
@@ -34,7 +34,8 @@ namespace DataAccess.DAO
                         var block = new Blocked
                         {
                             Blocker = blocker,
-                            Blockee = blockee
+                            Blockee = blockee,
+                            Reason = blockReason 
                         };
 
                         context.BlockedList.Add(block);

@@ -93,10 +93,11 @@ namespace BevososService
         /// </summary>
         /// <param name="userId">The unique identifier of the user blocking the friend.</param>
         /// <param name="friendId">The unique identifier of the friend being blocked.</param>
+        /// <param name="blockReason" >The reason for blocking the friend.</param>
         /// <returns>True if the friend was successfully blocked, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-        bool BlockFriend(int userId, int friendId);
+        bool BlockFriend(int userId, int friendId, string blockReason);
 
         /// <summary>
         /// Unblocks a previously blocked user.
@@ -114,10 +115,11 @@ namespace BevososService
         /// </summary>
         /// <param name="userId">The unique identifier of the user performing the block action.</param>
         /// <param name="blockeeId">The unique identifier of the user being blocked.</param>
+        /// <param name="blockReason" >The reason for blocking the user.</param>
         /// <returns>True if the user was successfully blocked, false otherwise.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
-        bool BlockUser(int userId, int blockeeId);
+        bool BlockUser(int userId, int blockeeId, string blockReason);
 
         /// <summary>
         /// Retrieves a list of blocked users for the specified user.

@@ -105,6 +105,10 @@
     <Compile Include="Migrations\202412060243491_added_Stats.Designer.cs">
       <DependentUpon>202412060243491_added_Stats.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202412252123464_blockReason.cs" />
+    <Compile Include="Migrations\202412252123464_blockReason.Designer.cs">
+      <DependentUpon>202412252123464_blockReason.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Blocked.cs" />
@@ -134,6 +138,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202412060243491_added_Stats.resx">
       <DependentUpon>202412060243491_added_Stats.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202412252123464_blockReason.resx">
+      <DependentUpon>202412252123464_blockReason.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
