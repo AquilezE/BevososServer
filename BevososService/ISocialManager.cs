@@ -157,7 +157,8 @@ namespace BevososService
         /// <param name="inviterName">The name of the inviter.</param>
         /// <param name="userId">The unique identifier of the user being invited.</param>
         /// <param name="lobbyId">The unique identifier of the lobby.</param>
-        [OperationContract(IsOneWay = true)]
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
         void InviteFriendToLobby(string inviterName, int userId, int lobbyId);
 
     }

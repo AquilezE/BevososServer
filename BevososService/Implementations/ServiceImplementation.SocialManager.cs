@@ -105,7 +105,15 @@ namespace BevososService.Implementations
 
         public bool SendFriendRequest(int userId, int requesteeId)
         {
-            int idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
+            int idFriendRequest = 0;
+            try
+            {
+                idFriendRequest = new FriendRequestDAO().SendFriendRequest(userId, requesteeId);
+            }catch(DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            
 
             if(idFriendRequest == 0)
             {
@@ -424,25 +432,32 @@ namespace BevososService.Implementations
         {
             try
             {
-                if (new UserDAO().UserExists(userId) && new UserDAO().UserExists(friendId))
+                if (!new UserDAO().UserExists(userId) || !new UserDAO().UserExists(friendId))
                 {
-                    bool resultFriendDeleted = new FriendshipDAO().RemoveFriendship(userId, friendId);
-                    if (resultFriendDeleted)
-                    {
-                        bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId, blockReason);
-                        if (resultBlockCreated)
-                        {
-                            if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
-                            {
-                                callback.OnFriendshipDeleted(userId);
-                            }
+                    return false;
+                }
+                
+                bool resultFriendDeleted = new FriendshipDAO().RemoveFriendship(userId, friendId);
+                
+                if (!resultFriendDeleted)
+                {
+                    return false;
+                }
+                
+                bool resultBlockCreated = new BlockedDAO().AddBlock(userId, friendId, blockReason);
 
-                            return true;
-                        }
-                    }
+                if (!resultBlockCreated)
+                {
+                    return false;
                 }
 
-                return false;
+                if (ConnectedClients.TryGetValue(friendId, out ISocialManagerCallback callback))
+                {
+                    callback.OnFriendshipDeleted(userId);
+                }
+
+                return true;
+
             }
             catch (DataBaseException ex)
             {

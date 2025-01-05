@@ -5,6 +5,7 @@ using System.Linq;
 using System.ServiceModel;
 using BevososService.GameModels;
 using System.Collections.Generic;
+using BevososService.Utils;
 
 namespace BevososService.Implementations
 {

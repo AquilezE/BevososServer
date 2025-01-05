@@ -15,6 +15,7 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the user whose profile is being updated.</param>
         /// <param name="username">The new username to be set.</param>
         /// <param name="profilePictureId">The identifier for the new profile picture.</param>
+        /// <returns>0 if the profile was successfully updated, 1 if the username is already in use, 2 if the user does not exist, 3 if an exception occurred.</returns>
         [OperationContract]
         [FaultContract(typeof(BevososServerExceptions))]
         int UpdateProfile(int userId, string username, int profilePictureId);
@@ -26,21 +27,10 @@ namespace BevososService
         /// <param name="userId">The unique identifier of the user requesting the password change.</param>
         /// <param name="oldPassword">The current password for verification.</param>
         /// <param name="newPassword">The new password to be set.</param>
-        //[OperationContract(IsOneWay = true)]
-        //void ChangePassword(int userId, string oldPassword, string newPassword);
+        /// <returns>0 if the password was successfully changed, 1 if the old password was incorrect,    if the user does not exist, 3 if an exception occurred.</returns>
+        [OperationContract]
+        [FaultContract(typeof(BevososServerExceptions))]
+        int ChangePassword(int userId, string oldPassword, string newPassword);
 
     }
-
-    //[ServiceContract]
-    //internal interface IProfileManagerCallback
-    //{
-    //    /// <summary>
-    //    /// Notifies the client of the result of a password change operation.
-    //    /// </summary>
-    //    /// <param name="result">A message indicating the result of the password change, or null if the change was successful.</param>
-    //    [OperationContract(IsOneWay = true)]
-    //    void OnPasswordChange(string result);
-
-    //}
-
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
+using BevososService.Utils;
 using DataAccess.DAO;
 using DataAccess.Exceptions;
 using DataAccess.Utils;
@@ -857,7 +858,7 @@ namespace BevososService.Implementations
             );
         }
 
-        public static void InitiateEndGamePhase(int matchCode)
+        private static void InitiateEndGamePhase(int matchCode)
         {
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
@@ -890,7 +891,7 @@ namespace BevososService.Implementations
             }
         }
 
-        public static void CheckEndGame(int matchCode)
+        private static void CheckEndGame(int matchCode)
         {
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
@@ -969,11 +970,12 @@ namespace BevososService.Implementations
             {
                 int points = PlayerStatistics[matchCode][playerId].PointsThisGame;
 
-                if (points > maxPoints)
+                if (points <= maxPoints)
                 {
-                    maxPoints = points;
-                    winnerId = playerId;
+                    continue;
                 }
+                maxPoints = points;
+                winnerId = playerId;
             }
 
             return winnerId;

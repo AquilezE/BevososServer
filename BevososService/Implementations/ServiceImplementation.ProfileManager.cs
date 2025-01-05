@@ -12,56 +12,58 @@ namespace BevososService.Implementations
     public partial class ServiceImplementation : IProfileManager
     {
 
-        //public void ChangePassword(int userId, string oldPassword, string newPassword)
-        //{
-        //    var callback = OperationContext.Current.GetCallbackChannel<IProfileManagerCallback>();
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
-        //        {
-        //            callback.OnPasswordChange("Password cannot be empty.");
-        //        }
+        public int ChangePassword(int userId, string oldPassword, string newPassword)
+        {
+            const int Success = 0;
+            const int IncorrectPassword= 1;
+            const int DoesntExistError = 2;
+            const int ExceptionError = 3;
 
-        //        var accountDAO = new AccountDAO();
-        //        Account account = accountDAO.GetAccountByUserId(userId);
+            try
+            {
 
-        //        if (account == null)
-        //        {
-        //            callback.OnPasswordChange("Account not found.");
-        //            return;
-        //        }
+                var accountDAO = new AccountDAO();
+                Account account = accountDAO.GetAccountByUserId(userId);
 
-        //        if (!SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
-        //        {
-        //            callback.OnPasswordChange("Incorrect password.");
-        //            return;
-        //        }
+                if (account == null)
+                {
+                    return DoesntExistError;
+                }
 
-        //        string newHashedPassword = SimpleHashing.HashPassword(newPassword);
-        //        bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
+                if (!SimpleHashing.VerifyPassword(oldPassword, account.PasswordHash))
+                {
+                    return IncorrectPassword;
+                }
 
-        //        callback.OnPasswordChange(result ? null : "Failed to update password.");
-        //    }
-        //    catch (DataBaseException ex)
-        //    {
-        //        throw CreateAndLogFaultException(ex);
-        //    }
-        //    catch (CommunicationException ex)
-        //    {
-        //        ExceptionManager.LogErrorException(ex);
-        //        callback.OnPasswordChange("An unexpected error occurred.");
-        //    }
-        //    catch (TimeoutException ex)
-        //    {
-        //        ExceptionManager.LogErrorException(ex);
-        //        callback.OnPasswordChange("An unexpected error occurred.");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        ExceptionManager.LogFatalException(ex);
-        //        callback.OnPasswordChange("An unexpected error occurred.");
-        //    }
-        //}
+                string newHashedPassword = SimpleHashing.HashPassword(newPassword);
+                bool result = accountDAO.UpdatePasswordByUserId(userId, newHashedPassword);
+
+                if (result)
+                {
+                    return Success;
+                }
+
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+             
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
+                
+            }
+            return ExceptionError;
+        }
 
         public int UpdateProfile(int userId, string username, int profilePictureId)
         {

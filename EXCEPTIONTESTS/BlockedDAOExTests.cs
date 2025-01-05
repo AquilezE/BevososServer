@@ -23,7 +23,7 @@ namespace EXCEPTIONTESTS
                 int blockerId = 1;
                 int blockeeId = 2;
 
-                Assert.Throws<DataBaseException>(() => dao.AddBlock(blockerId, blockeeId));
+                Assert.Throws<DataBaseException>(() => dao.AddBlock(blockerId, blockeeId, "reasons"));
             }
         }
 

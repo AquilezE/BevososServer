@@ -54,7 +54,7 @@ namespace TEST
 
                 var blockService = new BlockedDAO();
 
-                bool result = blockService.AddBlock(blockerId, blockeeId);
+                bool result = blockService.AddBlock(blockerId, blockeeId, "reasons");
 
                 Assert.True(result);
             }
@@ -69,7 +69,7 @@ namespace TEST
             var blockService = new BlockedDAO();
 
 
-            bool result = blockService.AddBlock(blockerId, blockeeId);
+            bool result = blockService.AddBlock(blockerId, blockeeId, "reasons");
 
 
             Assert.False(result);
