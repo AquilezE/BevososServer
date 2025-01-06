@@ -113,6 +113,12 @@ namespace BevososService
         void ReceiveGameState(GameStateDTO gameStateDto);
 
         /// <summary>
+        /// Notifies the player that they could not join the game.
+        /// </summary>
+        [OperationContract(IsOneWay = true)]
+        void OnNotifyCouldNotJoinGame();
+
+        /// <summary>
         /// Requests the selection of a body part for customization.
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>

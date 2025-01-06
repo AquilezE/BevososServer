@@ -121,8 +121,6 @@ namespace BevososService.Implementations
                     return;
                 }
             }
-
-            Console.WriteLine("Callback not found in any active game.");
         }
 
 
@@ -156,7 +154,7 @@ namespace BevososService.Implementations
                 {
                     User = userDto,
                     Hand = new List<Card>(),
-                    Monsters = new List<Monster>()
+                    Monsters = new List<Monster>(),
                 };
 
                 for (int i = 0; i < 5; i++)
@@ -193,15 +191,37 @@ namespace BevososService.Implementations
                 if (!GamePlayerCallBack.ContainsKey(gameId))
                 {
                     GamePlayerCallBack.TryAdd(gameId, new ConcurrentDictionary<int, IGameManagerCallback>());
+
                 }
 
                 GamePlayerCallBack[gameId].TryAdd(userDto.UserId, callback);
+
+                if (gameInstance.Players.TryGetValue(userDto.UserId, out PlayerState playerState))
+                {
+                    playerState.Disconnected = false;
+                }
 
                 BroadcastGameState(gameId);
             }
             else
             {
-                throw new FaultException("Game does not exist.");
+                try
+                {
+                    callback.OnNotifyCouldNotJoinGame();
+                }
+                catch (CommunicationException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                }
+                catch (TimeoutException ex)
+                {
+                    ExceptionManager.LogErrorException(ex);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionManager.LogFatalException(ex);
+                }
+                
             }
         }
 
@@ -263,7 +283,6 @@ namespace BevososService.Implementations
                 GamePlayerCallBack.TryRemove(gameId, out _);
                 PlayerStatistics.TryRemove(gameId, out _);
 
-                Console.WriteLine($"Game {gameId} has been ended and removed from active games");
             }
         }
 
@@ -300,7 +319,6 @@ namespace BevososService.Implementations
                 GamePlayerCallBack.TryRemove(gameId, out _);
                 PlayerStatistics.TryRemove(gameId, out _);
 
-                Console.WriteLine($"Game {gameId} has been ended and removed from active games");
             }
         }
 
@@ -533,12 +551,9 @@ namespace BevososService.Implementations
 
         public void PlayProvoke(int userId, int matchCode, int babyPileIndex)
         {
-            Console.WriteLine(
-                $"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
 
             if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
-                Console.WriteLine("Game not found");
                 return;
             }
 
@@ -694,8 +709,6 @@ namespace BevososService.Implementations
 
         public void ExecuteProvoke(int userId, int matchCode, int babyPileIndex)
         {
-            Console.WriteLine(
-                $"PlayProvoke called with userId: {userId}, matchCode: {matchCode}, babyPileIndex: {babyPileIndex}");
 
 
             if (!ActiveGames.TryGetValue(matchCode, out Game gameInstance))
@@ -747,11 +760,12 @@ namespace BevososService.Implementations
 
                 foreach (Monster monster in player.Monsters)
                 {
-                    if (monster.Head.Element == element || monster.Head.Element == Card.CardElement.Any)
+                    if (monster.Head.Element != element && monster.Head.Element != Card.CardElement.Any)
                     {
-                        monsterArmyStrenght += monster.GetDamage();
-                        monstersToRemove.Add(monster);
+                        continue;
                     }
+                    monsterArmyStrenght += monster.GetDamage();
+                    monstersToRemove.Add(monster);
                 }
 
                 foreach (Monster monster in monstersToRemove)
@@ -771,11 +785,12 @@ namespace BevososService.Implementations
                     player.Monsters.Remove(monster);
                 }
 
-                if (monsterArmyStrenght > monsterArmyMaxStrenght)
+                if (monsterArmyStrenght <= monsterArmyMaxStrenght)
                 {
-                    monsterArmyMaxStrenght = monsterArmyStrenght;
-                    playerWithMaxStrenght = player.User.UserId;
+                    continue;
                 }
+                monsterArmyMaxStrenght = monsterArmyStrenght;
+                playerWithMaxStrenght = player.User.UserId;
             }
 
             if (pileStrenght > monsterArmyMaxStrenght)
@@ -790,14 +805,69 @@ namespace BevososService.Implementations
             }
 
 
-            if (gameInstance.PlayerActionsRemaining[userId] == 0)
+            if (gameInstance.PlayerActionsRemaining[userId] != 0)
+                return;
+            if (gameInstance.IsEndGamePhase)
             {
-                if (gameInstance.IsEndGamePhase)
-                {
-                    gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
-                }
+                gameInstance.PlayersWhoFinishedFinalTurn.Add(userId);
+            }
 
-                AdvanceTurn(matchCode);
+            AdvanceTurn(matchCode);
+        }
+
+        public void SaveStatsForPLayer(StatsDTO userStatsDto, int userId)
+        {
+            int monsters = userStatsDto.MonstersCreated;
+            int babies = userStatsDto.AnihilatedBabies;
+            bool isWinner = userStatsDto.IsWinner;
+
+            try
+            {
+                if (userId > 0)
+                {
+                    if (new StatsDAO().UserStatsExists(userId))
+                    {
+                        DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(userId);
+
+                        userStats.Wins += isWinner ? 1 : 0;
+                        userStats.MonstersCreated += monsters;
+                        userStats.AnnihilatedBabies += babies;
+
+                        new StatsDAO().UpdateUserStats(userId, userStats);
+                    }
+                    else
+                    {
+                        var newUserStats = new DataAccess.Models.Stats
+                        {
+                            UserId = userId,
+                            Wins = isWinner ? 1 : 0,
+                            MonstersCreated = monsters,
+                            AnnihilatedBabies = babies
+                        };
+
+                        new StatsDAO().AddNewUserStats(userId, newUserStats);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Guest user, cannot save Stats");
+                }
+            }
+            catch (DataBaseException ex)
+            {
+                throw CreateAndLogFaultException(ex);
+            }
+            catch (CommunicationException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (TimeoutException ex)
+            {
+                ExceptionManager.LogErrorException(ex);
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.LogFatalException(ex);
             }
         }
 
@@ -806,6 +876,7 @@ namespace BevososService.Implementations
             if (ActiveGames.TryGetValue(matchCode, out Game gameInstance))
             {
                 List<int> playerIds = gameInstance.Players.Keys.ToList();
+
                 int currentIndex = playerIds.IndexOf(gameInstance.CurrentPlayerId);
                 int nextIndex = (currentIndex + 1) % playerIds.Count;
                 gameInstance.CurrentPlayerId = playerIds[nextIndex];
@@ -814,6 +885,13 @@ namespace BevososService.Implementations
                 gameInstance.PlayerActionsRemaining[gameInstance.CurrentPlayerId] = actionsPerTurn;
 
                 gameInstance.TurnStartTime = DateTime.UtcNow;
+                
+                int connectedPlayers = gameInstance.Players.Values.Count(player => !player.Disconnected);
+
+                if (connectedPlayers < 2)
+                {
+                    EndGameWithNoUsers(matchCode);
+                }
 
 
                 StartTurnTimer(matchCode, gameInstance.CurrentPlayerId);
@@ -842,7 +920,7 @@ namespace BevososService.Implementations
 
             if (playerState.Disconnected)
             {
-                turnDurationInSeconds = 5;
+                turnDurationInSeconds = 10;
             }
 
 
@@ -979,63 +1057,6 @@ namespace BevososService.Implementations
             }
 
             return winnerId;
-        }
-
-
-        public void SaveStatsForPLayer(StatsDTO userStatsDto, int userId)
-        {
-            int monsters = userStatsDto.MonstersCreated;
-            int babies = userStatsDto.AnihilatedBabies;
-            bool isWinner = userStatsDto.IsWinner;
-
-            try
-            {
-                if (userId > 0)
-                {
-                    if (new StatsDAO().UserStatsExists(userId))
-                    {
-                        DataAccess.Models.Stats userStats = new StatsDAO().GetUserStats(userId);
-
-                        userStats.Wins += isWinner ? 1 : 0;
-                        userStats.MonstersCreated += monsters;
-                        userStats.AnnihilatedBabies += babies;
-
-                        new StatsDAO().UpdateUserStats(userId, userStats);
-                    }
-                    else
-                    {
-                        var newUserStats = new DataAccess.Models.Stats
-                        {
-                            UserId = userId,
-                            Wins = isWinner ? 1 : 0,
-                            MonstersCreated = monsters,
-                            AnnihilatedBabies = babies
-                        };
-
-                        new StatsDAO().AddNewUserStats(userId, newUserStats);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Guest user, cannot save Stats");
-                }
-            }
-            catch (DataBaseException ex)
-            {
-                throw CreateAndLogFaultException(ex);
-            }
-            catch (CommunicationException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-            }
-            catch (TimeoutException ex)
-            {
-                ExceptionManager.LogErrorException(ex);
-            }
-            catch (Exception ex)
-            {
-                ExceptionManager.LogFatalException(ex);
-            }
         }
 
     }

@@ -82,11 +82,14 @@ namespace BevososService.Implementations
                     return DoesntExistError;
                 }
 
-                if (user.Username == username)
+                string currentUsername = user.Username?.Trim().ToLowerInvariant();
+                string newUsername = username?.Trim().ToLowerInvariant();
+
+                if (currentUsername == newUsername)
                 {
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
-                    if (result == true)
+                    if (result)
                     {
                         return Success;
                     }
@@ -96,7 +99,7 @@ namespace BevososService.Implementations
                     user.Username = username;
                     user.ProfilePictureId = profilePictureId;
                     bool result = userDAO.UpdateUser(user);
-                    if (result == true)
+                    if (result)
                     {
                         return Success;
                     }

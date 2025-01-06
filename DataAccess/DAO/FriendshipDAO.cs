@@ -21,43 +21,47 @@ namespace DataAccess.DAO
     public class FriendshipDAO
     {
 
+        private bool AreUsersValid(BevososContext context, int user1Id, int user2Id)
+        {
+            User user1 = context.Users.FirstOrDefault(u => u.UserId == user1Id);
+            User user2 = context.Users.FirstOrDefault(u => u.UserId == user2Id);
+
+            return user1 != null && user2 != null;
+        }
+
+        private bool IsFriendshipAllowed(BevososContext context, int user1Id, int user2Id)
+        {
+            bool friendshipExists = context.Friendships.Any(f =>
+                (f.User1Id == user1Id && f.User2Id == user2Id) ||
+                (f.User1Id == user2Id && f.User2Id == user1Id));
+            if (friendshipExists) return false;
+
+            bool friendRequestExists = context.FriendRequests.Any(fr =>
+                (fr.RequesterId == user1Id && fr.RequesteeId == user2Id) ||
+                (fr.RequesterId == user2Id && fr.RequesteeId == user1Id));
+            if (friendRequestExists) return false;
+
+            bool blocked = context.BlockedList.Any(b =>
+                (b.BlockerId == user1Id && b.BlockeeId == user2Id) ||
+                (b.BlockerId == user2Id && b.BlockeeId == user1Id));
+            return !blocked;
+        }
+
+
+
         public Friendship AddFriendship(int user1Id, int user2Id)
         {
             return ExceptionHelper.ExecuteWithExceptionHandling(() =>
             {
                 using (var context = new BevososContext())
                 {
-                    User user1 = context.Users.FirstOrDefault(u => u.UserId == user1Id);
-                    User user2 = context.Users.FirstOrDefault(u => u.UserId == user2Id);
-
-                    if (user1 == null || user2 == null)
+                    
+                    if (!AreUsersValid(context, user1Id, user2Id))
                     {
                         return null;
                     }
 
-                    bool friendshipExists = context.Friendships.Any(f =>
-                        (f.User1Id == user1Id && f.User2Id == user2Id) ||
-                        (f.User1Id == user2Id && f.User2Id == user1Id));
-
-                    if (friendshipExists)
-                    {
-                        return null;
-                    }
-
-                    bool friendRequestExists = context.FriendRequests.Any(fr =>
-                        (fr.RequesterId == user1Id && fr.RequesteeId == user2Id) ||
-                        (fr.RequesterId == user2Id && fr.RequesteeId == user1Id));
-
-                    if (friendRequestExists)
-                    {
-                        return null;
-                    }
-
-                    bool blocked = context.BlockedList.Any(b =>
-                        (b.BlockerId == user1Id && b.BlockeeId == user2Id) ||
-                        (b.BlockerId == user2Id && b.BlockeeId == user1Id));
-
-                    if (blocked)
+                    if (!IsFriendshipAllowed(context, user1Id, user2Id))
                     {
                         return null;
                     }

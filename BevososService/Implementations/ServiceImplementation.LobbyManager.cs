@@ -8,6 +8,7 @@ using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using DataAccess.Utils;
+using DataAccess.Models;
 
 namespace BevososService.Implementations
 {
@@ -294,8 +295,26 @@ namespace BevososService.Implementations
             {
                 if (lobby.TryRemove(userId, out ILobbyManagerCallback callback))
                 {
-                    Console.WriteLine($"{userId} removed from lobby: {lobbyId}");
 
+                    try
+                    {
+                        callback.OnLeaveLobby(lobbyId, userId);
+                    }                            
+                    catch (CommunicationException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(callback);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        ExceptionManager.LogErrorException(ex);
+                        RemoveLobbyClient(callback);
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionManager.LogFatalException(ex);
+                        RemoveLobbyClient(callback);
+                    }
                     foreach (ILobbyManagerCallback user in lobby.Values)
                     {
                         try
@@ -358,9 +377,12 @@ namespace BevososService.Implementations
                                 RemoveLobbyClient(user);
                             }
                         }
+                        RemoveClientFromLobby(lobbyId, userId);
+
                     }
                     else
                     {
+                        RemoveClientFromLobby(lobbyId, userId);
                         ActiveLobbiesDict.TryRemove(lobbyId, out _);
                         LobbyLeaders.TryRemove(lobbyId, out _);
                     }
